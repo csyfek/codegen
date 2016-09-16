@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Generate SQL From Golang</title>
+</head>
+<body>
+<form method="POST">
+    <div style="float:left;">
+        <label>Input:</label>
+        <br/>
+        <textarea cols="80" rows="40" name="Input">{{.Input}}</textarea>
+        <br/>
+    </div>
+    <div style="float:left;">
+        <input type="submit" value="Submit">
+    </div>
+</form>
+<div style="float:left;">
+    <label>Errors:</label>
+    <br/>
+    <textarea cols="80" rows="40" name="Errors">{{.Errors}}</textarea>
+</div>
+<div style="clear:both; float:left;">
+    <label>SelectSingular:</label>
+    <br/>
+    <textarea cols="80" rows="40" name="SelectSingular">{{.SelectSingular}}</textarea>
+</div>
+<div style="float:left;">
+    <label>SelectPlural:</label>
+    <br/>
+    <textarea cols="80" rows="40" name="SelectPlural">{{.SelectPlural}}</textarea>
+</div>
+<div style="float:left;">
+    <label>Insert:</label>
+    <br/>
+    <textarea cols="80" rows="40" name="Insert">{{.Insert}}</textarea>
+</div>
+<div style="float:left;">
+    <label>Update:</label>
+    <br/>
+    <textarea cols="80" rows="40" name="Update">{{.Update}}</textarea>
+</div>
+<div style="float:left;">
+    <label>Delete:</label>
+    <br/>
+    <textarea cols="80" rows="40" name="Delete">{{.Delete}}</textarea>
+</div>
+</body>
+</html>
