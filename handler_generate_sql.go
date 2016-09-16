@@ -1,14 +1,9 @@
 package main
 
 import (
-	"fmt"
+	"github.com/jackmanlabs/codegen/structfinder"
 	"github.com/jackmanlabs/errors"
-	"go/ast"
-	"go/parser"
-	"go/scanner"
-	"go/token"
 	"html/template"
-	"io/ioutil"
 	"log"
 	"net/http"
 )
@@ -17,29 +12,54 @@ type handlerGenerateSql struct{}
 
 func (this *handlerGenerateSql) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	var data GenerateSqlData
+	var data GenerateSqlData = GenerateSqlData{
+		Structs: make([]string, 0),
+	}
 
 	if r.Method == "POST" {
 		data.Input = r.FormValue("Input")
+		data.Struct = r.FormValue("Struct")
 
-		filename := "/home/jackman/gopath/src/v/codegen/handler_generate_sql.go"
-
-		structFinder, err := NewStructFinderFromFile(filename)
+		structFinder, err := structfinder.NewStructFinderFromBytes([]byte(data.Input))
 		if err != nil {
 			log.Print(errors.Stack(err))
 		}
 
-		err = structFinder.FindStructs()
-		if err != nil {
-			log.Print(errors.Stack(err))
+		structDatum := structFinder.FindStructs()
+
+		// Set up the struct selection drop-down menu.
+		structSelected := false
+		var selectedStruct structfinder.StructDefinition
+		for _, structData := range structDatum {
+			selectOption := SelectOption{
+				Name:     structData.Name,
+				Selected: data.Struct == structData.Name,
+			}
+
+			if selectOption.Selected {
+				structSelected = true
+				selectedStruct = structData
+			}
+			data.Structs = append(data.Structs, selectOption)
 		}
 
-		//data.SelectSingular = buf.String()
+		if !structSelected && len(data.Structs) > 0 {
+			data.Structs[0].Selected = true
+		}
 
-		//test, err := json.MarshalIndent(t, "", "\t")
-		//data.SelectSingular = string(test)
+		// Make sure that we have a valid struct selected for generation.
+		if !structSelected && len(structDatum) > 0 {
+			selectedStruct = structDatum[0]
+		} else if !structSelected {
+			goto PostProcessing
+		}
+
+		data.SelectSingular = generateSelectSingular(selectedStruct)
+		data.SelectPlural = generateSelectPlural(selectedStruct)
+
 	}
 
+PostProcessing:
 	t, err := template.New("generateSql").Parse(generateSqlHtml)
 	if err != nil {
 		writeError(w, errors.Stack(err))
@@ -60,6 +80,22 @@ type GenerateSqlData struct {
 	Update         string
 	Delete         string
 	Errors         string
+	Structs        []SelectOption
+	Struct         string
+}
+
+type SelectOption struct {
+	Name     string
+	Selected bool
+}
+
+func generateSelectSingular(structfinder.StructDefinition) string {
+
+	return ""
+}
+func generateSelectPlural(structfinder.StructDefinition) string {
+
+	return ""
 }
 
 var generateSqlHtml string = `
@@ -89,7 +125,8 @@ var generateSqlHtml string = `
 <div style="clear:both; float:left;">
     <label>SelectSingular:</label>
     <br/>
-    <textarea cols="80" rows="40" name="SelectSingular">{{.SelectSingular}}</textarea>
+    <textarea cols="80" rows="40"
+              name="SelectSingular">{{.SelectSingular}}</textarea>
 </div>
 <div style="float:left;">
     <label>SelectPlural:</label>
@@ -114,83 +151,3 @@ var generateSqlHtml string = `
 </body>
 </html>
 `
-
-func NewStructFinderFromFile(filename string) (*StructFinder, error) {
-
-	var (
-		this *StructFinder = new(StructFinder)
-		err  error
-	)
-
-	this.Data, err = ioutil.ReadFile(filename)
-	if err != nil {
-		return nil, errors.Stack(err)
-	}
-
-	this.FSet = token.NewFileSet()
-	this.File, err = parser.ParseFile(this.FSet, filename, nil, 0)
-	if err != nil {
-		return nil, errors.Stack(err)
-	}
-
-	return this, nil
-}
-
-type StructFinder struct {
-	File *ast.File
-	Data []byte
-	FSet *token.FileSet
-}
-
-func (this *StructFinder) FindStructs() error {
-	for _, dec := range this.File.Decls {
-		switch dec.(type) {
-		case *ast.GenDecl:
-			genDecl := dec.(*ast.GenDecl)
-			if genDecl.Tok == token.TYPE {
-				var s scanner.Scanner
-				s.Init(this.FSet.File(genDecl.Pos()), this.Data, nil /* no error handler */, scanner.ScanComments)
-
-				var (
-					pos token.Pos
-					tok token.Token
-					lit string
-				)
-
-				// fast forward scanner
-				for pos < genDecl.TokPos {
-					pos, tok, lit = s.Scan()
-				}
-
-				// This should yield the struct name
-				pos, tok, lit = s.Scan()
-				fmt.Printf("%s\t%s\t%q\n", this.FSet.Position(pos), tok, lit)
-
-				// This should yield token.STRUCT
-				pos, tok, lit = s.Scan()
-				fmt.Printf("%s\t%s\t%q\n", this.FSet.Position(pos), tok, lit)
-				if tok != token.STRUCT{
-					continue
-				}
-
-			}
-
-			//case *ast.FuncDecl:
-			//case *ast.BadDecl:
-			//default:
-		}
-		//fmt.Printf("%s\n", raw[dec.Pos()-1:dec.End()])
-	}
-
-	return nil
-}
-
-type StructDefinition struct {
-	Package string
-	Members []StructMemberDefinition
-}
-
-type StructMemberDefinition struct {
-	Name string
-	Type string
-}

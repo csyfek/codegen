@@ -13,6 +13,9 @@
         <br/>
     </div>
     <div style="float:left;">
+        <select name="Struct"> {{range .Structs}}
+            <option {{if .Selected}} selected="selected" {{end}} value="{{.Name}}">{{.Name}}</option>
+            {{end}} </select>
         <input type="submit" value="Submit">
     </div>
 </form>
@@ -24,7 +27,8 @@
 <div style="clear:both; float:left;">
     <label>SelectSingular:</label>
     <br/>
-    <textarea cols="80" rows="40" name="SelectSingular">{{.SelectSingular}}</textarea>
+    <textarea cols="80" rows="40"
+              name="SelectSingular">{{.SelectSingular}}</textarea>
 </div>
 <div style="float:left;">
     <label>SelectPlural:</label>
