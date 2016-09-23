@@ -54,16 +54,16 @@ func (this *StructFinder) FindStructs() []StructDefinition {
 
 	for _, dec := range this.File.Decls {
 
-		switch dec.(type) {
+		switch decl := dec.(type) {
 		case *ast.GenDecl:
-			genDecl := dec.(*ast.GenDecl)
-			if genDecl.Tok == token.TYPE {
-				for _, spec_ := range genDecl.Specs {
+			if decl.Tok == token.TYPE {
+				for _, spec_ := range decl.Specs {
 					spec := spec_.(*ast.TypeSpec)
 
 					structDef := StructDefinition{
-						Name:    spec.Name,
 						Members: make([]StructMemberDefinition, 0),
+						Name:    spec.Name.String(),
+						Package: this.File.Name.String(),
 					}
 
 					t := spec.Type.(*ast.StructType)

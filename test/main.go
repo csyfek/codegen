@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/jackmanlabs/bucket/jlog"
 	"github.com/jackmanlabs/codegen/structfinder"
 	"github.com/jackmanlabs/errors"
 	"log"
@@ -13,8 +14,6 @@ func main() {
 		log.Print(errors.Stack(err))
 	}
 
-	err = structFinder.FindStructs()
-	if err != nil {
-		log.Print(errors.Stack(err))
-	}
+	defs := structFinder.FindStructs()
+	jlog.Log(defs)
 }

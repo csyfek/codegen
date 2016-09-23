@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"database/sql"
 )
 
 type handlerGenerateSql struct{}
@@ -56,7 +57,6 @@ func (this *handlerGenerateSql) ServeHTTP(w http.ResponseWriter, r *http.Request
 
 		data.SelectSingular = generateSelectSingular(selectedStruct)
 		data.SelectPlural = generateSelectPlural(selectedStruct)
-
 	}
 
 PostProcessing:
@@ -91,6 +91,38 @@ type SelectOption struct {
 
 func generateSelectSingular(structfinder.StructDefinition) string {
 
+	var ps_StoreDynamic *sql.Stmt
+
+	// This method assumes that the caller specifies the ID, a UUID.
+	func StoreDynamic(noun string, id string, data []byte) error {
+		db, err := db()
+		if err != nil {
+		return errors.Stack(err)
+		}
+
+		if ps_StoreDynamic == nil {
+		q := `INSERT INTO dynamic (id, noun, data) VALUES (?, ?, ?);`
+
+		ps_StoreDynamic, err = db.Prepare(q)
+		if err != nil {
+		return errors.Stack(err)
+		}
+		}
+
+		args := []interface{}{
+		id,
+		noun,
+		data,
+		}
+
+		_, err = ps_StoreDynamic.Exec(args...)
+		if err != nil {
+		return errors.Stack(err)
+		}
+
+		return nil
+	}
+
 	return ""
 }
 func generateSelectPlural(structfinder.StructDefinition) string {
@@ -110,43 +142,65 @@ var generateSqlHtml string = `
     <div style="float:left;">
         <label>Input:</label>
         <br/>
-        <textarea cols="80" rows="40" name="Input">{{.Input}}</textarea>
+        <textarea cols="80"
+                  rows="40"
+                  name="Input">{{.Input}}</textarea>
         <br/>
     </div>
     <div style="float:left;">
-        <input type="submit" value="Submit">
+        <select name="Struct"> {{range .Structs}}
+            <option {{if
+                    .Selected}}
+                    selected="selected"
+                    {{end}}
+                    value="{{.Name}}">{{.Name}}
+            </option>
+            {{end}} </select>
+        <input type="submit"
+               value="Submit">
     </div>
 </form>
 <div style="float:left;">
     <label>Errors:</label>
     <br/>
-    <textarea cols="80" rows="40" name="Errors">{{.Errors}}</textarea>
+    <textarea cols="80"
+              rows="40"
+              name="Errors">{{.Errors}}</textarea>
 </div>
 <div style="clear:both; float:left;">
     <label>SelectSingular:</label>
     <br/>
-    <textarea cols="80" rows="40"
+    <textarea cols="80"
+              rows="40"
               name="SelectSingular">{{.SelectSingular}}</textarea>
 </div>
 <div style="float:left;">
     <label>SelectPlural:</label>
     <br/>
-    <textarea cols="80" rows="40" name="SelectPlural">{{.SelectPlural}}</textarea>
+    <textarea cols="80"
+              rows="40"
+              name="SelectPlural">{{.SelectPlural}}</textarea>
 </div>
 <div style="float:left;">
     <label>Insert:</label>
     <br/>
-    <textarea cols="80" rows="40" name="Insert">{{.Insert}}</textarea>
+    <textarea cols="80"
+              rows="40"
+              name="Insert">{{.Insert}}</textarea>
 </div>
 <div style="float:left;">
     <label>Update:</label>
     <br/>
-    <textarea cols="80" rows="40" name="Update">{{.Update}}</textarea>
+    <textarea cols="80"
+              rows="40"
+              name="Update">{{.Update}}</textarea>
 </div>
 <div style="float:left;">
     <label>Delete:</label>
     <br/>
-    <textarea cols="80" rows="40" name="Delete">{{.Delete}}</textarea>
+    <textarea cols="80"
+              rows="40"
+              name="Delete">{{.Delete}}</textarea>
 </div>
 </body>
 </html>
