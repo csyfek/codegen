@@ -1,11 +1,15 @@
 package main
 
 import (
+	"bytes"
+	"fmt"
 	"github.com/jackmanlabs/codegen/structfinder"
 	"github.com/jackmanlabs/errors"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
+	"strings"
 )
 
 type handlerGenerateSql struct{}
@@ -74,6 +78,7 @@ PostProcessing:
 
 type GenerateSqlData struct {
 	Input          string
+	Schema         string
 	SelectSingular string
 	SelectPlural   string
 	Insert         string
@@ -89,7 +94,24 @@ type SelectOption struct {
 	Selected bool
 }
 
-func generateSelectSingular(structfinder.StructDefinition) string {
+func generateSelectSingular(def structfinder.StructDefinition) string {
+
+	b := bytes.NewBuffer(nil)
+	b_sql := bytes.NewBuffer(nil)
+
+	funcName := fmt.Sprintf("Get%s", def.Name)
+	psName := fmt.Sprintf("ps_%s", funcName)
+
+	fmt.Fprintf(b, "var %s *sql.Stmt\n\n", psName)
+	fmt.Fprintf(b, "func &s(id string) (%s.%s, error) {\n", funcName, def.Package, def.Name)
+	fmt.Fprintf(b, "	if %s != nil{", psName)
+	fmt.Fprintf(b, "	sql := `\n")
+	fmt.Fprintf(b, "%s", b_sql.Bytes())
+	fmt.Fprintf(b, "`\n")
+
+
+	fmt.Fprintf(b, "	}\n")
+	fmt.Fprintf(b, "}\n")
 
 	return ""
 }
