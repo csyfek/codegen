@@ -1,7 +1,8 @@
 package main
 
 import (
-	"github.com/jackmanlabs/bucket/jlog"
+	"fmt"
+	"github.com/jackmanlabs/codegen/generate_sql"
 	"github.com/jackmanlabs/codegen/structfinder"
 	"github.com/jackmanlabs/errors"
 	"log"
@@ -15,5 +16,11 @@ func main() {
 	}
 
 	defs := structFinder.FindStructs()
-	jlog.Log(defs)
+
+	for _, def := range defs {
+		s := generate_sql.SelectSingular(def)
+		fmt.Println("==================================================================")
+		fmt.Println(s)
+		fmt.Println("==================================================================")
+	}
 }

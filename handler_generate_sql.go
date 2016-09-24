@@ -1,12 +1,13 @@
 package main
 
 import (
+	"bytes"
+	"fmt"
 	"github.com/jackmanlabs/codegen/structfinder"
 	"github.com/jackmanlabs/errors"
 	"html/template"
 	"log"
 	"net/http"
-	"database/sql"
 )
 
 type handlerGenerateSql struct{}
@@ -74,6 +75,7 @@ PostProcessing:
 
 type GenerateSqlData struct {
 	Input          string
+	Schema         string
 	SelectSingular string
 	SelectPlural   string
 	Insert         string
@@ -89,46 +91,6 @@ type SelectOption struct {
 	Selected bool
 }
 
-func generateSelectSingular(structfinder.StructDefinition) string {
-
-	var ps_StoreDynamic *sql.Stmt
-
-	// This method assumes that the caller specifies the ID, a UUID.
-	func StoreDynamic(noun string, id string, data []byte) error {
-		db, err := db()
-		if err != nil {
-		return errors.Stack(err)
-		}
-
-		if ps_StoreDynamic == nil {
-		q := `INSERT INTO dynamic (id, noun, data) VALUES (?, ?, ?);`
-
-		ps_StoreDynamic, err = db.Prepare(q)
-		if err != nil {
-		return errors.Stack(err)
-		}
-		}
-
-		args := []interface{}{
-		id,
-		noun,
-		data,
-		}
-
-		_, err = ps_StoreDynamic.Exec(args...)
-		if err != nil {
-		return errors.Stack(err)
-		}
-
-		return nil
-	}
-
-	return ""
-}
-func generateSelectPlural(structfinder.StructDefinition) string {
-
-	return ""
-}
 
 var generateSqlHtml string = `
 <!DOCTYPE html>
