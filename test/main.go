@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	filename := "/home/jackman/gopath/src/github.com/jackmanlabs/codegen/structfinder/structfinder.go"
+	filename := "/home/jackman/gopath/src/github.com/jackmanlabs/v/types/world.go"
 	structFinder, err := structfinder.NewStructFinderFromFile(filename)
 	if err != nil {
 		log.Print(errors.Stack(err))
@@ -18,7 +18,7 @@ func main() {
 	defs := structFinder.FindStructs()
 
 	for _, def := range defs {
-		s := generate_sql.SelectSingular(def)
+		s := generate_sql.SelectPlural(def)
 		fmt.Println("==================================================================")
 		fmt.Println(s)
 		fmt.Println("==================================================================")

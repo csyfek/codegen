@@ -7,6 +7,7 @@ import (
 	"go/parser"
 	"go/token"
 	"io/ioutil"
+	"reflect"
 )
 
 func NewStructFinderFromFile(filename string) (*StructFinder, error) {
@@ -66,9 +67,14 @@ func (this *StructFinder) FindStructs() []StructDefinition {
 						Package: this.File.Name.String(),
 					}
 
-					t := spec.Type.(*ast.StructType)
+					t := reflect.TypeOf(spec.Type)
+					if t.String() != "*ast.StructType" {
+						continue
+					}
 
-					for _, field := range t.Fields.List {
+					structType := spec.Type.(*ast.StructType)
+
+					for _, field := range structType.Fields.List {
 						structMemberDef := StructMemberDefinition{
 							Name: field.Names[0].Name,
 							Type: getExprType(field.Type),

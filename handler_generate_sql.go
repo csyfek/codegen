@@ -1,8 +1,7 @@
 package main
 
 import (
-	"bytes"
-	"fmt"
+	"github.com/jackmanlabs/codegen/generate_sql"
 	"github.com/jackmanlabs/codegen/structfinder"
 	"github.com/jackmanlabs/errors"
 	"html/template"
@@ -56,8 +55,8 @@ func (this *handlerGenerateSql) ServeHTTP(w http.ResponseWriter, r *http.Request
 			goto PostProcessing
 		}
 
-		data.SelectSingular = generateSelectSingular(selectedStruct)
-		data.SelectPlural = generateSelectPlural(selectedStruct)
+		data.SelectSingular = generate_sql.SelectSingular(selectedStruct)
+		data.SelectPlural = generate_sql.SelectPlural(selectedStruct)
 	}
 
 PostProcessing:
@@ -91,25 +90,31 @@ type SelectOption struct {
 	Selected bool
 }
 
-
 var generateSqlHtml string = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Generate SQL From Golang</title>
+    <style>
+        textarea,div {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
 </head>
 <body>
 <form method="POST">
-    <div style="float:left;">
+    <div style="clear:both; width:33%; float:left;">
         <label>Input:</label>
         <br/>
-        <textarea cols="80"
-                  rows="40"
+        <textarea style="width:100%;"
+                  rows="20"
                   name="Input">{{.Input}}</textarea>
         <br/>
     </div>
-    <div style="float:left;">
+    <div style="width:33%; float:left;">
+        <label>Struct:</label><br/>
         <select name="Struct"> {{range .Structs}}
             <option {{if
                     .Selected}}
@@ -118,50 +123,58 @@ var generateSqlHtml string = `
                     value="{{.Name}}">{{.Name}}
             </option>
             {{end}} </select>
+        <br/>
         <input type="submit"
                value="Submit">
     </div>
 </form>
-<div style="float:left;">
+<div style="width:33%; float:left;">
     <label>Errors:</label>
     <br/>
-    <textarea cols="80"
-              rows="40"
+    <textarea style="width:100%;"
+              rows="20"
               name="Errors">{{.Errors}}</textarea>
 </div>
-<div style="clear:both; float:left;">
+<div style="clear:both; width:33%; float:left;">
+    <label>Create:</label>
+    <br/>
+    <textarea style="width:100%;"
+              rows="20"
+              name="Create">{{.Create}}</textarea>
+</div>
+<div style="width:33%; float:left;">
     <label>SelectSingular:</label>
     <br/>
-    <textarea cols="80"
-              rows="40"
+    <textarea style="width:100%;"
+              rows="20"
               name="SelectSingular">{{.SelectSingular}}</textarea>
 </div>
-<div style="float:left;">
+<div style="width:33%; float:left;">
     <label>SelectPlural:</label>
     <br/>
-    <textarea cols="80"
-              rows="40"
+    <textarea style="width:100%;"
+              rows="20"
               name="SelectPlural">{{.SelectPlural}}</textarea>
 </div>
-<div style="float:left;">
+<div style="width:33%; float:left;">
     <label>Insert:</label>
     <br/>
-    <textarea cols="80"
-              rows="40"
+    <textarea style="width:100%;"
+              rows="20"
               name="Insert">{{.Insert}}</textarea>
 </div>
-<div style="float:left;">
+<div style="width:33%; float:left;">
     <label>Update:</label>
     <br/>
-    <textarea cols="80"
-              rows="40"
+    <textarea style="width:100%;"
+              rows="20"
               name="Update">{{.Update}}</textarea>
 </div>
-<div style="float:left;">
+<div style="width:33%; float:left;">
     <label>Delete:</label>
     <br/>
-    <textarea cols="80"
-              rows="40"
+    <textarea style="width:100%;"
+              rows="20"
               name="Delete">{{.Delete}}</textarea>
 </div>
 </body>
