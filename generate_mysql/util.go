@@ -1,4 +1,4 @@
-package generate_sql
+package generate_mysql
 
 import (
 	"github.com/jackmanlabs/codegen/structfinder"
@@ -29,7 +29,7 @@ func getSqlType(goType string) (sqlType string, sqlCompatible bool) {
 		return "BLOB", true
 	}
 
-	return "BLOB", false
+	return "TEXT", false
 }
 
 type GoSqlDatum struct {
@@ -38,7 +38,6 @@ type GoSqlDatum struct {
 	SqlType       string
 	SqlName       string
 }
-
 
 func getGoSqlData(structMembers []structfinder.StructMemberDefinition) []GoSqlDatum {
 	members := make([]GoSqlDatum, 0)

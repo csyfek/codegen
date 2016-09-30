@@ -1,4 +1,4 @@
-package generate_sql
+package generate_mysql
 
 import (
 	"bytes"

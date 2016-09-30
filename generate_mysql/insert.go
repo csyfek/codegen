@@ -1,4 +1,4 @@
-package generate_sql
+package generate_mysql
 
 import (
 	"bytes"
@@ -65,9 +65,6 @@ func Insert(def structfinder.StructDefinition) string {
 		} else {
 			fmt.Fprintf(b, "\t\t&x_%s,\n", member.Name)
 		}
-	}
-	if len(members) > 0 {
-		fmt.Fprintf(b, "\t\t&x.%s,\n", members[0].Name)
 	}
 	fmt.Fprint(b, "\t}\n\n")
 

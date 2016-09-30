@@ -1,4 +1,4 @@
-package generate_sql
+package generate_mysql
 
 import (
 	"bytes"
@@ -15,16 +15,25 @@ func Create(def structfinder.StructDefinition) string {
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)
 
-	var firstField structfinder.StructMemberDefinition
-	if len(def.Members) > 0 {
-		firstField = def.Members[0]
+	var firstField GoSqlDatum
+	if len(members) > 0 {
+		firstField = members[0]
 	}
 
 	fmt.Fprintf(b, "CREATE TABLE %s (\n", tableName)
-	for _, member := range members {
-		fmt.Fprintf(b, "\t%s %s NOT NULL,\n", member.SqlName, member.SqlType)
+	for idx, member := range members {
+		if idx == 0 {
+			if member.Type == "string" {
+				member.SqlType = "CHAR(36)"
+			}
+			fmt.Fprintf(b, "\t%s %s PRIMARY KEY,\n", member.SqlName, member.SqlType)
+		} else if idx == len(members)-1 {
+			fmt.Fprintf(b, "\t%s %s NOT NULL\n", member.SqlName, member.SqlType)
+		} else {
+			fmt.Fprintf(b, "\t%s %s NOT NULL,\n", member.SqlName, member.SqlType)
+		}
 	}
-	fmt.Fprintf(b, "\tPRIMARY KEY (%s)\n", snaker.CamelToSnake(firstField.Name))
+	fmt.Fprintf(b, "\t-- FOREIGN KEY (%s) REFERENCES parent_table (id) ON DELETE CASCADE\n", firstField.SqlName)
 	fmt.Fprintf(b, ")\n")
 	fmt.Fprint(b, "\tENGINE = InnoDB\n")
 	fmt.Fprint(b, "\tDEFAULT CHARSET = utf8\n")
