@@ -7,8 +7,10 @@ import (
 
 func getSqlType(goType string) (sqlType string, sqlCompatible bool) {
 	switch goType {
+	case "int":
+		return "INT", true
 	case "string":
-		return "VARCHAR(256)", true
+		return "VARCHAR(255)", true
 	case "float32":
 		return "DOUBLE", true
 	case "float64":
