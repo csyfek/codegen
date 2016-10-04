@@ -35,9 +35,9 @@ func Create(def structfinder.StructDefinition) string {
 	}
 	fmt.Fprintf(b, "\t-- FOREIGN KEY (%s) REFERENCES parent_table (id) ON DELETE CASCADE\n", firstField.SqlName)
 	fmt.Fprintf(b, ")\n")
-	fmt.Fprint(b, "\tENGINE = TokuDB\n")
-	fmt.Fprint(b, "\t-- ENGINE = InnoDB\n")
-	fmt.Fprint(b, "\t-- ROW_FORMAT = COMPRESSED; -- Requires Barracuda file format.\n")
+	fmt.Fprint(b, "\t-- ENGINE = TokuDB\n")
+	fmt.Fprint(b, "\tENGINE = InnoDB\n")
+	fmt.Fprint(b, "\tROW_FORMAT = COMPRESSED -- Requires Barracuda file format.\n")
 	fmt.Fprint(b, "\tDEFAULT CHARSET = utf8;\n")
 
 	return b.String()
