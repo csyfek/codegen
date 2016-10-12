@@ -1,4 +1,4 @@
-package generate_mysql
+package pg
 
 import (
 	"bytes"
@@ -118,7 +118,7 @@ func selectSingularSql(def structfinder.StructDefinition, members []GoSqlDatum) 
 		}
 	}
 	fmt.Fprintf(b, "FROM %s\n", tableName)
-	fmt.Fprintf(b, "WHERE %s.%s = ?;\n", tableName, firstField.SqlName)
+	fmt.Fprintf(b, "WHERE %s.%s = $1;\n", tableName, firstField.SqlName)
 
 	return b
 }

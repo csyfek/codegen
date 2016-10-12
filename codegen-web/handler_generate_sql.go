@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/jackmanlabs/codegen/generate_mysql"
+	"github.com/jackmanlabs/codegen/mysql"
 	"github.com/jackmanlabs/codegen/structfinder"
 	"github.com/jackmanlabs/errors"
 	"html/template"
@@ -55,8 +55,8 @@ func (this *handlerGenerateSql) ServeHTTP(w http.ResponseWriter, r *http.Request
 			goto PostProcessing
 		}
 
-		data.SelectSingular = generate_mysql.SelectSingular(selectedStruct)
-		data.SelectPlural = generate_mysql.SelectPlural(selectedStruct)
+		data.SelectSingular = mysql.SelectSingular(selectedStruct)
+		data.SelectPlural = mysql.SelectPlural(selectedStruct)
 	}
 
 PostProcessing:

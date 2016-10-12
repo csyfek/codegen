@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/jackmanlabs/codegen/generate_mysql"
+	"github.com/jackmanlabs/codegen/mysql"
 	"github.com/jackmanlabs/codegen/structfinder"
 	"github.com/jackmanlabs/errors"
 	"log"
@@ -30,22 +30,22 @@ func main() {
 	for _, def := range defs {
 		fmt.Println("/*============================================================================*/")
 		fmt.Println()
-		fmt.Println(generate_mysql.Create(def))
+		fmt.Println(mysql.Create(def))
 		fmt.Println("/*============================================================================*/")
 		fmt.Println()
-		fmt.Println(generate_mysql.SelectSingular(def))
+		fmt.Println(mysql.SelectSingular(def))
 		fmt.Println("/*============================================================================*/")
 		fmt.Println()
-		fmt.Println(generate_mysql.SelectPlural(def))
+		fmt.Println(mysql.SelectPlural(def))
 		fmt.Println("/*============================================================================*/")
 		fmt.Println()
-		fmt.Println(generate_mysql.Update(def))
+		fmt.Println(mysql.Update(def))
 		fmt.Println("/*============================================================================*/")
 		fmt.Println()
-		fmt.Println(generate_mysql.Insert(def))
+		fmt.Println(mysql.Insert(def))
 		fmt.Println("/*============================================================================*/")
 		fmt.Println()
-		fmt.Println(generate_mysql.Delete(def))
+		fmt.Println(mysql.Delete(def))
 		fmt.Println("/*============================================================================*/")
 		fmt.Println()
 	}

@@ -1,4 +1,4 @@
-package generate_mysql
+package pg
 
 import (
 	"bytes"
@@ -101,13 +101,13 @@ func updateSql(def structfinder.StructDefinition, members []GoSqlDatum) *bytes.B
 	fmt.Fprint(b, "SET\n")
 	for idx, member := range members {
 		if idx == len(def.Members)-1 {
-			fmt.Fprintf(b, "\t%s.%s = ?\n", tableName, member.SqlName)
+			fmt.Fprintf(b, "\t%s = $%d\n", member.SqlName, idx+1)
 		} else {
 			// Note the trailing comma.
-			fmt.Fprintf(b, "\t%s.%s = ?,\n", tableName, member.SqlName)
+			fmt.Fprintf(b, "\t%s = $%d,\n", member.SqlName, idx+1)
 		}
 	}
-	fmt.Fprintf(b, "WHERE %s.%s = ?;\n", tableName, firstField.SqlName)
+	fmt.Fprintf(b, "WHERE %s.%s = $%d;\n", tableName, firstField.SqlName, len(members)+1)
 
 	return b
 }

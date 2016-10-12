@@ -1,4 +1,4 @@
-package generate_mysql
+package pg
 
 import (
 	"bytes"
@@ -103,9 +103,9 @@ func insertSql(def structfinder.StructDefinition, members []GoSqlDatum) *bytes.B
 	fmt.Fprint(b, ") VALUES (")
 	for idx := range members {
 		if idx == len(members)-1 {
-			fmt.Fprint(b, "?);\n")
+			fmt.Fprintf(b, "$%d);\n", idx+1)
 		} else {
-			fmt.Fprint(b, "?, ")
+			fmt.Fprintf(b, "$%d, ", idx+1)
 		}
 	}
 

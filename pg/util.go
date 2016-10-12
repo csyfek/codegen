@@ -1,4 +1,4 @@
-package generate_mysql
+package pg
 
 import (
 	"github.com/jackmanlabs/codegen/structfinder"
@@ -12,11 +12,11 @@ func getSqlType(goType string) (sqlType string, sqlCompatible bool) {
 	case "string":
 		return "VARCHAR(255)", true
 	case "float32":
-		return "DOUBLE", true
+		return "DOUBLE PRECISION", true
 	case "float64":
-		return "DOUBLE", true
+		return "DOUBLE PRECISION", true
 	case "time.Time":
-		return "DATETIME", true
+		return "TIMESTAMP", true
 	case "int64":
 		return "BIGINT", true
 	case "int32":

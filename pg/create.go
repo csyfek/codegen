@@ -1,4 +1,4 @@
-package generate_mysql
+package pg
 
 import (
 	"bytes"
@@ -20,6 +20,7 @@ func Create(def structfinder.StructDefinition) string {
 		firstField = members[0]
 	}
 
+	fmt.Fprintf(b, "DROP TABLE IF EXISTS %s;\n\n", tableName)
 	fmt.Fprintf(b, "CREATE TABLE %s (\n", tableName)
 	for idx, member := range members {
 		if idx == 0 {
@@ -34,11 +35,6 @@ func Create(def structfinder.StructDefinition) string {
 		}
 	}
 	fmt.Fprintf(b, "\t-- FOREIGN KEY (%s) REFERENCES parent_table (id) ON DELETE CASCADE\n", firstField.SqlName)
-	fmt.Fprintf(b, ")\n")
-	fmt.Fprint(b, "\t-- ENGINE = TokuDB\n")
-	fmt.Fprint(b, "\tENGINE = InnoDB\n")
-	fmt.Fprint(b, "\tROW_FORMAT = COMPRESSED -- Requires Barracuda file format.\n")
-	fmt.Fprint(b, "\tDEFAULT CHARSET = utf8;\n")
-
+	fmt.Fprintf(b, ");\n")
 	return b.String()
 }

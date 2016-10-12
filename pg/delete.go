@@ -1,4 +1,4 @@
-package generate_mysql
+package pg
 
 import (
 	"bytes"
@@ -63,7 +63,7 @@ func deleteSql(def structfinder.StructDefinition, members []GoSqlDatum) *bytes.B
 	fmt.Fprintf(b, "DELETE FROM %s\n", tableName)
 	if len(members) > 0 {
 		member := members[0]
-		fmt.Fprintf(b, "\tWHERE %s.%s = ?;\n", tableName, member.SqlName)
+		fmt.Fprintf(b, "\tWHERE %s.%s = $1;\n", tableName, member.SqlName)
 	} else {
 		fmt.Fprint(b, "\t-- Insert your filter criteria here.\n")
 	}

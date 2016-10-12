@@ -10,6 +10,7 @@ import (
 	"reflect"
 )
 
+// We use a filename so that we can keep the filename data for the parser.
 func NewStructFinderFromFile(filename string) (*StructFinder, error) {
 
 	var (
