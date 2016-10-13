@@ -12,7 +12,7 @@ var _db *sql.DB
 func db() (*sql.DB, error) {
 
     if _db != nil{
-        return _db
+        return _db, nil
     }
 
     database := "foo"
