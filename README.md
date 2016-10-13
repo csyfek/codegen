@@ -7,22 +7,29 @@ This is currently a work in progress. At the time of writing, There are two comm
 
 Regarding the output, the code assumes that you have a db() method somewhere in your code that returns a database pointer and an error. At a minimum, it can look something like this:
 
-    func db() (*sql.DB, error) {
+```go
+var _db *sql.DB
+func db() (*sql.DB, error) {
 
-        database := "foo"
-        host := "bar"
-        port := 1234
-        password := "username"
-        username := "password"
-
-        connString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", username, password, host, port, database)
-        db, err := sql.Open("postgres", connString)
-        if err != nil {
-            return nil, errors.Stack(err)
-        }
-
-        return db, nil
+    if _db != nil{
+        return _db
     }
+
+    database := "foo"
+    host := "bar"
+    port := 1234
+    password := "username"
+    username := "password"
+
+    connString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", username, password, host, port, database)
+    _db, err := sql.Open("postgres", connString)
+    if err != nil {
+        return nil, errors.Stack(err)
+    }
+
+    return _db, nil
+}
+```
 
 In addition to expecting this sort of function available, We also use the following package for error reporting: github.com/jackmanlabs/errors. This package has the Stack() method to assemble a call stack in addition to the error to facilitate debugging. If you don't like it, it should easy enough to replace it with your own error package or error messages.
 
