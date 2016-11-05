@@ -3,22 +3,22 @@ package mysql
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/structfinder"
+	"github.com/jackmanlabs/codegen/extractor"
 	"github.com/serenize/snaker"
 )
 
-func SelectPlural(def structfinder.StructDefinition) string {
+func SelectPlural(pkgName string, def *extractor.StructDefinition) string {
 
 	members := getGoSqlData(def.Members)
 
 	b := bytes.NewBuffer(nil)
-	b_sql := selectPluralSql(def, members)
+	b_sql := selectPluralSql(pkgName, def, members)
 
 	funcName := fmt.Sprintf("Get%ss", def.Name)
 	psName := fmt.Sprintf("ps_%s", funcName)
 
 	fmt.Fprintf(b, "var %s *sql.Stmt\n\n", psName)
-	fmt.Fprintf(b, "func %s(id string) ([]%s.%s, error) {\n", funcName, def.Package, def.Name)
+	fmt.Fprintf(b, "func %s(id string) ([]%s.%s, error) {\n", funcName, pkgName, def.Name)
 	fmt.Fprint(b, `
 	db, err := db()
 	if err != nil {
@@ -51,9 +51,9 @@ func SelectPlural(def structfinder.StructDefinition) string {
 
 `)
 
-	fmt.Fprintf(b, "\tvar z []%s.%s = make([]%s.%s, 0)\n", def.Package, def.Name, def.Package, def.Name)
+	fmt.Fprintf(b, "\tvar z []%s.%s = make([]%s.%s, 0)\n", pkgName, def.Name, pkgName, def.Name)
 	fmt.Fprint(b, "\tfor rows.Next() {\n")
-	fmt.Fprintf(b, "\t\tvar x %s.%s\n", def.Package, def.Name)
+	fmt.Fprintf(b, "\t\tvar x %s.%s\n", pkgName, def.Name)
 	for _, member := range members {
 		if !member.SqlCompatible {
 			fmt.Fprintf(b, "\t\tvar x_%s []byte\n", member.Name)
@@ -102,10 +102,10 @@ func SelectPlural(def structfinder.StructDefinition) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func selectPluralSql(def structfinder.StructDefinition, members []GoSqlDatum) *bytes.Buffer {
+func selectPluralSql(pkgName string, def *extractor.StructDefinition, members []GoSqlDatum) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
-	tableName := snaker.CamelToSnake(def.Name)
+	tableName := snaker.CamelToSnake(pkgName)
 
 	var firstField GoSqlDatum
 	if len(members) > 0 {

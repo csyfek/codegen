@@ -3,13 +3,13 @@ package mysql
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/structfinder"
 	"github.com/serenize/snaker"
+	"github.com/jackmanlabs/codegen/extractor"
 )
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func Create(def structfinder.StructDefinition) string {
+func Create(def *extractor.StructDefinition) string {
 	members := getGoSqlData(def.Members)
 
 	b := bytes.NewBuffer(nil)

@@ -3,11 +3,11 @@ package mysql
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/structfinder"
+	"github.com/jackmanlabs/codegen/extractor"
 	"github.com/serenize/snaker"
 )
 
-func SelectSingular(def structfinder.StructDefinition) string {
+func SelectSingular(pkgName string, def *extractor.StructDefinition) string {
 
 	members := getGoSqlData(def.Members)
 
@@ -18,7 +18,7 @@ func SelectSingular(def structfinder.StructDefinition) string {
 	psName := fmt.Sprintf("ps_%s", funcName)
 
 	fmt.Fprintf(b, "var %s *sql.Stmt\n\n", psName)
-	fmt.Fprintf(b, "func %s(id string) (*%s.%s, error) {\n", funcName, def.Package, def.Name)
+	fmt.Fprintf(b, "func %s(id string) (*%s.%s, error) {\n", funcName, pkgName, def.Name)
 	fmt.Fprint(b, `
 	db, err := db()
 	if err != nil {
@@ -48,9 +48,9 @@ func SelectSingular(def structfinder.StructDefinition) string {
 
 `)
 
-	fmt.Fprintf(b, "\tvar x *%s.%s\n", def.Package, def.Name)
+	fmt.Fprintf(b, "\tvar x *%s.%s\n", pkgName, def.Name)
 	fmt.Fprint(b, "\tif rows.Next() {\n")
-	fmt.Fprintf(b, "\t\tx = new(%s.%s)\n", def.Package, def.Name)
+	fmt.Fprintf(b, "\t\tx = new(%s.%s)\n", pkgName, def.Name)
 	for _, member := range members {
 		if !member.SqlCompatible {
 			fmt.Fprintf(b, "\t\tvar x_%s []byte\n", member.Name)
@@ -98,7 +98,7 @@ func SelectSingular(def structfinder.StructDefinition) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func selectSingularSql(def structfinder.StructDefinition, members []GoSqlDatum) *bytes.Buffer {
+func selectSingularSql(def *extractor.StructDefinition, members []GoSqlDatum) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)

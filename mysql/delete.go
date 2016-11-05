@@ -3,11 +3,11 @@ package mysql
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/structfinder"
+	"github.com/jackmanlabs/codegen/extractor"
 	"github.com/serenize/snaker"
 )
 
-func Delete(def structfinder.StructDefinition) string {
+func Delete(def *extractor.StructDefinition) string {
 
 	members := getGoSqlData(def.Members)
 
@@ -55,7 +55,7 @@ func Delete(def structfinder.StructDefinition) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func deleteSql(def structfinder.StructDefinition, members []GoSqlDatum) *bytes.Buffer {
+func deleteSql(def *extractor.StructDefinition, members []GoSqlDatum) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)
