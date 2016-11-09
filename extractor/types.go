@@ -66,6 +66,8 @@ func (this *PackageDefinition) Visit(node ast.Node) ast.Visitor {
 		fmt.Print("*ast.Field\n")
 
 		sdef := this.Structs[len(this.Structs)-1]
+
+		// Handle embedded structs.
 		if len(t.Names) == 0 {
 			ast.Fprint(os.Stdout, this.Fset, t, nil)
 
