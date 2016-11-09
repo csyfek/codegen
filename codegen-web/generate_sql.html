@@ -1,88 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Generate SQL From Golang</title>
-    <style>
-        textarea,div {
-            margin: 0;
-            padding: 0;
-        }
-    </style>
-</head>
-<body>
-<form method="POST">
-    <div style="clear:both; width:33%; float:left;">
-        <label>Input:</label>
-        <br/>
-        <textarea style="width:100%;"
-                  rows="20"
-                  name="Input">{{.Input}}</textarea>
-        <br/>
-    </div>
-    <div style="width:33%; float:left;">
-        <label>Struct:</label><br/>
-        <select name="Struct"> {{range .Structs}}
-            <option {{if
-                    .Selected}}
-                    selected="selected"
-                    {{end}}
-                    value="{{.Name}}">{{.Name}}
-            </option>
-            {{end}} </select>
-        <br/>
-        <input type="submit"
-               value="Submit">
-    </div>
-</form>
-<div style="width:33%; float:left;">
-    <label>Errors:</label>
-    <br/>
-    <textarea style="width:100%;"
-              rows="20"
-              name="Errors">{{.Errors}}</textarea>
-</div>
-<div style="clear:both; width:33%; float:left;">
-    <label>Create:</label>
-    <br/>
-    <textarea style="width:100%;"
-              rows="20"
-              name="Create">{{.Create}}</textarea>
-</div>
-<div style="width:33%; float:left;">
-    <label>SelectSingular:</label>
-    <br/>
-    <textarea style="width:100%;"
-              rows="20"
-              name="SelectSingular">{{.SelectSingular}}</textarea>
-</div>
-<div style="width:33%; float:left;">
-    <label>SelectPlural:</label>
-    <br/>
-    <textarea style="width:100%;"
-              rows="20"
-              name="SelectPlural">{{.SelectPlural}}</textarea>
-</div>
-<div style="width:33%; float:left;">
-    <label>Insert:</label>
-    <br/>
-    <textarea style="width:100%;"
-              rows="20"
-              name="Insert">{{.Insert}}</textarea>
-</div>
-<div style="width:33%; float:left;">
-    <label>Update:</label>
-    <br/>
-    <textarea style="width:100%;"
-              rows="20"
-              name="Update">{{.Update}}</textarea>
-</div>
-<div style="width:33%; float:left;">
-    <label>Delete:</label>
-    <br/>
-    <textarea style="width:100%;"
-              rows="20"
-              name="Delete">{{.Delete}}</textarea>
-</div>
-</body>
+    <head>
+        <meta charset="UTF-8">
+        <title>Generate SQL From Golang</title>
+        <style>
+            textarea, div {
+                margin: 0;
+                padding: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <form method="POST">
+            <div style="clear:both; width:33%; float:left;">
+                <label>Input:</label>
+                <br/>
+                <textarea style="width:100%;" rows="20" name="Input">{{.Input}}</textarea>
+                <br/>
+            </div>
+            <div style="width:33%; float:left;">
+                <label>Struct:</label><br/>
+                <select name="Struct"> {{range .Structs}}
+                    <option {{if .Selected}} selected="selected" {{end}} value="{{.Name}}">
+                        {{.Name}}
+                    </option>
+                    {{end}} </select>
+                <br/>
+                <input type="submit" value="Submit">
+            </div>
+        </form>
+        <div style="width:33%; float:left;">
+            <label>Errors:</label>
+            <br/>
+            <textarea style="width:100%;" rows="20" name="Errors">{{.Errors}}</textarea>
+        </div>
+        <div style="clear:both; width:33%; float:left;">
+            <label>Create:</label>
+            <br/>
+            <textarea style="width:100%;" rows="20" name="Create">{{.Create}}</textarea>
+        </div>
+        <div style="width:33%; float:left;">
+            <label>SelectSingular:</label>
+            <br/>
+            <textarea style="width:100%;" rows="20" name="SelectSingular">{{.SelectSingular}}</textarea>
+        </div>
+        <div style="width:33%; float:left;">
+            <label>SelectPlural:</label>
+            <br/>
+            <textarea style="width:100%;" rows="20" name="SelectPlural">{{.SelectPlural}}</textarea>
+        </div>
+        <div style="width:33%; float:left;">
+            <label>Insert:</label>
+            <br/>
+            <textarea style="width:100%;" rows="20" name="Insert">{{.Insert}}</textarea>
+        </div>
+        <div style="width:33%; float:left;">
+            <label>Update:</label>
+            <br/>
+            <textarea style="width:100%;" rows="20" name="Update">{{.Update}}</textarea>
+        </div>
+        <div style="width:33%; float:left;">
+            <label>Delete:</label>
+            <br/>
+            <textarea style="width:100%;" rows="20" name="Delete">{{.Delete}}</textarea>
+        </div>
+    </body>
 </html>

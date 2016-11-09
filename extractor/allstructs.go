@@ -88,7 +88,7 @@ func getStructs(path string) ([]PackageDefinition, error) {
 
 	pkgDefs := make([]PackageDefinition, 0)
 	for _, pkg := range pkgs {
-		pkgDef := &PackageDefinition{fset: fset}
+		pkgDef := &PackageDefinition{Fset: fset}
 		ast.Walk(pkgDef, pkg)
 		pkgDefs = append(pkgDefs, *pkgDef)
 	}

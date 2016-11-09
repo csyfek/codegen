@@ -2,13 +2,11 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"github.com/jackmanlabs/bucket/jlog"
 	"github.com/jackmanlabs/codegen/extractor"
-	"github.com/jackmanlabs/codegen/mysql"
 	"github.com/jackmanlabs/errors"
 	"log"
 	"os"
-	"github.com/jackmanlabs/bucket/jlog"
 )
 
 func main() {
@@ -32,47 +30,48 @@ func main() {
 		os.Exit(1)
 	}
 
+	//_, err := extractor.PackageStructs(*pkgPath)
 	pkgs, err := extractor.PackageStructs(*pkgPath)
 	if err != nil {
 		log.Fatal(errors.Stack(err))
 	}
 
 	jlog.Log(pkgs)
-
-	for _, pkg := range pkgs {
-		for _, sdef := range pkg.Structs {
-			if *doSql {
-				fmt.Println("-- -----------------------------------------------------------------------------")
-				fmt.Println()
-				fmt.Println(mysql.Create(sdef))
-				fmt.Println()
-				//fmt.Println("-- -----------------------------------------------------------------------------")
-			}
-
-			if *doGolang {
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(mysql.SelectSingular(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(mysql.SelectPlural(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(mysql.Update(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(mysql.Insert(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(mysql.Delete(sdef))
-				fmt.Println()
-				//fmt.Println("/*============================================================================*/")
-			}
-		}
-	}
+	//
+	//for _, pkg := range pkgs {
+	//	for _, sdef := range pkg.Structs {
+	//		if *doSql {
+	//			fmt.Println("-- -----------------------------------------------------------------------------")
+	//			fmt.Println()
+	//			fmt.Println(mysql.Create(sdef))
+	//			fmt.Println()
+	//			//fmt.Println("-- -----------------------------------------------------------------------------")
+	//		}
+	//
+	//		if *doGolang {
+	//			fmt.Println("/*============================================================================*/")
+	//			fmt.Println()
+	//			fmt.Println(mysql.SelectSingular(pkg.Name, sdef))
+	//			fmt.Println()
+	//			fmt.Println("/*============================================================================*/")
+	//			fmt.Println()
+	//			fmt.Println(mysql.SelectPlural(pkg.Name, sdef))
+	//			fmt.Println()
+	//			fmt.Println("/*============================================================================*/")
+	//			fmt.Println()
+	//			fmt.Println(mysql.Update(pkg.Name, sdef))
+	//			fmt.Println()
+	//			fmt.Println("/*============================================================================*/")
+	//			fmt.Println()
+	//			fmt.Println(mysql.Insert(pkg.Name, sdef))
+	//			fmt.Println()
+	//			fmt.Println("/*============================================================================*/")
+	//			fmt.Println()
+	//			fmt.Println(mysql.Delete(sdef))
+	//			fmt.Println()
+	//			//fmt.Println("/*============================================================================*/")
+	//		}
+	//	}
+	//}
 
 }

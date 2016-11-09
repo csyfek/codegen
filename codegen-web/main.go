@@ -1,8 +1,10 @@
 package main
 
+//go:generate ./html2go.sh
+
 import (
-	"net/http"
 	"log"
+	"net/http"
 )
 
 func main() {

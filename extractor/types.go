@@ -1,8 +1,8 @@
 package extractor
 
 import (
+	"fmt"
 	"go/ast"
-	"go/printer"
 	"go/token"
 	"os"
 )
@@ -10,7 +10,7 @@ import (
 type StructDefinition struct {
 	Name            string
 	Members         []StructMemberDefinition
-	embeddedStructs []string
+	EmbeddedStructs []string
 }
 
 type StructMemberDefinition struct {
@@ -19,7 +19,7 @@ type StructMemberDefinition struct {
 }
 
 type PackageDefinition struct {
-	fset         *token.FileSet
+	Fset         *token.FileSet
 	Name         string
 	Structs      []*StructDefinition
 	Imports      []string
@@ -27,10 +27,17 @@ type PackageDefinition struct {
 }
 
 func (this *PackageDefinition) Visit(node ast.Node) ast.Visitor {
+
+	if this.Fset == nil {
+		fmt.Println("fset is nil.")
+		return nil
+	}
+
 	switch t := node.(type) {
 	case *ast.Package:
 		this.Name = t.Name
 	case *ast.FuncDecl:
+		// Ignore function declarations.
 		return nil
 	case *ast.StructType:
 		// push a new struct onto the slice.
@@ -56,18 +63,29 @@ func (this *PackageDefinition) Visit(node ast.Node) ast.Visitor {
 			this.pendingIdent = typeSpec.Name.String()
 		}
 	case *ast.Field:
-		sdef := this.Structs[len(this.Structs)-1]
+		fmt.Print("*ast.Field\n")
 
-		var member StructMemberDefinition
+		sdef := this.Structs[len(this.Structs)-1]
 		if len(t.Names) == 0 {
-			printer.Fprint(os.Stderr, this.fset, t)
+			ast.Fprint(os.Stdout, this.Fset, t, nil)
+
+			if sdef.EmbeddedStructs == nil {
+				sdef.EmbeddedStructs = make([]string, 0)
+			}
+			embeddedStruct := t.Type.(*ast.Ident).Name
+			sdef.EmbeddedStructs = append(sdef.EmbeddedStructs, embeddedStruct)
 			return nil
 		}
+
+		var member StructMemberDefinition
 		member.Name = t.Names[0].String()
 		member.Type = getExprType(t.Type)
 
 		sdef.Members = append(sdef.Members, member)
-	default:
+		return nil
+		//case nil:
+		//default:
+		//	fmt.Printf("unexpected type %T\n", t) // %T prints whatever type t has
 	}
 
 	return this
