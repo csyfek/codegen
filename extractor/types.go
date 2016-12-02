@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
-	"os"
 )
 
 type StructDefinition struct {
@@ -69,7 +68,7 @@ func (this *PackageDefinition) Visit(node ast.Node) ast.Visitor {
 
 		// Handle embedded structs.
 		if len(t.Names) == 0 {
-			ast.Fprint(os.Stdout, this.Fset, t, nil)
+			//ast.Fprint(os.Stdout, this.Fset, t, nil)
 
 			if sdef.EmbeddedStructs == nil {
 				sdef.EmbeddedStructs = make([]string, 0)

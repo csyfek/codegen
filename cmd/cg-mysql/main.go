@@ -37,6 +37,25 @@ func main() {
 	}
 
 	jlog.Log(pkgs)
+
+	// Prepare to flatten the structs for MySQL generation by making them addressable.
+
+
+	for _, pkg := range pkgs {
+
+		structMap := make(map[string]extractor.StructDefinition)
+
+		for _, s := range pkg.Structs{
+			structMap[s.Name] = s
+		}
+
+		
+
+
+	}
+
+
+
 	//
 	//for _, pkg := range pkgs {
 	//	for _, sdef := range pkg.Structs {
