@@ -1,7 +1,6 @@
 package extractor
 
 import (
-	"fmt"
 	"go/ast"
 	"go/token"
 )
@@ -10,6 +9,16 @@ type StructDefinition struct {
 	Name            string
 	Members         []StructMemberDefinition
 	EmbeddedStructs []string
+}
+
+func (this *StructDefinition) ContainsMember(name string) bool {
+	for _, member := range this.Members {
+		if member.Name == name {
+			return true
+		}
+	}
+
+	return false
 }
 
 type StructMemberDefinition struct {
@@ -28,7 +37,7 @@ type PackageDefinition struct {
 func (this *PackageDefinition) Visit(node ast.Node) ast.Visitor {
 
 	if this.Fset == nil {
-		fmt.Println("fset is nil.")
+		//fmt.Println("fset is nil.")
 		return nil
 	}
 
@@ -62,7 +71,7 @@ func (this *PackageDefinition) Visit(node ast.Node) ast.Visitor {
 			this.pendingIdent = typeSpec.Name.String()
 		}
 	case *ast.Field:
-		fmt.Print("*ast.Field\n")
+		//fmt.Print("*ast.Field\n")
 
 		sdef := this.Structs[len(this.Structs)-1]
 

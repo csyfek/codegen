@@ -105,7 +105,7 @@ func SelectPlural(pkgName string, def *extractor.StructDefinition) string {
 func selectPluralSql(pkgName string, def *extractor.StructDefinition, members []GoSqlDatum) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
-	tableName := snaker.CamelToSnake(pkgName)
+	tableName := snaker.CamelToSnake(def.Name)
 
 	var firstField GoSqlDatum
 	if len(members) > 0 {

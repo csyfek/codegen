@@ -2,8 +2,9 @@ package main
 
 import (
 	"flag"
-	"github.com/jackmanlabs/bucket/jlog"
+	"fmt"
 	"github.com/jackmanlabs/codegen/extractor"
+	"github.com/jackmanlabs/codegen/mysql"
 	"github.com/jackmanlabs/errors"
 	"log"
 	"os"
@@ -36,61 +37,71 @@ func main() {
 		log.Fatal(errors.Stack(err))
 	}
 
-	jlog.Log(pkgs)
-
-	// Prepare to flatten the structs for MySQL generation by making them addressable.
+	//jlog.Log(pkgs)
 
 
 	for _, pkg := range pkgs {
 
-		structMap := make(map[string]extractor.StructDefinition)
+		structMap := make(map[string]*extractor.StructDefinition)
 
-		for _, s := range pkg.Structs{
+		// Prepare to flatten the structs for MySQL generation by making them addressable.
+		for _, s := range pkg.Structs {
 			structMap[s.Name] = s
 		}
 
-		
-
-
+		// Merge the embedded structs into the parent structs.
+		for _, parentStruct := range pkg.Structs {
+			for _, embeddedStructName := range parentStruct.EmbeddedStructs {
+				embeddedStruct := structMap[embeddedStructName]
+				mergeStructs(parentStruct, embeddedStruct)
+			}
+		}
 	}
 
+	//jlog.Log(pkgs)
 
+	for _, pkg := range pkgs {
+		for _, sdef := range pkg.Structs {
+			if *doSql {
+				fmt.Println("-- -----------------------------------------------------------------------------")
+				fmt.Println()
+				fmt.Println(mysql.Create(sdef))
+				fmt.Println()
+				//fmt.Println("-- -----------------------------------------------------------------------------")
+			}
 
-	//
-	//for _, pkg := range pkgs {
-	//	for _, sdef := range pkg.Structs {
-	//		if *doSql {
-	//			fmt.Println("-- -----------------------------------------------------------------------------")
-	//			fmt.Println()
-	//			fmt.Println(mysql.Create(sdef))
-	//			fmt.Println()
-	//			//fmt.Println("-- -----------------------------------------------------------------------------")
-	//		}
-	//
-	//		if *doGolang {
-	//			fmt.Println("/*============================================================================*/")
-	//			fmt.Println()
-	//			fmt.Println(mysql.SelectSingular(pkg.Name, sdef))
-	//			fmt.Println()
-	//			fmt.Println("/*============================================================================*/")
-	//			fmt.Println()
-	//			fmt.Println(mysql.SelectPlural(pkg.Name, sdef))
-	//			fmt.Println()
-	//			fmt.Println("/*============================================================================*/")
-	//			fmt.Println()
-	//			fmt.Println(mysql.Update(pkg.Name, sdef))
-	//			fmt.Println()
-	//			fmt.Println("/*============================================================================*/")
-	//			fmt.Println()
-	//			fmt.Println(mysql.Insert(pkg.Name, sdef))
-	//			fmt.Println()
-	//			fmt.Println("/*============================================================================*/")
-	//			fmt.Println()
-	//			fmt.Println(mysql.Delete(sdef))
-	//			fmt.Println()
-	//			//fmt.Println("/*============================================================================*/")
-	//		}
-	//	}
-	//}
+			if *doGolang {
+				fmt.Println("/*============================================================================*/")
+				fmt.Println()
+				fmt.Println(mysql.SelectSingular(pkg.Name, sdef))
+				fmt.Println()
+				fmt.Println("/*============================================================================*/")
+				fmt.Println()
+				fmt.Println(mysql.SelectPlural(pkg.Name, sdef))
+				fmt.Println()
+				fmt.Println("/*============================================================================*/")
+				fmt.Println()
+				fmt.Println(mysql.Update(pkg.Name, sdef))
+				fmt.Println()
+				fmt.Println("/*============================================================================*/")
+				fmt.Println()
+				fmt.Println(mysql.Insert(pkg.Name, sdef))
+				fmt.Println()
+				fmt.Println("/*============================================================================*/")
+				fmt.Println()
+				fmt.Println(mysql.Delete(sdef))
+				fmt.Println()
+				//fmt.Println("/*============================================================================*/")
+			}
+		}
+	}
+}
 
+func mergeStructs(dst, src *extractor.StructDefinition) {
+	for _, srcMember := range src.Members {
+		exists := dst.ContainsMember(srcMember.Name)
+		if !exists {
+			dst.Members = append(dst.Members, srcMember)
+		}
+	}
 }
