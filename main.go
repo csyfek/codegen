@@ -77,6 +77,12 @@ func main() {
 		fmt.Println(`
 package main
 
+import (
+	"database/sql"
+	"encoding/json"
+	"github.com/jackmanlabs/errors"
+)
+
 func db() (*sql.DB, error) {
 	return &sql.DB{}, nil
 }
