@@ -1,7 +1,7 @@
 package pg
 
 import (
-	"github.com/jackmanlabs/codegen/structfinder"
+	"github.com/jackmanlabs/codegen/extractor"
 	"github.com/serenize/snaker"
 )
 
@@ -35,13 +35,13 @@ func getSqlType(goType string) (sqlType string, sqlCompatible bool) {
 }
 
 type GoSqlDatum struct {
-	structfinder.StructMemberDefinition
+	extractor.StructMemberDefinition
 	SqlCompatible bool
 	SqlType       string
 	SqlName       string
 }
 
-func getGoSqlData(structMembers []structfinder.StructMemberDefinition) []GoSqlDatum {
+func getGoSqlData(structMembers []extractor.StructMemberDefinition) []GoSqlDatum {
 	members := make([]GoSqlDatum, 0)
 	for _, member_ := range structMembers {
 		sqlType, compatible := getSqlType(member_.Type)

@@ -3,11 +3,11 @@ package pg
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/structfinder"
+	"github.com/jackmanlabs/codegen/extractor"
 	"github.com/serenize/snaker"
 )
 
-func Update(def structfinder.StructDefinition) string {
+func Update(pkgName string, def *extractor.StructDefinition) string {
 
 	members := getGoSqlData(def.Members)
 
@@ -18,7 +18,7 @@ func Update(def structfinder.StructDefinition) string {
 	psName := fmt.Sprintf("ps_%s", funcName)
 
 	fmt.Fprintf(b, "var %s *sql.Stmt\n\n", psName)
-	fmt.Fprintf(b, "func %s(x *%s.%s) error {\n", funcName, def.Package, def.Name)
+	fmt.Fprintf(b, "func %s(x *%s.%s) error {\n", funcName, pkgName, def.Name)
 	fmt.Fprint(b, `
 	db, err := db()
 	if err != nil {
@@ -85,9 +85,70 @@ func Update(def structfinder.StructDefinition) string {
 	return b.String()
 }
 
+func UpdateTx(pkgName string, def *extractor.StructDefinition) string {
+
+	members := getGoSqlData(def.Members)
+
+	b := bytes.NewBuffer(nil)
+	b_sql := updateSql(def, members)
+
+	funcName := fmt.Sprintf("Update%s", def.Name)
+
+	fmt.Fprintf(b, "func %s(x *%s.%s) error {\n", funcName, pkgName, def.Name)
+	fmt.Fprint(b, "var err error\n")
+	fmt.Fprint(b, "\t\tq := `\n")
+	fmt.Fprintf(b, "%s", b_sql.Bytes())
+	fmt.Fprint(b, "`\n\n")
+
+	for _, member := range members {
+		if !member.SqlCompatible {
+			fmt.Fprintf(b, "\tvar x_%s []byte\n", member.Name)
+		}
+	}
+	fmt.Fprint(b, "\n")
+
+	for _, member := range members {
+		if !member.SqlCompatible {
+			fmt.Fprintf(b, "\tx_%s, err = json.Marshal(x.%s)", member.Name, member.Name)
+			fmt.Fprint(b, `
+	if err != nil {
+		return errors.Stack(err)
+	}
+
+`)
+		}
+	}
+
+	fmt.Fprint(b, "\targs := []interface{}{\n")
+	for _, member := range members {
+		if member.SqlCompatible {
+			fmt.Fprintf(b, "\t\t&x.%s,\n", member.Name)
+		} else {
+			fmt.Fprintf(b, "\t\t&x_%s,\n", member.Name)
+		}
+	}
+	if len(members) > 0 {
+		fmt.Fprintf(b, "\t\t&x.%s,\n", members[0].Name)
+	}
+	fmt.Fprint(b, "\t}\n\n")
+
+	fmt.Fprint(b, "\t_, err = tx.Exec(q, args...)")
+	fmt.Fprint(b, `
+	if err != nil {
+		return errors.Stack(err)
+	}
+
+`)
+
+	fmt.Fprint(b, "\treturn nil\n")
+	fmt.Fprint(b, "}\n") // end of function
+
+	return b.String()
+}
+
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func updateSql(def structfinder.StructDefinition, members []GoSqlDatum) *bytes.Buffer {
+func updateSql(def *extractor.StructDefinition, members []GoSqlDatum) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)

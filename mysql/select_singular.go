@@ -96,6 +96,78 @@ func SelectSingular(pkgName string, def *extractor.StructDefinition) string {
 	return b.String()
 }
 
+func SelectSingularTx(pkgName string, def *extractor.StructDefinition) string {
+
+	members := getGoSqlData(def.Members)
+
+	b := bytes.NewBuffer(nil)
+	b_sql := selectSingularSql(def, members)
+
+	funcName := fmt.Sprintf("Get%sTx", def.Name)
+
+	fmt.Fprintf(b, "func %s(tx *sql.Tx, id string) (*%s.%s, error) {\n", funcName, pkgName, def.Name)
+	fmt.Fprint(b, "\t\tq := `\n")
+	fmt.Fprintf(b, "%s", b_sql.Bytes())
+	fmt.Fprint(b, "`\n\n")
+
+	fmt.Fprint(b, "\targs := []interface{}{id}\n\n")
+	fmt.Fprint(b, "\trows, err := tx.Query(q, args...)")
+	fmt.Fprint(b, `
+	if err != nil {
+		return nil, errors.Stack(err)
+	}
+	defer rows.Close()
+
+`)
+
+	fmt.Fprintf(b, "\tvar x *%s.%s\n", pkgName, def.Name)
+	fmt.Fprint(b, "\tif rows.Next() {\n")
+	fmt.Fprintf(b, "\t\tx = new(%s.%s)\n", pkgName, def.Name)
+	for _, member := range members {
+		if !member.SqlCompatible {
+			fmt.Fprintf(b, "\t\tvar x_%s []byte\n", member.Name)
+		}
+	}
+
+	fmt.Fprint(b, "\t\ttargets := []interface{}{\n")
+	for _, member := range members {
+		if member.SqlCompatible {
+			fmt.Fprintf(b, "\t\t\t&x.%s,\n", member.Name)
+		} else {
+			fmt.Fprintf(b, "\t\t\t&x_%s,\n", member.Name)
+		}
+	}
+
+	fmt.Fprint(b, "\t\t}\n") // end of targets declaration.
+	fmt.Fprint(b, `
+		err = rows.Scan(targets...)
+		if err != nil {
+			return x, errors.Stack(err)
+		}
+
+`)
+
+	for _, member := range members {
+		if !member.SqlCompatible {
+			fmt.Fprintf(b, "\t\terr = json.Unmarshal(x_%s, &x.%s)", member.Name, member.Name)
+			fmt.Fprint(b, `
+		if err != nil {
+			return x, errors.Stack(err)
+		}
+
+`)
+		}
+	}
+
+	fmt.Fprint(b, "\t}\n\n") // end of scan clause.
+	fmt.Fprint(b, "\t// nil is returned if no data was present.\n")
+	fmt.Fprint(b, "\treturn x, nil\n")
+
+	fmt.Fprint(b, "}\n") // end of function
+
+	return b.String()
+}
+
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
 func selectSingularSql(def *extractor.StructDefinition, members []GoSqlDatum) *bytes.Buffer {

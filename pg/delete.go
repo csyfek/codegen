@@ -3,11 +3,11 @@ package pg
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/structfinder"
+	"github.com/jackmanlabs/codegen/extractor"
 	"github.com/serenize/snaker"
 )
 
-func Delete(def structfinder.StructDefinition) string {
+func Delete(def *extractor.StructDefinition) string {
 
 	members := getGoSqlData(def.Members)
 
@@ -53,9 +53,38 @@ func Delete(def structfinder.StructDefinition) string {
 	return b.String()
 }
 
+func DeleteTx(def *extractor.StructDefinition) string {
+
+	members := getGoSqlData(def.Members)
+
+	b := bytes.NewBuffer(nil)
+	b_sql := deleteSql(def, members)
+
+	funcName := fmt.Sprintf("Delete%s", def.Name)
+
+	fmt.Fprintf(b, "func %s(id string) error {\n", funcName)
+	fmt.Fprint(b, "\t\tq := `\n")
+	fmt.Fprintf(b, "%s", b_sql.Bytes())
+	fmt.Fprint(b, "`\n\n")
+
+	fmt.Fprint(b, "\targs := []interface{}{id}\n\n")
+	fmt.Fprint(b, "\t_, err := tx.Exec(q, args...)")
+	fmt.Fprint(b, `
+	if err != nil {
+		return errors.Stack(err)
+	}
+
+`)
+
+	fmt.Fprint(b, "\treturn nil\n")
+	fmt.Fprint(b, "}\n") // end of function
+
+	return b.String()
+}
+
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func deleteSql(def structfinder.StructDefinition, members []GoSqlDatum) *bytes.Buffer {
+func deleteSql(def *extractor.StructDefinition, members []GoSqlDatum) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)
