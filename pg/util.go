@@ -17,6 +17,8 @@ func getSqlType(goType string) (sqlType string, sqlCompatible bool) {
 		return "DOUBLE PRECISION", true
 	case "time.Time":
 		return "TIMESTAMP", true
+	case "time.Duration":
+		return "BIGINT", true
 	case "int64":
 		return "BIGINT", true
 	case "int32":
