@@ -72,22 +72,14 @@ func main() {
 
 	//jlog.Log(pkgs)
 
-	if *doGolang{
-		// This makes it so that the syntax checker kicks in.
-		fmt.Println(`
-package main
-
-import (
-	"database/sql"
-	"encoding/json"
-	"github.com/jackmanlabs/errors"
-)
-
-func db() (*sql.DB, error) {
-	return &sql.DB{}, nil
-}
-
-`)
+	if *doGolang {
+		if *doPg{
+			fmt.Println(pg.Baseline())
+			fmt.Println()
+		}else if *doMy{
+			fmt.Println(mysql.Baseline())
+			fmt.Println()
+		}
 	}
 
 	for _, pkg := range pkgs {
@@ -178,6 +170,14 @@ func db() (*sql.DB, error) {
 				fmt.Println("/*============================================================================*/")
 				fmt.Println()
 				fmt.Println(mysql.UpdateTx(pkg.Name, sdef))
+				fmt.Println()
+				fmt.Println("/*============================================================================*/")
+				fmt.Println()
+				fmt.Println(mysql.UpdatePlural(pkg.Name, sdef))
+				fmt.Println()
+				fmt.Println("/*============================================================================*/")
+				fmt.Println()
+				fmt.Println(mysql.UpdatePluralTx(pkg.Name, sdef))
 				fmt.Println()
 				fmt.Println("/*============================================================================*/")
 				fmt.Println()
