@@ -101,7 +101,7 @@ func SelectSingularTx(pkgName string, def *extractor.StructDefinition) string {
 	members := getGoSqlData(def.Members)
 
 	b := bytes.NewBuffer(nil)
-	b_sql := selectSingularSql(def, members)
+	b_sql := selectSingularSqlTx(def, members)
 
 	funcName := fmt.Sprintf("get%sTx", def.Name)
 
@@ -190,7 +190,38 @@ func selectSingularSql(def *extractor.StructDefinition, members []GoSqlDatum) *b
 		}
 	}
 	fmt.Fprintf(b, "FROM %s\n", tableName)
-	fmt.Fprintf(b, "WHERE %s.%s = ?;\n", tableName, firstField.SqlName)
+	fmt.Fprintf(b, "WHERE %s.%s = ?\n", tableName, firstField.SqlName)
+	fmt.Fprint(b, "LIMIT 1;\n")
 
 	return b
 }
+
+// SELECT for transactions require some slight changes.
+func selectSingularSqlTx(def *extractor.StructDefinition, members []GoSqlDatum) *bytes.Buffer {
+
+	b := bytes.NewBuffer(nil)
+	tableName := snaker.CamelToSnake(def.Name)
+
+	var firstField GoSqlDatum
+	if len(members) > 0 {
+		firstField = members[0]
+	}
+
+	fmt.Fprint(b, "SELECT\n")
+	for idx, member := range members {
+		if idx == len(def.Members)-1 {
+			fmt.Fprintf(b, "\t%s.%s\n", tableName, member.SqlName)
+		} else {
+			// Note the trailing comma.
+			fmt.Fprintf(b, "\t%s.%s,\n", tableName, member.SqlName)
+		}
+	}
+	fmt.Fprintf(b, "FROM %s\n", tableName)
+	fmt.Fprintf(b, "WHERE %s.%s = ?\n", tableName, firstField.SqlName)
+	fmt.Fprint(b, "LIMIT 1\n")
+	fmt.Fprint(b, "FOR UPDATE;\n")
+
+	return b
+}
+
+

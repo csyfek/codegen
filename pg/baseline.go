@@ -1,5 +1,7 @@
 package pg
 
+// TODO: Supprt https://github.com/jackc/pgx
+
 func Baseline() string {
 	return `
 package main

@@ -103,9 +103,9 @@ func SelectSingularTx(pkgName string, def *extractor.StructDefinition) string {
 	b := bytes.NewBuffer(nil)
 	b_sql := selectSingularSql(def, members)
 
-	funcName := fmt.Sprintf("Get%s", def.Name)
+	funcName := fmt.Sprintf("Get%sTx", def.Name)
 
-	fmt.Fprintf(b, "func %s(id string) (*%s.%s, error) {\n", funcName, pkgName, def.Name)
+	fmt.Fprintf(b, "func %s(tx *sql.Tx, id string) (*%s.%s, error) {\n", funcName, pkgName, def.Name)
 	fmt.Fprint(b, "\t\tq := `\n")
 	fmt.Fprintf(b, "%s", b_sql.Bytes())
 	fmt.Fprint(b, "`\n\n")
@@ -190,7 +190,9 @@ func selectSingularSql(def *extractor.StructDefinition, members []GoSqlDatum) *b
 		}
 	}
 	fmt.Fprintf(b, "FROM %s\n", tableName)
-	fmt.Fprintf(b, "WHERE %s.%s = $1;\n", tableName, firstField.SqlName)
+	fmt.Fprintf(b, "WHERE %s.%s = $1\n", tableName, firstField.SqlName)
+	fmt.Fprint(b, "LIMIT 1;\n")
 
 	return b
 }
+

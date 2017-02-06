@@ -108,7 +108,7 @@ func SelectPluralTx(pkgName string, def *extractor.StructDefinition) string {
 	members := getGoSqlData(def.Members)
 
 	b := bytes.NewBuffer(nil)
-	b_sql := selectPluralSql(pkgName, def, members)
+	b_sql := selectPluralSqlTx(pkgName, def, members)
 
 	funcName := fmt.Sprintf("get%ssTx", def.Name)
 
@@ -116,17 +116,16 @@ func SelectPluralTx(pkgName string, def *extractor.StructDefinition) string {
 
 	fmt.Fprint(b, "\t\tq := `\n")
 	fmt.Fprintf(b, "%s", b_sql.Bytes())
-	fmt.Fprint(b, "`\n\n")
+	fmt.Fprint(b, "`") // backtick needs to be in double quotes.
 
 	fmt.Fprint(b, `
+
 	args := []interface{}{
 		// If you add a filter criteria, insert it here:
 		// filter,
 	}
 
-	`)
-	fmt.Fprint(b, "\trows, err := tx.Query(q, args...)")
-	fmt.Fprint(b, `
+	rows, err := tx.Query(q, args...)
 	if err != nil {
 		return nil, errors.Stack(err)
 	}
@@ -152,8 +151,9 @@ func SelectPluralTx(pkgName string, def *extractor.StructDefinition) string {
 		}
 	}
 
-	fmt.Fprint(b, "\t\t}\n") // end of targets declaration.
 	fmt.Fprint(b, `
+		} // end of targets declaration.
+
 		err = rows.Scan(targets...)
 		if err != nil {
 			return z, errors.Stack(err)
@@ -173,13 +173,14 @@ func SelectPluralTx(pkgName string, def *extractor.StructDefinition) string {
 		}
 	}
 
-	fmt.Fprint(b, "\t\tz = append(z, x)\n")
-	fmt.Fprint(b, "\t}\n\n") // end of scan clause.
-	fmt.Fprint(b, "\t// empty slice is returned if no data was present.\n")
-	fmt.Fprint(b, "\treturn z, nil\n")
+	fmt.Fprint(b,`
+		z = append(z, x)
+	} // end of scan clause.
 
-	fmt.Fprint(b, "}\n") // end of function
-
+	// empty slice is returned if no data was present.
+	return z, nil
+}
+`)
 	return b.String()
 }
 
@@ -205,3 +206,28 @@ func selectPluralSql(pkgName string, def *extractor.StructDefinition, members []
 
 	return b
 }
+
+// SELECT for transactions require some slight changes.
+func selectPluralSqlTx(pkgName string, def *extractor.StructDefinition, members []GoSqlDatum) *bytes.Buffer {
+
+	b := bytes.NewBuffer(nil)
+	tableName := snaker.CamelToSnake(def.Name)
+
+	fmt.Fprint(b, "SELECT\n")
+	for idx, member := range members {
+		if idx == len(def.Members)-1 {
+			fmt.Fprintf(b, "\t%s.%s\n", tableName, member.SqlName)
+		} else {
+			// Note the trailing comma.
+			fmt.Fprintf(b, "\t%s.%s,\n", tableName, member.SqlName)
+		}
+	}
+	fmt.Fprintf(b, "FROM %s\n", tableName)
+	fmt.Fprint(b, "-- Update your filter criteria here:\n")
+	fmt.Fprintf(b, "-- WHERE %s.filter = ?\n", tableName)
+	fmt.Fprint(b, "LIMIT 1\n")
+	fmt.Fprint(b, "FOR UPDATE;\n")
+
+	return b
+}
+

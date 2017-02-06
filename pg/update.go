@@ -92,9 +92,9 @@ func UpdateTx(pkgName string, def *extractor.StructDefinition) string {
 	b := bytes.NewBuffer(nil)
 	b_sql := updateSql(def, members)
 
-	funcName := fmt.Sprintf("Update%s", def.Name)
+	funcName := fmt.Sprintf("Update%sTx", def.Name)
 
-	fmt.Fprintf(b, "func %s(x *%s.%s) error {\n", funcName, pkgName, def.Name)
+	fmt.Fprintf(b, "func %s(tx *sql.Tx, x *%s.%s) error {\n", funcName, pkgName, def.Name)
 	fmt.Fprint(b, "var err error\n")
 	fmt.Fprint(b, "\t\tq := `\n")
 	fmt.Fprintf(b, "%s", b_sql.Bytes())

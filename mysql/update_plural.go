@@ -15,7 +15,7 @@ func UpdatePlural(pkgName string, def *extractor.StructDefinition) string {
 	)
 
 	fmt.Fprintf(b, "func %s(z []%s.%s) error {\n", funcName, pkgName, def.Name)
-	fmt.Fprint(b, `var err error
+	fmt.Fprint(b, `
 
 	tx, err := tx()
 	if err != nil{
@@ -52,7 +52,7 @@ func UpdatePluralTx(pkgName string, def *extractor.StructDefinition) string {
 	)
 
 	fmt.Fprintf(b, "func %s(tx *sql.Tx, z []%s.%s) error {\n", funcName, pkgName, def.Name)
-	fmt.Fprint(b, `var err error
+	fmt.Fprint(b, `
 
 	for _, x := range z {
 `)

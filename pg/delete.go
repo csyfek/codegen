@@ -60,9 +60,9 @@ func DeleteTx(def *extractor.StructDefinition) string {
 	b := bytes.NewBuffer(nil)
 	b_sql := deleteSql(def, members)
 
-	funcName := fmt.Sprintf("Delete%s", def.Name)
+	funcName := fmt.Sprintf("Delete%sTx", def.Name)
 
-	fmt.Fprintf(b, "func %s(id string) error {\n", funcName)
+	fmt.Fprintf(b, "func %s(tx *sql.Tx, id string) error {\n", funcName)
 	fmt.Fprint(b, "\t\tq := `\n")
 	fmt.Fprintf(b, "%s", b_sql.Bytes())
 	fmt.Fprint(b, "`\n\n")

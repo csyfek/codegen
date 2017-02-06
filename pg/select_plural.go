@@ -104,9 +104,9 @@ func SelectPluralTx(pkgName string, def *extractor.StructDefinition) string {
 	b := bytes.NewBuffer(nil)
 	b_sql := selectPluralSql(def, members)
 
-	funcName := fmt.Sprintf("Get%ss", def.Name)
+	funcName := fmt.Sprintf("Get%ssTx", def.Name)
 
-	fmt.Fprintf(b, "func %s() ([]%s.%s, error) {\n", funcName, pkgName, def.Name)
+	fmt.Fprintf(b, "func %s(tx *sql.Tx) ([]%s.%s, error) {\n", funcName, pkgName, def.Name)
 
 	fmt.Fprint(b, "\t\tq := `\n")
 	fmt.Fprintf(b, "%s", b_sql.Bytes())
