@@ -14,10 +14,10 @@ import (
 func main() {
 	var (
 		doGolang *bool   = flag.Bool("go", false, "Generate Go code.")
+		doSql    *bool   = flag.Bool("sql", false, "Generate SQL code.")
 		doMy     *bool   = flag.Bool("my", false, "Use the MySQL dialect (default).")
 		doPg     *bool   = flag.Bool("pg", false, "Use the PostgreSQL dialect.")
-		doSql    *bool   = flag.Bool("sql", false, "Generate SQL code.")
-		pkgPath  *string = flag.String("pkg", "", "The file that you want to analyze.")
+		pkgPath  *string = flag.String("pkg", "", "The package that you want to use for source material.")
 	)
 
 	flag.Parse()
@@ -50,7 +50,6 @@ func main() {
 		log.Fatal(errors.Stack(err))
 	}
 
-	//jlog.Log(pkgs)
 
 	for _, pkg := range pkgs {
 
@@ -70,7 +69,6 @@ func main() {
 		}
 	}
 
-	//jlog.Log(pkgs)
 
 	if *doGolang {
 		if *doPg{
