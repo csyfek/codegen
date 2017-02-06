@@ -9,7 +9,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/jackmanlabs/agame/types"
 	"github.com/jackmanlabs/errors"
 	"sync"
 )
