@@ -6,6 +6,7 @@ import (
 	"github.com/jackmanlabs/codegen/extractor"
 	"github.com/jackmanlabs/codegen/mysql"
 	"github.com/jackmanlabs/codegen/pg"
+	"github.com/jackmanlabs/codegen/sqlite"
 	"github.com/jackmanlabs/errors"
 	"log"
 	"os"
@@ -15,7 +16,8 @@ func main() {
 	var (
 		doGolang *bool   = flag.Bool("go", false, "Generate Go code.")
 		doSql    *bool   = flag.Bool("sql", false, "Generate SQL code.")
-		doMy     *bool   = flag.Bool("my", false, "Use the MySQL dialect (default).")
+		doSqlite *bool   = flag.Bool("sqlite", false, "Use the MySQL dialect (default).")
+		doMysql  *bool   = flag.Bool("mysql", false, "Use the MySQL dialect (default).")
 		doPg     *bool   = flag.Bool("pg", false, "Use the PostgreSQL dialect.")
 		pkgPath  *string = flag.String("pkg", "", "The package that you want to use for source material.")
 	)
@@ -34,14 +36,25 @@ func main() {
 		os.Exit(1)
 	}
 
-	if *doMy && *doPg {
+	sqlCount := 0
+	if *doMysql {
+		sqlCount++
+	}
+	if *doSqlite {
+		sqlCount++
+	}
+	if *doPg {
+		sqlCount++
+	}
+
+	if sqlCount > 1 {
 		log.Println("You must choose only one SQL dialect.")
 		flag.Usage()
 		os.Exit(1)
 	}
 
-	if !*doMy && !*doPg {
-		*doMy = true
+	if sqlCount == 0 {
+		*doMysql = true
 	}
 
 	//_, err := extractor.PackageStructs(*pkgPath)
@@ -49,7 +62,6 @@ func main() {
 	if err != nil {
 		log.Fatal(errors.Stack(err))
 	}
-
 
 	for _, pkg := range pkgs {
 
@@ -69,20 +81,22 @@ func main() {
 		}
 	}
 
-
 	if *doGolang {
-		if *doPg{
+		if *doPg {
 			fmt.Println(pg.Baseline())
 			fmt.Println()
-		}else if *doMy{
+		} else if *doMysql {
 			fmt.Println(mysql.Baseline())
+			fmt.Println()
+		} else if *doSqlite {
+			fmt.Println(sqlite.Baseline())
 			fmt.Println()
 		}
 	}
 
 	for _, pkg := range pkgs {
 		for _, sdef := range pkg.Structs {
-			if *doSql && *doMy {
+			if *doSql && *doMysql {
 				fmt.Println("-- -----------------------------------------------------------------------------")
 				fmt.Println()
 				fmt.Println(mysql.Create(sdef))
@@ -98,7 +112,13 @@ func main() {
 				//fmt.Println("-- -----------------------------------------------------------------------------")
 			}
 
-
+			if *doSql && *doSqlite {
+				fmt.Println("-- -----------------------------------------------------------------------------")
+				fmt.Println()
+				fmt.Println(sqlite.Create(sdef))
+				fmt.Println()
+				//fmt.Println("-- -----------------------------------------------------------------------------")
+			}
 
 			if *doGolang && *doPg {
 				fmt.Println("/*============================================================================*/")
@@ -144,7 +164,7 @@ func main() {
 				//fmt.Println("/*============================================================================*/")
 			}
 
-			if *doGolang && *doMy {
+			if *doGolang && *doMysql {
 				fmt.Println("/*============================================================================*/")
 				fmt.Println()
 				fmt.Println(mysql.SelectSingular(pkg.Name, sdef))
@@ -192,6 +212,50 @@ func main() {
 				fmt.Println("/*============================================================================*/")
 				fmt.Println()
 				fmt.Println(mysql.DeleteTx(sdef))
+				fmt.Println()
+				//fmt.Println("/*============================================================================*/")
+			}
+
+			if *doGolang && *doSqlite {
+				fmt.Println("/*============================================================================*/")
+				fmt.Println()
+				fmt.Println(sqlite.SelectSingular(pkg.Name, sdef))
+				fmt.Println()
+				fmt.Println("/*============================================================================*/")
+				fmt.Println()
+				fmt.Println(sqlite.SelectSingularTx(pkg.Name, sdef))
+				fmt.Println()
+				fmt.Println("/*============================================================================*/")
+				fmt.Println()
+				fmt.Println(sqlite.SelectPlural(pkg.Name, sdef))
+				fmt.Println()
+				fmt.Println("/*============================================================================*/")
+				fmt.Println()
+				fmt.Println(sqlite.SelectPluralTx(pkg.Name, sdef))
+				fmt.Println()
+				fmt.Println("/*============================================================================*/")
+				fmt.Println()
+				fmt.Println(sqlite.Update(pkg.Name, sdef))
+				fmt.Println()
+				fmt.Println("/*============================================================================*/")
+				fmt.Println()
+				fmt.Println(sqlite.UpdateTx(pkg.Name, sdef))
+				fmt.Println()
+				fmt.Println("/*============================================================================*/")
+				fmt.Println()
+				fmt.Println(sqlite.Insert(pkg.Name, sdef))
+				fmt.Println()
+				fmt.Println("/*============================================================================*/")
+				fmt.Println()
+				fmt.Println(sqlite.InsertTx(pkg.Name, sdef))
+				fmt.Println()
+				fmt.Println("/*============================================================================*/")
+				fmt.Println()
+				fmt.Println(sqlite.Delete(sdef))
+				fmt.Println()
+				fmt.Println("/*============================================================================*/")
+				fmt.Println()
+				fmt.Println(sqlite.DeleteTx(sdef))
 				fmt.Println()
 				//fmt.Println("/*============================================================================*/")
 			}
