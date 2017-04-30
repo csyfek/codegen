@@ -11,7 +11,7 @@ func UpdatePlural(pkgName string, def *extractor.StructDefinition) string {
 	var (
 		b             = bytes.NewBuffer(nil)
 		funcName      = fmt.Sprintf("Update%ss", def.Name)
-		funcNameSlave = fmt.Sprintf("update%sTx", def.Name)
+		funcNameSlave = fmt.Sprintf("Update%sTx", def.Name)
 	)
 
 	fmt.Fprintf(b, "func %s(z []%s.%s) error {\n", funcName, pkgName, def.Name)
@@ -48,7 +48,7 @@ func UpdatePluralTx(pkgName string, def *extractor.StructDefinition) string {
 	var (
 		b             = bytes.NewBuffer(nil)
 		funcName      = fmt.Sprintf("Update%ssTx", def.Name)
-		funcNameSlave = fmt.Sprintf("update%sTx", def.Name)
+		funcNameSlave = fmt.Sprintf("Update%sTx", def.Name)
 	)
 
 	fmt.Fprintf(b, "func %s(tx *sql.Tx, z []%s.%s) error {\n", funcName, pkgName, def.Name)
