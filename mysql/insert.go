@@ -91,7 +91,7 @@ func InsertTx(pkgName string, def *extractor.StructDefinition) string {
 	b := bytes.NewBuffer(nil)
 	b_sql := insertSql(def, members)
 
-	funcName := fmt.Sprintf("insert%sTx", def.Name)
+	funcName := fmt.Sprintf("Insert%sTx", def.Name)
 
 	fmt.Fprintf(b, "func %s(tx *sql.Tx, x *%s.%s) error {\n", funcName, pkgName, def.Name)
 	fmt.Fprint(b, "var err error\n")
