@@ -12,53 +12,106 @@ import (
 	"os"
 )
 
+var (
+	pkgPath string
+)
+
 func main() {
 	var (
-		doGolang *bool   = flag.Bool("go", false, "Generate Go code.")
-		doSql    *bool   = flag.Bool("sql", false, "Generate SQL code.")
-		doSqlite *bool   = flag.Bool("sqlite", false, "Use the MySQL dialect (default).")
-		doMysql  *bool   = flag.Bool("mysql", false, "Use the MySQL dialect (default).")
-		doPg     *bool   = flag.Bool("pg", false, "Use the PostgreSQL dialect.")
-		pkgPath  *string = flag.String("pkg", "", "The package that you want to use for source material.")
+		driver     *string = flag.String("driver", "mysql", "The SQL driver relevant to your request; one of 'lite', 'my', 'pg', or 'ms'.")
+		pkgPathIn  *string = flag.String("pkg", "", "The package that you want to use for source material.")
+		database   *string = flag.String("db", "", "The name of the database you want to analyze.")
+		hostname   *string = flag.String("host", "", "The host (IP address or hostname) that hosts the database you want to analyze.")
+		outputPath *string = flag.String("out", "", "The path where resulting files will be deposited.")
+		password   *string = flag.String("pass", "", "The password of the user specificed by 'username'.")
+		username   *string = flag.String("user", "", "The username on the database you want to analyze.")
+		src        *string = flag.String("src", "", "The source of data that interests you; one of 'pkg' or 'db'.")
+		dst        *string = flag.String("dst", "", "The desired output, one of 'types', 'control', 'bindings', 'rest', 'schema', or 'everything'.")
 	)
 
 	flag.Parse()
 
-	if *pkgPath == "" {
-		log.Println("You must specify a Go package to analyze for this tool to work.")
+	switch *src {
+	case "db":
+		switch {
+		case *username == "":
+			flag.Usage()
+			log.Println("When the 'src' argument is 'db', the 'user' argument is required.")
+			os.Exit(1)
+		case *password == "":
+			flag.Usage()
+			log.Println("When the 'src' argument is 'db', the 'pass' argument is required.")
+			os.Exit(1)
+		case *database == "":
+			flag.Usage()
+			log.Println("When the 'src' argument is 'db', the 'db' argument is required.")
+			os.Exit(1)
+		case *hostname == "":
+			flag.Usage()
+			log.Println("When the 'src' argument is 'db', the 'host' argument is required.")
+			os.Exit(1)
+		case *driver == "":
+			flag.Usage()
+			log.Println("When the 'src' argument is 'db', the 'driver' argument is required.")
+			os.Exit(1)
+		}
+	case "pkg":
+		switch {
+		case *pkgPathIn == "":
+			flag.Usage()
+			log.Println("When the 'src' argument is 'pkg', the 'pkg' argument is required.")
+			os.Exit(1)
+		}
+	default:
 		flag.Usage()
+		log.Println("The 'src' argument is required and must be one of 'pkg' or 'db'.")
 		os.Exit(1)
 	}
 
-	if !*doSql && !*doGolang {
-		log.Println("You must specify which language output you desire.")
+	// 'types', 'control', 'bindings', 'rest', or 'schema'
+	switch *dst {
+	case "types":
+	case "control":
+	case "bindings":
+		switch {
+		case *driver == "":
+			flag.Usage()
+			log.Println("When the 'dst' argument is 'everything', the 'schema' argument is required.")
+			os.Exit(1)
+		}
+	case "http":
+	case "schema":
+		switch {
+		case *driver == "":
+			flag.Usage()
+			log.Println("When the 'dst' argument is 'everything', the 'schema' argument is required.")
+			os.Exit(1)
+		}
+	case "everything":
+		switch {
+		case *driver == "":
+			flag.Usage()
+			log.Println("When the 'dst' argument is 'everything', the 'driver' argument is required.")
+			os.Exit(1)
+		}
+	default:
 		flag.Usage()
+		log.Println("The 'dst' argument is required and must be one of 'types',")
+		log.Println("'control', 'bindings', 'rest', 'schema', or 'everything'.")
 		os.Exit(1)
 	}
 
-	sqlCount := 0
-	if *doMysql {
-		sqlCount++
-	}
-	if *doSqlite {
-		sqlCount++
-	}
-	if *doPg {
-		sqlCount++
-	}
-
-	if sqlCount > 1 {
-		log.Println("You must choose only one SQL dialect.")
+	if *outputPath == "" {
 		flag.Usage()
+		log.Println("You must always specify an output directory.")
+		log.Println("If you want to use the current directory, use '.' or './'.")
 		os.Exit(1)
 	}
 
-	if sqlCount == 0 {
-		*doMysql = true
-	}
 
-	//_, err := extractor.PackageStructs(*pkgPath)
-	pkgs, err := extractor.PackageStructs(*pkgPath)
+
+
+	pkgs, err := extractor.ExtractPackage(*pkgPathIn)
 	if err != nil {
 		log.Fatal(errors.Stack(err))
 	}
@@ -81,18 +134,7 @@ func main() {
 		}
 	}
 
-	if *doGolang {
-		if *doPg {
-			fmt.Println(pg.Baseline())
-			fmt.Println()
-		}else if *doMysql{
-			fmt.Println(mysql.Baseline())
-			fmt.Println()
-		} else if *doSqlite {
-			fmt.Println(sqlite.Baseline())
-			fmt.Println()
-		}
-	}
+
 
 	for _, pkg := range pkgs {
 		for _, sdef := range pkg.Structs {
@@ -123,19 +165,19 @@ func main() {
 			if *doGolang && *doPg {
 				fmt.Println("/*============================================================================*/")
 				fmt.Println()
-				fmt.Println(pg.SelectSingular(pkg.Name, sdef))
+				fmt.Println(pg.SelectOne(pkg.Name, sdef))
 				fmt.Println()
 				fmt.Println("/*============================================================================*/")
 				fmt.Println()
-				fmt.Println(pg.SelectSingularTx(pkg.Name, sdef))
+				fmt.Println(pg.SelectOneTx(pkg.Name, sdef))
 				fmt.Println()
 				fmt.Println("/*============================================================================*/")
 				fmt.Println()
-				fmt.Println(pg.SelectPlural(pkg.Name, sdef))
+				fmt.Println(pg.SelectMany(pkg.Name, sdef))
 				fmt.Println()
 				fmt.Println("/*============================================================================*/")
 				fmt.Println()
-				fmt.Println(pg.SelectPluralTx(pkg.Name, sdef))
+				fmt.Println(pg.SelectManyTx(pkg.Name, sdef))
 				fmt.Println()
 				fmt.Println("/*============================================================================*/")
 				fmt.Println()
@@ -167,19 +209,19 @@ func main() {
 			if *doGolang && *doMysql {
 				fmt.Println("/*============================================================================*/")
 				fmt.Println()
-				fmt.Println(mysql.SelectSingular(pkg.Name, sdef))
+				fmt.Println(mysql.SelectOne(pkg.Name, sdef))
 				fmt.Println()
 				fmt.Println("/*============================================================================*/")
 				fmt.Println()
-				fmt.Println(mysql.SelectSingularTx(pkg.Name, sdef))
+				fmt.Println(mysql.SelectOneTx(pkg.Name, sdef))
 				fmt.Println()
 				fmt.Println("/*============================================================================*/")
 				fmt.Println()
-				fmt.Println(mysql.SelectPlural(pkg.Name, sdef))
+				fmt.Println(mysql.SelectMany(pkg.Name, sdef))
 				fmt.Println()
 				fmt.Println("/*============================================================================*/")
 				fmt.Println()
-				fmt.Println(mysql.SelectPluralTx(pkg.Name, sdef))
+				fmt.Println(mysql.SelectManyTx(pkg.Name, sdef))
 				fmt.Println()
 				fmt.Println("/*============================================================================*/")
 				fmt.Println()
@@ -191,11 +233,11 @@ func main() {
 				fmt.Println()
 				fmt.Println("/*============================================================================*/")
 				fmt.Println()
-				fmt.Println(mysql.UpdatePlural(pkg.Name, sdef))
+				fmt.Println(mysql.UpdateMany(pkg.Name, sdef))
 				fmt.Println()
 				fmt.Println("/*============================================================================*/")
 				fmt.Println()
-				fmt.Println(mysql.UpdatePluralTx(pkg.Name, sdef))
+				fmt.Println(mysql.UpdateManyTx(pkg.Name, sdef))
 				fmt.Println()
 				fmt.Println("/*============================================================================*/")
 				fmt.Println()
@@ -219,19 +261,19 @@ func main() {
 			if *doGolang && *doSqlite {
 				fmt.Println("/*============================================================================*/")
 				fmt.Println()
-				fmt.Println(sqlite.SelectSingular(pkg.Name, sdef))
+				fmt.Println(sqlite.SelectOne(pkg.Name, sdef))
 				fmt.Println()
 				fmt.Println("/*============================================================================*/")
 				fmt.Println()
-				fmt.Println(sqlite.SelectSingularTx(pkg.Name, sdef))
+				fmt.Println(sqlite.SelectOneTx(pkg.Name, sdef))
 				fmt.Println()
 				fmt.Println("/*============================================================================*/")
 				fmt.Println()
-				fmt.Println(sqlite.SelectPlural(pkg.Name, sdef))
+				fmt.Println(sqlite.SelectMany(pkg.Name, sdef))
 				fmt.Println()
 				fmt.Println("/*============================================================================*/")
 				fmt.Println()
-				fmt.Println(sqlite.SelectPluralTx(pkg.Name, sdef))
+				fmt.Println(sqlite.SelectManyTx(pkg.Name, sdef))
 				fmt.Println()
 				fmt.Println("/*============================================================================*/")
 				fmt.Println()

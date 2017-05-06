@@ -7,12 +7,12 @@ import (
 	"github.com/serenize/snaker"
 )
 
-func SelectPlural(pkgName string, def *extractor.StructDefinition) string {
+func SelectMany(pkgName string, def *extractor.StructDefinition) string {
 
 	members := getGoSqlData(def.Members)
 
 	b := bytes.NewBuffer(nil)
-	b_sql := selectPluralSql(def, members)
+	b_sql := selectManySql(def, members)
 
 	funcName := fmt.Sprintf("Get%ss", def.Name)
 	psName := fmt.Sprintf("ps_%s", funcName)
@@ -97,12 +97,12 @@ func SelectPlural(pkgName string, def *extractor.StructDefinition) string {
 	return b.String()
 }
 
-func SelectPluralTx(pkgName string, def *extractor.StructDefinition) string {
+func SelectManyTx(pkgName string, def *extractor.StructDefinition) string {
 
 	members := getGoSqlData(def.Members)
 
 	b := bytes.NewBuffer(nil)
-	b_sql := selectPluralSql(def, members)
+	b_sql := selectManySql(def, members)
 
 	funcName := fmt.Sprintf("Get%ssTx", def.Name)
 
@@ -173,7 +173,7 @@ func SelectPluralTx(pkgName string, def *extractor.StructDefinition) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func selectPluralSql(def *extractor.StructDefinition, members []GoSqlDatum) *bytes.Buffer {
+func selectManySql(def *extractor.StructDefinition, members []GoSqlDatum) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)

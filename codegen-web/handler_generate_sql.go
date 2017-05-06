@@ -55,8 +55,8 @@ func (this *handlerGenerateSql) ServeHTTP(w http.ResponseWriter, r *http.Request
 			goto PostProcessing
 		}
 
-		data.SelectSingular = mysql.SelectSingular(selectedStruct)
-		data.SelectPlural = mysql.SelectPlural(selectedStruct)
+		data.SelectOne = mysql.SelectOne(selectedStruct)
+		data.SelectMany = mysql.SelectMany(selectedStruct)
 	}
 
 PostProcessing:
@@ -75,8 +75,8 @@ PostProcessing:
 type GenerateSqlData struct {
 	Input          string
 	Schema         string
-	SelectSingular string
-	SelectPlural   string
+	SelectOne string
+	SelectMany   string
 	Insert         string
 	Update         string
 	Delete         string
@@ -143,18 +143,18 @@ var generateSqlHtml string = `
               name="Create">{{.Create}}</textarea>
 </div>
 <div style="width:33%; float:left;">
-    <label>SelectSingular:</label>
+    <label>SelectOne:</label>
     <br/>
     <textarea style="width:100%;"
               rows="20"
-              name="SelectSingular">{{.SelectSingular}}</textarea>
+              name="SelectOne">{{.SelectOne}}</textarea>
 </div>
 <div style="width:33%; float:left;">
-    <label>SelectPlural:</label>
+    <label>SelectMany:</label>
     <br/>
     <textarea style="width:100%;"
               rows="20"
-              name="SelectPlural">{{.SelectPlural}}</textarea>
+              name="SelectMany">{{.SelectMany}}</textarea>
 </div>
 <div style="width:33%; float:left;">
     <label>Insert:</label>

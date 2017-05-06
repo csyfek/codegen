@@ -7,12 +7,12 @@ import (
 	"github.com/serenize/snaker"
 )
 
-func SelectSingular(pkgName string, def *extractor.StructDefinition) string {
+func SelectOne(pkgName string, def *extractor.StructDefinition) string {
 
 	members := getGoSqlData(def.Members)
 
 	b := bytes.NewBuffer(nil)
-	b_sql := selectSingularSql(def, members)
+	b_sql := selectOneSql(def, members)
 
 	funcName := fmt.Sprintf("Get%s", def.Name)
 	psName := fmt.Sprintf("ps_%s", funcName)
@@ -96,12 +96,12 @@ func SelectSingular(pkgName string, def *extractor.StructDefinition) string {
 	return b.String()
 }
 
-func SelectSingularTx(pkgName string, def *extractor.StructDefinition) string {
+func SelectOneTx(pkgName string, def *extractor.StructDefinition) string {
 
 	members := getGoSqlData(def.Members)
 
 	b := bytes.NewBuffer(nil)
-	b_sql := selectSingularSql(def, members)
+	b_sql := selectOneSql(def, members)
 
 	funcName := fmt.Sprintf("Get%sTx", def.Name)
 
@@ -170,7 +170,7 @@ func SelectSingularTx(pkgName string, def *extractor.StructDefinition) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func selectSingularSql(def *extractor.StructDefinition, members []GoSqlDatum) *bytes.Buffer {
+func selectOneSql(def *extractor.StructDefinition, members []GoSqlDatum) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)

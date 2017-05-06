@@ -5,17 +5,35 @@ import (
 	"go/ast"
 )
 
-func getExprType(expr ast.Expr) string {
+func resolveTypeExpression(expr ast.Expr) string {
+
 	switch t := expr.(type) {
 	case *ast.StarExpr:
-		return "*" + getExprType(t.X)
+		return "*" + resolveTypeExpression(t.X)
 	case *ast.ArrayType:
-		return "[]" + getExprType(t.Elt)
+		return "[]" + resolveTypeExpression(t.Elt)
 	case *ast.Ident:
 		return t.Name
 	case *ast.SelectorExpr:
-		return getExprType(t.X) + "." + t.Sel.Name
+		return resolveTypeExpression(t.X) + "." + t.Sel.Name
+	case *ast.MapType:
+		return fmt.Sprintf("map[%s]%s", resolveTypeExpression(t.Key), resolveTypeExpression(t.Value))
+	case *ast.InterfaceType:
+		return "interface{}"
+	case *ast.StructType:
+		return "struct"
 	default:
-		return fmt.Sprintf("Unknown Type: %T", t)
+		return fmt.Sprintf("_%T_", t)
 	}
+
+}
+
+
+func sContains (set []string, s string) bool{
+	for _, s_ := range set {
+		if s == s_{
+			return true
+		}
+	}
+	return false
 }
