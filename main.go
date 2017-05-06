@@ -73,10 +73,10 @@ func main() {
 	//jlog.Log(pkgs)
 
 	if *doGolang {
-		if *doPg{
+		if *doPg {
 			fmt.Println(pg.Baseline())
 			fmt.Println()
-		}else if *doMy{
+		} else if *doMy {
 			fmt.Println(mysql.Baseline())
 			fmt.Println()
 		}
@@ -99,8 +99,6 @@ func main() {
 				fmt.Println()
 				//fmt.Println("-- -----------------------------------------------------------------------------")
 			}
-
-
 
 			if *doGolang && *doPg {
 				fmt.Println("/*============================================================================*/")

@@ -42,7 +42,6 @@ func UpdatePlural(pkgName string, def *extractor.StructDefinition) string {
 	return b.String()
 }
 
-
 func UpdatePluralTx(pkgName string, def *extractor.StructDefinition) string {
 
 	var (

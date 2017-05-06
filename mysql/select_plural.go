@@ -173,7 +173,7 @@ func SelectPluralTx(pkgName string, def *extractor.StructDefinition) string {
 		}
 	}
 
-	fmt.Fprint(b,`
+	fmt.Fprint(b, `
 		z = append(z, x)
 	} // end of scan clause.
 
@@ -230,4 +230,3 @@ func selectPluralSqlTx(pkgName string, def *extractor.StructDefinition, members 
 
 	return b
 }
-

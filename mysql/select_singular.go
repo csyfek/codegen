@@ -223,5 +223,3 @@ func selectSingularSqlTx(def *extractor.StructDefinition, members []GoSqlDatum) 
 
 	return b
 }
-
-
