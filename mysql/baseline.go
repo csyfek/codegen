@@ -1,8 +1,7 @@
 package mysql
 
-
-func Baseline() string{
-return `
+func Baseline() string {
+	return `
 package main
 
 import (

@@ -110,7 +110,7 @@ func SelectPluralTx(pkgName string, def *extractor.StructDefinition) string {
 	b := bytes.NewBuffer(nil)
 	b_sql := selectPluralSqlTx(pkgName, def, members)
 
-	funcName := fmt.Sprintf("get%ssTx", def.Name)
+	funcName := fmt.Sprintf("Get%ssTx", def.Name)
 
 	fmt.Fprintf(b, "func %s(tx *sql.Tx /*, filter string */) ([]%s.%s, error) {\n", funcName, pkgName, def.Name)
 
@@ -173,7 +173,7 @@ func SelectPluralTx(pkgName string, def *extractor.StructDefinition) string {
 		}
 	}
 
-	fmt.Fprint(b,`
+	fmt.Fprint(b, `
 		z = append(z, x)
 	} // end of scan clause.
 
@@ -230,4 +230,3 @@ func selectPluralSqlTx(pkgName string, def *extractor.StructDefinition, members 
 
 	return b
 }
-

@@ -16,6 +16,7 @@ func PackageStructs(pkgPath string) ([]PackageDefinition, error) {
 		bpkg *build.Package
 		err  error
 	)
+
 	srcDirs := build.Default.SrcDirs()
 	for _, srcDir := range srcDirs {
 		bpkg, err = build.Import(pkgPath, srcDir, 0)

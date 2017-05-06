@@ -103,7 +103,7 @@ func SelectSingularTx(pkgName string, def *extractor.StructDefinition) string {
 	b := bytes.NewBuffer(nil)
 	b_sql := selectSingularSqlTx(def, members)
 
-	funcName := fmt.Sprintf("get%sTx", def.Name)
+	funcName := fmt.Sprintf("Get%sTx", def.Name)
 
 	fmt.Fprintf(b, "func %s(tx *sql.Tx, id string) (*%s.%s, error) {\n", funcName, pkgName, def.Name)
 	fmt.Fprint(b, "\t\tq := `\n")
@@ -223,5 +223,3 @@ func selectSingularSqlTx(def *extractor.StructDefinition, members []GoSqlDatum) 
 
 	return b
 }
-
-

@@ -195,4 +195,3 @@ func selectSingularSql(def *extractor.StructDefinition, members []GoSqlDatum) *b
 
 	return b
 }
-

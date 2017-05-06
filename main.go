@@ -85,7 +85,7 @@ func main() {
 		if *doPg {
 			fmt.Println(pg.Baseline())
 			fmt.Println()
-		} else if *doMysql {
+		}else if *doMysql{
 			fmt.Println(mysql.Baseline())
 			fmt.Println()
 		} else if *doSqlite {
