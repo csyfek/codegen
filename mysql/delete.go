@@ -28,7 +28,7 @@ func Delete(def *extractor.StructDefinition) string {
 `)
 	fmt.Fprintf(b, "\tif %s == nil{\n", psName)
 	fmt.Fprint(b, "\t\tq := `\n")
-	fmt.Fprintf(b, "%s", b_sql.Bytes())
+	fmt.Fprint(b, b_sql.String())
 	fmt.Fprint(b, "`\n\n")
 
 	fmt.Fprintf(b, "\t\t%s, err = db.Prepare(q)", psName)
@@ -36,19 +36,19 @@ func Delete(def *extractor.StructDefinition) string {
 		if err != nil {
 		return errors.Stack(err)
 		}
-`)
-	fmt.Fprint(b, "	}\n\n") // end of prepared statement clause
-	fmt.Fprint(b, "\targs := []interface{}{id}\n\n")
+	}
+
+	args := []interface{}{id}
+	`) // end of prepared statement clause
 	fmt.Fprintf(b, "\t_, err = %s.Exec(args...)", psName)
 	fmt.Fprint(b, `
 	if err != nil {
 		return errors.Stack(err)
 	}
 
+	return nil
+}
 `)
-
-	fmt.Fprint(b, "\treturn nil\n")
-	fmt.Fprint(b, "}\n") // end of function
 
 	return b.String()
 }
@@ -63,21 +63,22 @@ func DeleteTx(def *extractor.StructDefinition) string {
 	funcName := fmt.Sprintf("delete%sTx", def.Name)
 
 	fmt.Fprintf(b, "func %s(tx *sql.Tx, id string) error {\n", funcName)
-	fmt.Fprint(b, "\t\tq := `\n")
-	fmt.Fprintf(b, "%s", b_sql.Bytes())
-	fmt.Fprint(b, "`\n\n")
+	fmt.Fprintln(b, "q := `")
+	fmt.Fprintln(b, b_sql.String())
+	fmt.Fprintln(b, "`")
 
-	fmt.Fprint(b, "\targs := []interface{}{id}\n\n")
-	fmt.Fprint(b, "\t_, err := tx.Exec(q, args...)")
 	fmt.Fprint(b, `
+
+	args := []interface{}{id}
+
+	_, err := tx.Exec(q, args...)
 	if err != nil {
 		return errors.Stack(err)
 	}
 
+	return nil
+}
 `)
-
-	fmt.Fprint(b, "\treturn nil\n")
-	fmt.Fprint(b, "}\n") // end of function
 
 	return b.String()
 }
