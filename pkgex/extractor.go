@@ -1,6 +1,7 @@
-package extractor
+package pkgex
 
 import (
+	"github.com/jackmanlabs/codegen/types"
 	"github.com/jackmanlabs/errors"
 	"go/ast"
 	"go/build"
@@ -11,9 +12,19 @@ import (
 	"unicode"
 )
 
-func ExtractPackage(pkgPath string) (*Package, error) {
+type extractorType struct {
+	pkgPath string
+}
 
-	buildPkg, err := build.Import(pkgPath, "", 0)
+func NewExtractor(pkgPath string) *extractorType {
+	return &extractorType{
+		pkgPath: pkgPath,
+	}
+}
+
+func (this *extractorType) Extract() (*types.Package, error) {
+
+	buildPkg, err := build.Import(this.pkgPath, "", 0)
 	if err != nil {
 		return nil, errors.Stack(err)
 	}
@@ -24,7 +35,7 @@ func ExtractPackage(pkgPath string) (*Package, error) {
 		return nil, errors.Stack(err)
 	}
 
-	pkg := &Package{Fset: fset}
+	pkg := &pkgType{Fset: fset}
 	for _, astPkg := range astPkgs {
 		if strings.HasSuffix(astPkg.Name, "_test") {
 			continue
@@ -32,11 +43,16 @@ func ExtractPackage(pkgPath string) (*Package, error) {
 		ast.Walk(pkg, astPkg)
 	}
 
-	pkg.Path = pkgPath
+	pkg.Path = this.pkgPath
 	return pkg, nil
 }
 
-func (this *Package) Visit(node ast.Node) (w ast.Visitor) {
+type pkgType struct {
+	types.Package
+	Fset *token.FileSet
+}
+
+func (this *pkgType) Visit(node ast.Node) (w ast.Visitor) {
 
 	if this.Fset == nil {
 		log.Println("fset is nil.")
@@ -50,7 +66,7 @@ func (this *Package) Visit(node ast.Node) (w ast.Visitor) {
 
 	case *ast.TypeSpec:
 
-		newType := NewType()
+		newType := types.NewType()
 		newType.Name = t.Name.String()
 		newType.UnderlyingType = resolveTypeExpression(t.Type)
 		this.Types = append(this.Types, newType)
@@ -74,7 +90,7 @@ func (this *Package) Visit(node ast.Node) (w ast.Visitor) {
 			return nil
 		}
 
-		member := Member{
+		member := types.Member{
 			Type: typ,
 			Name: name,
 		}

@@ -73,16 +73,16 @@ PostProcessing:
 }
 
 type GenerateSqlData struct {
-	Input          string
-	Schema         string
-	SelectOne string
-	SelectMany   string
-	Insert         string
-	Update         string
-	Delete         string
-	Errors         string
-	Structs        []SelectOption
-	Struct         string
+	Input      string
+	Schema     string
+	SelectOne  string
+	SelectMany string
+	Insert     string
+	Update     string
+	Delete     string
+	Errors     string
+	Structs    []SelectOption
+	Struct     string
 }
 
 type SelectOption struct {

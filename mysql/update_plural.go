@@ -3,10 +3,10 @@ package mysql
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/extractor"
+	"github.com/jackmanlabs/codegen/types"
 )
 
-func UpdateMany(pkgName string, def *extractor.StructDefinition) string {
+func UpdateMany(pkgName string, def *types.Type) string {
 
 	var (
 		b             = bytes.NewBuffer(nil)
@@ -42,7 +42,7 @@ func UpdateMany(pkgName string, def *extractor.StructDefinition) string {
 	return b.String()
 }
 
-func UpdateManyTx(pkgName string, def *extractor.StructDefinition) string {
+func UpdateManyTx(pkgName string, def *types.Type) string {
 
 	var (
 		b             = bytes.NewBuffer(nil)

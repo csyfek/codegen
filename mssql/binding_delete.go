@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func  (this *Generator)Delete(typeName, table string, columns []Column) string {
+func (this *Generator) Delete(typeName, table string, columns []Column) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := deleteSql(table, columns)
@@ -49,7 +49,7 @@ func  (this *Generator)Delete(typeName, table string, columns []Column) string {
 	return b.String()
 }
 
-func  (this *Generator)DeleteTx(typeName string, table string, columns []Column) string {
+func (this *Generator) DeleteTx(typeName string, table string, columns []Column) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := deleteSql(table, columns)

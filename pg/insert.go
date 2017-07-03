@@ -3,11 +3,11 @@ package pg
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/extractor"
+	"github.com/jackmanlabs/codegen/types"
 	"github.com/serenize/snaker"
 )
 
-func Insert(pkgName string, def *extractor.StructDefinition) string {
+func Insert(pkgName string, def *types.Type) string {
 
 	members := getGoSqlData(def.Members)
 
@@ -84,7 +84,7 @@ func Insert(pkgName string, def *extractor.StructDefinition) string {
 	return b.String()
 }
 
-func InsertTx(pkgName string, def *extractor.StructDefinition) string {
+func InsertTx(pkgName string, def *types.Type) string {
 
 	members := getGoSqlData(def.Members)
 
@@ -146,7 +146,7 @@ func InsertTx(pkgName string, def *extractor.StructDefinition) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func insertSql(def *extractor.StructDefinition, members []GoSqlDatum) *bytes.Buffer {
+func insertSql(def *types.Type, members []GoSqlDatum) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)

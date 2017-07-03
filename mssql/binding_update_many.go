@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func  (this *Generator)UpdateMany(pkgName, typeName, table string, columns []Column) string {
+func (this *Generator) UpdateMany(pkgName, typeName, table string, columns []Column) string {
 
 	var (
 		b             = bytes.NewBuffer(nil)
@@ -41,7 +41,7 @@ func  (this *Generator)UpdateMany(pkgName, typeName, table string, columns []Col
 	return b.String()
 }
 
-func  (this *Generator)UpdateManyTx(pkgName, typeName, table string, columns []Column) string {
+func (this *Generator) UpdateManyTx(pkgName, typeName, table string, columns []Column) string {
 
 	var (
 		b             = bytes.NewBuffer(nil)

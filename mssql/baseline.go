@@ -1,6 +1,5 @@
 package mssql
 
-
 func (this *Generator) Baseline() string {
 	return `
 package data
@@ -57,4 +56,3 @@ func Tx() (*sql.Tx, error) {
 }
 `
 }
-

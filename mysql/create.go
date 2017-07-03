@@ -3,13 +3,13 @@ package mysql
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/extractor"
+	"github.com/jackmanlabs/codegen/types"
 	"github.com/serenize/snaker"
 )
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func Create(def *extractor.StructDefinition) string {
+func Create(def *types.Type) string {
 	members := getGoSqlData(def.Members)
 
 	b := bytes.NewBuffer(nil)
@@ -25,9 +25,9 @@ func Create(def *extractor.StructDefinition) string {
 	fmt.Fprintf(b, "CREATE TABLE %s (\n", tableName)
 	for idx, member := range members {
 		if idx == 0 {
-			if member.Type == "string" {
-				member.SqlType = "CHAR(36)"
-			}
+			//if member.GoType() == "string" {
+			//	member.SqlType = "CHAR(36)"
+			//}
 			fmt.Fprintf(b, "\t%s %s PRIMARY KEY,\n", member.SqlName, member.SqlType)
 		} else if idx == len(members)-1 {
 			fmt.Fprintf(b, "\t%s %s NOT NULL\n", member.SqlName, member.SqlType)

@@ -3,11 +3,11 @@ package sqlite
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/extractor"
+	"github.com/jackmanlabs/codegen/types"
 	"github.com/serenize/snaker"
 )
 
-func Update(pkgName string, def *extractor.StructDefinition) string {
+func Update(pkgName string, def *types.Type) string {
 
 	members := getGoSqlData(def.Members)
 
@@ -85,7 +85,7 @@ func Update(pkgName string, def *extractor.StructDefinition) string {
 	return b.String()
 }
 
-func UpdateTx(pkgName string, def *extractor.StructDefinition) string {
+func UpdateTx(pkgName string, def *types.Type) string {
 
 	members := getGoSqlData(def.Members)
 
@@ -148,7 +148,7 @@ func UpdateTx(pkgName string, def *extractor.StructDefinition) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func updateSql(def *extractor.StructDefinition, members []GoSqlDatum) *bytes.Buffer {
+func updateSql(def *types.Type, members []GoSqlDatum) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)

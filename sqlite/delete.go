@@ -3,11 +3,11 @@ package sqlite
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/extractor"
+	"github.com/jackmanlabs/codegen/types"
 	"github.com/serenize/snaker"
 )
 
-func Delete(def *extractor.StructDefinition) string {
+func Delete(def *types.Type) string {
 
 	members := getGoSqlData(def.Members)
 
@@ -53,7 +53,7 @@ func Delete(def *extractor.StructDefinition) string {
 	return b.String()
 }
 
-func DeleteTx(def *extractor.StructDefinition) string {
+func DeleteTx(def *types.Type) string {
 
 	members := getGoSqlData(def.Members)
 
@@ -84,7 +84,7 @@ func DeleteTx(def *extractor.StructDefinition) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func deleteSql(def *extractor.StructDefinition, members []GoSqlDatum) *bytes.Buffer {
+func deleteSql(def *types.Type, members []GoSqlDatum) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)

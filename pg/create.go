@@ -3,13 +3,13 @@ package pg
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/extractor"
+	"github.com/jackmanlabs/codegen/types"
 	"github.com/serenize/snaker"
 )
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func Create(def *extractor.StructDefinition) string {
+func Create(def *types.Type) string {
 	members := getGoSqlData(def.Members)
 
 	b := bytes.NewBuffer(nil)

@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/jackmanlabs/codegen/extractor"
+	"github.com/jackmanlabs/codegen/types"
 	"github.com/jackmanlabs/errors"
 	"log"
 	"os"
@@ -10,9 +10,9 @@ import (
 
 func main() {
 
-	pkgPath := "github.com/jackmanlabs/codegen/extractor"
+	pkgPath := "github.com/jackmanlabs/codegen/types"
 
-	pkgs, err := extractor.PackageStructs(pkgPath)
+	pkgs, err := pkger.PackageStructs(pkgPath)
 	if err != nil {
 		log.Fatal(errors.Stack(err))
 	}

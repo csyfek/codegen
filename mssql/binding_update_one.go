@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func (this *Generator)UpdateOne(pkgName, typeName, table string, columns []Column) string {
+func (this *Generator) UpdateOne(pkgName, typeName, table string, columns []Column) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := updateSql(table, columns)
@@ -60,7 +60,7 @@ func (this *Generator)UpdateOne(pkgName, typeName, table string, columns []Colum
 	return b.String()
 }
 
-func  (this *Generator)UpdateOneTx(pkgName, typeName, table string, columns []Column) string {
+func (this *Generator) UpdateOneTx(pkgName, typeName, table string, columns []Column) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := updateSql(table, columns)

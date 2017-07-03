@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func  (this *Generator)Insert(pkgName, typeName, tableName string, columns []Column) string {
+func (this *Generator) Insert(pkgName, typeName, tableName string, columns []Column) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := insertSql(tableName, columns)
@@ -59,7 +59,7 @@ func  (this *Generator)Insert(pkgName, typeName, tableName string, columns []Col
 	return b.String()
 }
 
-func  (this *Generator)InsertTx(pkgName, typeName, table string, columns []Column) string {
+func (this *Generator) InsertTx(pkgName, typeName, table string, columns []Column) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := insertSql(table, columns)

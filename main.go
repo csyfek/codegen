@@ -3,10 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/jackmanlabs/codegen/extractor"
+	"github.com/jackmanlabs/codegen/mssql"
 	"github.com/jackmanlabs/codegen/mysql"
 	"github.com/jackmanlabs/codegen/pg"
+	"github.com/jackmanlabs/codegen/pkgex"
 	"github.com/jackmanlabs/codegen/sqlite"
+	"github.com/jackmanlabs/codegen/types"
 	"github.com/jackmanlabs/errors"
 	"log"
 	"os"
@@ -18,11 +20,11 @@ var (
 
 func main() {
 	var (
-		driver     *string = flag.String("driver", "mysql", "The SQL driver relevant to your request; one of 'lite', 'my', 'pg', or 'ms'.")
+		driver     *string = flag.String("driver", "mysql", "The SQL driver relevant to your request; one of 'sqlite', 'mysql', 'pg', or 'mssql'.")
 		pkgPathIn  *string = flag.String("pkg", "", "The package that you want to use for source material.")
 		database   *string = flag.String("db", "", "The name of the database you want to analyze.")
 		hostname   *string = flag.String("host", "", "The host (IP address or hostname) that hosts the database you want to analyze.")
-		outputPath *string = flag.String("out", "", "The path where resulting files will be deposited.")
+		outputPath *string = flag.String("out", "", "The path where resulting files will be deposited. Without a specified path, stdout will be used if possible.")
 		password   *string = flag.String("pass", "", "The password of the user specificed by 'username'.")
 		username   *string = flag.String("user", "", "The username on the database you want to analyze.")
 		src        *string = flag.String("src", "", "The source of data that interests you; one of 'pkg' or 'db'.")
@@ -93,6 +95,12 @@ func main() {
 			flag.Usage()
 			log.Println("When the 'dst' argument is 'everything', the 'driver' argument is required.")
 			os.Exit(1)
+		case *outputPath == "" :
+			flag.Usage()
+			log.Println("Multiple languages can not be sanely printed to stdout.")
+			log.Println("Please specify a target directory with the 'out' flag.")
+			log.Println("If you want to use the current directory, use '.' or './'.")
+			os.Exit(1)
 		}
 	default:
 		flag.Usage()
@@ -103,209 +111,146 @@ func main() {
 
 	if *outputPath == "" {
 		flag.Usage()
-		log.Println("You must always specify an output directory.")
+		log.Println("Writing to stdout.")
+		log.Println("If you want to dump to a directory, specify a target directory with the 'out' flag.")
 		log.Println("If you want to use the current directory, use '.' or './'.")
-		os.Exit(1)
 	}
 
+	if *driver != "" {
+		switch *driver {
+		case "sqlite":
+		case "mysql":
+		case "pg":
+		case "mssql":
+		default:
+			flag.Usage()
+			log.Println("The 'driver' argument must be one of 'sqlite', 'mysql', 'pg', or 'mssql'.")
+			os.Exit(1)
+		}
+	}
 
+	var pkg types.Package
+	var extractor types.Extractor
 
+	// No need to go crazy with validation; that's already been done above.
+	if *src == "db" {
+		switch *driver {
+		case "sqlite":
+			extractor = sqlite.NewExtractor(*database)
+		case "mysql":
+			extractor = mysql.NewExtractor(*username, *password, *hostname, *database)
+		case "pg":
+			extractor = pg.NewExtractor(*username, *password, *hostname, *database)
+		case "mssql":
+			extractor = mssql.NewExtractor(*username, *password, *hostname, *database)
+		}
+	} else {
+		extractor = pkgex.NewExtractor(*pkgPathIn)
+	}
 
-	pkgs, err := extractor.ExtractPackage(*pkgPathIn)
+	pkg, err := extractor.Extract()
 	if err != nil {
 		log.Fatal(errors.Stack(err))
 	}
 
-	for _, pkg := range pkgs {
+	structMap := make(map[string]*types.Type)
 
-		structMap := make(map[string]*extractor.StructDefinition)
+	// Prepare to flatten the structs for MySQL generation by making them addressable.
+	for _, s := range pkg.Types {
+		structMap[s.Name] = s
+	}
 
-		// Prepare to flatten the structs for MySQL generation by making them addressable.
-		for _, s := range pkg.Structs {
-			structMap[s.Name] = s
-		}
-
-		// Merge the embedded structs into the parent structs.
-		for _, parentStruct := range pkg.Structs {
-			for _, embeddedStructName := range parentStruct.EmbeddedStructs {
-				embeddedStruct := structMap[embeddedStructName]
-				mergeStructs(parentStruct, embeddedStruct)
-			}
+	// Merge the embedded structs into the parent structs.
+	for _, parentStruct := range pkg.Types {
+		for _, embeddedStructName := range parentStruct.EmbeddedStructs {
+			embeddedStruct := structMap[embeddedStructName]
+			mergeStructs(parentStruct, embeddedStruct)
 		}
 	}
 
+	var generator types.SqlGenerator
+	if *dst == "bindings" || *dst == "everything" || *dst == "schema" {
+		switch *driver {
+		case "sqlite":
+			generator = sqlite.NewGenerator()
+		case "mysql":
+			generator = mysql.NewGenerator()
+		case "pg":
+			generator = pg.NewGenerator()
+		case "mssql":
+			generator = mssql.NewGenerator()
+		}
 
+	}
 
-	for _, pkg := range pkgs {
-		for _, sdef := range pkg.Structs {
-			if *doSql && *doMysql {
-				fmt.Println("-- -----------------------------------------------------------------------------")
-				fmt.Println()
-				fmt.Println(mysql.Create(sdef))
-				fmt.Println()
-				//fmt.Println("-- -----------------------------------------------------------------------------")
-			}
+	if *dst == "schema" || *dst == "everything" {
+		for _, sdef := range pkg.Types {
 
-			if *doSql && *doPg {
-				fmt.Println("-- -----------------------------------------------------------------------------")
-				fmt.Println()
-				fmt.Println(pg.Create(sdef))
-				fmt.Println()
-				//fmt.Println("-- -----------------------------------------------------------------------------")
-			}
-
-			if *doSql && *doSqlite {
-				fmt.Println("-- -----------------------------------------------------------------------------")
-				fmt.Println()
-				fmt.Println(sqlite.Create(sdef))
-				fmt.Println()
-				//fmt.Println("-- -----------------------------------------------------------------------------")
-			}
-
-			if *doGolang && *doPg {
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(pg.SelectOne(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(pg.SelectOneTx(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(pg.SelectMany(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(pg.SelectManyTx(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(pg.Update(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(pg.UpdateTx(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(pg.Insert(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(pg.InsertTx(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(pg.Delete(sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(pg.DeleteTx(sdef))
-				fmt.Println()
-				//fmt.Println("/*============================================================================*/")
-			}
-
-			if *doGolang && *doMysql {
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(mysql.SelectOne(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(mysql.SelectOneTx(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(mysql.SelectMany(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(mysql.SelectManyTx(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(mysql.Update(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(mysql.UpdateTx(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(mysql.UpdateMany(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(mysql.UpdateManyTx(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(mysql.Insert(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(mysql.InsertTx(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(mysql.Delete(sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(mysql.DeleteTx(sdef))
-				fmt.Println()
-				//fmt.Println("/*============================================================================*/")
-			}
-
-			if *doGolang && *doSqlite {
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(sqlite.SelectOne(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(sqlite.SelectOneTx(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(sqlite.SelectMany(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(sqlite.SelectManyTx(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(sqlite.Update(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(sqlite.UpdateTx(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(sqlite.Insert(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(sqlite.InsertTx(pkg.Name, sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(sqlite.Delete(sdef))
-				fmt.Println()
-				fmt.Println("/*============================================================================*/")
-				fmt.Println()
-				fmt.Println(sqlite.DeleteTx(sdef))
-				fmt.Println()
-				//fmt.Println("/*============================================================================*/")
-			}
+			fmt.Println("-- -----------------------------------------------------------------------------")
+			fmt.Println()
+			fmt.Println(generator.Schema(sdef))
+			fmt.Println()
+			//fmt.Println("-- -----------------------------------------------------------------------------")
 		}
 	}
+
+	if *dst == "bindings" || *dst == "everything" {
+		for _, sdef := range pkg.Types {
+
+			fmt.Println("/*============================================================================*/")
+			fmt.Println()
+			fmt.Println(generator.SelectOne(pkg.Name, sdef))
+			fmt.Println()
+			fmt.Println("/*============================================================================*/")
+			fmt.Println()
+			fmt.Println(generator.SelectOneTx(pkg.Name, sdef))
+			fmt.Println()
+			fmt.Println("/*============================================================================*/")
+			fmt.Println()
+			fmt.Println(generator.SelectMany(pkg.Name, sdef))
+			fmt.Println()
+			fmt.Println("/*============================================================================*/")
+			fmt.Println()
+			fmt.Println(generator.SelectManyTx(pkg.Name, sdef))
+			fmt.Println()
+			fmt.Println("/*============================================================================*/")
+			fmt.Println()
+			fmt.Println(generator.UpdateOne(pkg.Name, sdef))
+			fmt.Println()
+			fmt.Println("/*============================================================================*/")
+			fmt.Println()
+			fmt.Println(generator.UpdateOneTx(pkg.Name, sdef))
+			fmt.Println()
+			fmt.Println("/*============================================================================*/")
+			fmt.Println()
+			fmt.Println(generator.UpdateMany(pkg.Name, sdef))
+			fmt.Println()
+			fmt.Println("/*============================================================================*/")
+			fmt.Println()
+			fmt.Println(generator.UpdateManyTx(pkg.Name, sdef))
+			fmt.Println()
+			fmt.Println("/*============================================================================*/")
+			fmt.Println()
+			fmt.Println(generator.InsertOne(pkg.Name, sdef))
+			fmt.Println()
+			fmt.Println("/*============================================================================*/")
+			fmt.Println()
+			fmt.Println(generator.InsertOneTx(pkg.Name, sdef))
+			fmt.Println()
+			fmt.Println("/*============================================================================*/")
+			fmt.Println()
+			fmt.Println(generator.Delete(sdef))
+			fmt.Println()
+			fmt.Println("/*============================================================================*/")
+			fmt.Println()
+			fmt.Println(generator.DeleteTx(sdef))
+			fmt.Println()
+		}
+	}
+
 }
 
-func mergeStructs(dst, src *extractor.StructDefinition) {
+func mergeStructs(dst, src *types.Type) {
 	for _, srcMember := range src.Members {
 		exists := dst.ContainsMember(srcMember.Name)
 		if !exists {

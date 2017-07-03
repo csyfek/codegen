@@ -1,9 +1,10 @@
-package mssql
+package pg
 
 import (
 	"database/sql"
 	"fmt"
 	"github.com/jackmanlabs/errors"
+	_ "github.com/lib/pq"
 	"sync"
 )
 
@@ -18,7 +19,7 @@ func (this *Extractor) db() (*sql.DB, error) {
 	connString := fmt.Sprintf("server=%s;database=%s;user id=%s;password=%s", this.hostname, this.database, this.username, this.password)
 
 	var err error
-	this._db, err = sql.Open("mssql", connString)
+	this._db, err = sql.Open("postgres", connString)
 	if err != nil {
 		return nil, errors.Stack(err)
 	}

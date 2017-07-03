@@ -3,11 +3,11 @@ package mysql
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/extractor"
+	"github.com/jackmanlabs/codegen/types"
 	"github.com/serenize/snaker"
 )
 
-func SelectOne(pkgName string, def *extractor.StructDefinition) string {
+func SelectOne(pkgName string, def *types.Type) string {
 
 	members := getGoSqlData(def.Members)
 
@@ -96,7 +96,7 @@ func SelectOne(pkgName string, def *extractor.StructDefinition) string {
 	return b.String()
 }
 
-func SelectOneTx(pkgName string, def *extractor.StructDefinition) string {
+func SelectOneTx(pkgName string, def *types.Type) string {
 
 	members := getGoSqlData(def.Members)
 
@@ -170,7 +170,7 @@ func SelectOneTx(pkgName string, def *extractor.StructDefinition) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func selectOneSql(def *extractor.StructDefinition, members []GoSqlDatum) *bytes.Buffer {
+func selectOneSql(def *types.Type, members []GoSqlDatum) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)
@@ -197,7 +197,7 @@ func selectOneSql(def *extractor.StructDefinition, members []GoSqlDatum) *bytes.
 }
 
 // SELECT for transactions require some slight changes.
-func selectOneSqlTx(def *extractor.StructDefinition, members []GoSqlDatum) *bytes.Buffer {
+func selectOneSqlTx(def *types.Type, members []GoSqlDatum) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)

@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func  (this *Generator)SelectMany(pkgName, typeName, table string, columns []Column) string {
+func (this *Generator) SelectMany(pkgName, typeName, table string, columns []Column) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := selectManySql(pkgName, table, columns)
@@ -78,7 +78,7 @@ func  (this *Generator)SelectMany(pkgName, typeName, table string, columns []Col
 	return b.String()
 }
 
-func  (this *Generator)SelectManyTx(pkgName, typeName, tableName string, columns []Column) string {
+func (this *Generator) SelectManyTx(pkgName, typeName, tableName string, columns []Column) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := selectManySqlTx(pkgName, tableName, columns)

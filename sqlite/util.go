@@ -1,7 +1,7 @@
 package sqlite
 
 import (
-	"github.com/jackmanlabs/codegen/extractor"
+	"github.com/jackmanlabs/codegen/types"
 	"github.com/serenize/snaker"
 )
 
@@ -37,21 +37,21 @@ func getSqlType(goType string) (sqlType string, sqlCompatible bool) {
 }
 
 type GoSqlDatum struct {
-	extractor.StructMemberDefinition
+	pkger.Member
 	SqlCompatible bool
 	SqlType       string
 	SqlName       string
 }
 
-func getGoSqlData(structMembers []extractor.StructMemberDefinition) []GoSqlDatum {
+func getGoSqlData(structMembers []pkger.Member) []GoSqlDatum {
 	members := make([]GoSqlDatum, 0)
 	for _, member_ := range structMembers {
 		sqlType, compatible := getSqlType(member_.Type)
 		member := GoSqlDatum{
-			StructMemberDefinition: member_,
-			SqlType:                sqlType,
-			SqlCompatible:          compatible,
-			SqlName:                snaker.CamelToSnake(member_.Name),
+			Member:        member_,
+			SqlType:       sqlType,
+			SqlCompatible: compatible,
+			SqlName:       snaker.CamelToSnake(member_.Name),
 		}
 		members = append(members, member)
 	}

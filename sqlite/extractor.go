@@ -1,9 +1,10 @@
-package mssql
+package sqlite
 
 import (
 	"database/sql"
 	"fmt"
 	"github.com/jackmanlabs/errors"
+	_ "github.com/mattn/go-sqlite3"
 	"sync"
 )
 
@@ -15,10 +16,10 @@ func (this *Extractor) db() (*sql.DB, error) {
 		return this._db, nil
 	}
 
-	connString := fmt.Sprintf("server=%s;database=%s;user id=%s;password=%s", this.hostname, this.database, this.username, this.password)
+	connString := fmt.Sprintf("file:%s", this.filename)
 
 	var err error
-	this._db, err = sql.Open("mssql", connString)
+	this._db, err = sql.Open("sqlite3", connString)
 	if err != nil {
 		return nil, errors.Stack(err)
 	}
@@ -29,18 +30,12 @@ func (this *Extractor) db() (*sql.DB, error) {
 type Extractor struct {
 	_db *sql.DB
 	sync.Mutex
-	username string
-	password string
-	hostname string
-	database string
+	filename string
 }
 
-func NewExtractor(username, password, hostname, database string) *Extractor {
+func NewExtractor(filename string) *Extractor {
 	this := &Extractor{
-		username: username,
-		password: password,
-		hostname: hostname,
-		database: database,
+		filename: filename,
 	}
 	return this
 }

@@ -1,15 +1,10 @@
-package extractor
-
-import (
-	"go/token"
-)
+package types
 
 type Package struct {
-	Fset    *token.FileSet
 	Types   []*Type
 	Imports map[string][]string
 	Name    string
-	Path string
+	Path    string
 }
 
 type Type struct {
@@ -21,14 +16,14 @@ type Type struct {
 
 func NewType() *Type {
 	return &Type{
-		Mambers:         make([]Member, 0),
+		Members:         make([]Member, 0),
 		EmbeddedStructs: make([]string, 0),
 	}
 }
 
 func (this *Type) ContainsMember(name string) bool {
 	for _, member := range this.Members {
-		if member.Name == name {
+		if member.GoName() == name {
 			return true
 		}
 	}
@@ -36,7 +31,14 @@ func (this *Type) ContainsMember(name string) bool {
 	return false
 }
 
-type Member struct {
-	Name string
-	Type string
+/*
+Members are derived from different sources. Depending on the source, the Go and
+SQL names will be generated differently, and, possibly, functionally.
+*/
+type Member interface {
+	GoType() string
+	GoName() string
+	SqlType() string
+	SqlName() string
+	IsPrimary() bool
 }

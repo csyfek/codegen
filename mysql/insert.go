@@ -3,11 +3,11 @@ package mysql
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/extractor"
+	"github.com/jackmanlabs/codegen/types"
 	"github.com/serenize/snaker"
 )
 
-func Insert(pkgName string, def *extractor.StructDefinition) string {
+func Insert(pkgName string, def *types.Type) string {
 
 	members := getGoSqlData(def.Members)
 
@@ -41,14 +41,14 @@ func Insert(pkgName string, def *extractor.StructDefinition) string {
 
 	for _, member := range members {
 		if !member.SqlCompatible {
-			fmt.Fprintf(b, "\tvar x_%s []byte\n", member.Name)
+			fmt.Fprintf(b, "\tvar x_%s []byte\n", member.GoName())
 		}
 	}
 	fmt.Fprint(b, "\n")
 
 	for _, member := range members {
 		if !member.SqlCompatible {
-			fmt.Fprintf(b, "\tx_%s, err = json.Marshal(x.%s)", member.Name, member.Name)
+			fmt.Fprintf(b, "\tx_%s, err = json.Marshal(x.%s)", member.GoName(), member.GoName())
 			fmt.Fprint(b, `
 	if err != nil {
 		return errors.Stack(err)
@@ -61,9 +61,9 @@ func Insert(pkgName string, def *extractor.StructDefinition) string {
 	fmt.Fprint(b, "\targs := []interface{}{\n")
 	for _, member := range members {
 		if member.SqlCompatible {
-			fmt.Fprintf(b, "\t\t&x.%s,\n", member.Name)
+			fmt.Fprintf(b, "\t\t&x.%s,\n", member.GoName())
 		} else {
-			fmt.Fprintf(b, "\t\t&x_%s,\n", member.Name)
+			fmt.Fprintf(b, "\t\t&x_%s,\n", member.GoName())
 		}
 	}
 	fmt.Fprint(b, "\t}\n\n")
@@ -84,7 +84,7 @@ func Insert(pkgName string, def *extractor.StructDefinition) string {
 	return b.String()
 }
 
-func InsertTx(pkgName string, def *extractor.StructDefinition) string {
+func InsertTx(pkgName string, def *types.Type) string {
 
 	members := getGoSqlData(def.Members)
 
@@ -102,14 +102,14 @@ func InsertTx(pkgName string, def *extractor.StructDefinition) string {
 
 	for _, member := range members {
 		if !member.SqlCompatible {
-			fmt.Fprintf(b, "\tvar x_%s []byte\n", member.Name)
+			fmt.Fprintf(b, "\tvar x_%s []byte\n", member.GoName())
 		}
 	}
 	fmt.Fprint(b, "\n")
 
 	for _, member := range members {
 		if !member.SqlCompatible {
-			fmt.Fprintf(b, "\tx_%s, err = json.Marshal(x.%s)", member.Name, member.Name)
+			fmt.Fprintf(b, "\tx_%s, err = json.Marshal(x.%s)", member.GoName(), member.GoName())
 			fmt.Fprint(b, `
 	if err != nil {
 		return errors.Stack(err)
@@ -122,9 +122,9 @@ func InsertTx(pkgName string, def *extractor.StructDefinition) string {
 	fmt.Fprint(b, "\targs := []interface{}{\n")
 	for _, member := range members {
 		if member.SqlCompatible {
-			fmt.Fprintf(b, "\t\t&x.%s,\n", member.Name)
+			fmt.Fprintf(b, "\t\t&x.%s,\n", member.GoName())
 		} else {
-			fmt.Fprintf(b, "\t\t&x_%s,\n", member.Name)
+			fmt.Fprintf(b, "\t\t&x_%s,\n", member.GoName())
 		}
 	}
 	fmt.Fprint(b, "\t}\n\n")
@@ -147,7 +147,7 @@ func InsertTx(pkgName string, def *extractor.StructDefinition) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func insertSql(def *extractor.StructDefinition, members []GoSqlDatum) *bytes.Buffer {
+func insertSql(def *types.Type, members []GoSqlDatum) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)

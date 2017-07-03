@@ -1,4 +1,4 @@
-package extractor
+package pkgex
 
 import (
 	"fmt"
@@ -28,10 +28,9 @@ func resolveTypeExpression(expr ast.Expr) string {
 
 }
 
-
-func sContains (set []string, s string) bool{
+func sContains(set []string, s string) bool {
 	for _, s_ := range set {
-		if s == s_{
+		if s == s_ {
 			return true
 		}
 	}
