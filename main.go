@@ -95,7 +95,7 @@ func main() {
 			flag.Usage()
 			log.Println("When the 'dst' argument is 'everything', the 'driver' argument is required.")
 			os.Exit(1)
-		case *outputPath == "" :
+		case *outputPath == "":
 			flag.Usage()
 			log.Println("Multiple languages can not be sanely printed to stdout.")
 			log.Println("Please specify a target directory with the 'out' flag.")

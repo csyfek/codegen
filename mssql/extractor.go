@@ -3,7 +3,9 @@ package mssql
 import (
 	"database/sql"
 	"fmt"
+	"github.com/jackmanlabs/codegen/types"
 	"github.com/jackmanlabs/errors"
+	"strings"
 	"sync"
 )
 
@@ -45,7 +47,49 @@ func NewExtractor(username, password, hostname, database string) *Extractor {
 	return this
 }
 
-func (this *Extractor) Tables() ([]string, error) {
+func (this *Extractor) Extract() (*types.Package, error) {
+
+	tables, err := this.tables()
+	if err != nil {
+		return nil, errors.Stack(err)
+	}
+
+	tableColumns := make(map[string][]Column)
+
+	for _, table := range tables {
+		if !strings.HasPrefix(table, "tbl") {
+			continue
+		}
+
+		columns, err := this.columns(table)
+		if err != nil {
+			return nil, errors.Stack(err)
+		}
+
+		tableColumns[table] = columns
+	}
+
+	pkg := &types.Package{
+		Types:   make([]*types.Type, 0),
+		Imports: nil,
+		Name:    "",
+		Path:    "",
+	}
+
+	for table, columns := range tableColumns {
+
+		t := types.NewType()
+		t.Name = strings.TrimPrefix(table, "tbl")
+
+		for _, column := range columns {
+			t.Members = append(t.Members, column.Member())
+		}
+	}
+
+	return pkg, nil
+}
+
+func (this *Extractor) tables() ([]string, error) {
 
 	db, err := this.db()
 	if err != nil {
@@ -74,7 +118,7 @@ func (this *Extractor) Tables() ([]string, error) {
 	return tables, nil
 }
 
-func (this *Extractor) Columns(table string) ([]Column, error) {
+func (this *Extractor) columns(table string) ([]Column, error) {
 
 	db, err := this.db()
 	if err != nil {

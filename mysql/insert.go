@@ -41,14 +41,14 @@ func Insert(pkgName string, def *types.Type) string {
 
 	for _, member := range members {
 		if !member.SqlCompatible {
-			fmt.Fprintf(b, "\tvar x_%s []byte\n", member.GoName())
+			fmt.Fprintf(b, "\tvar x_%s []byte\n", member.Name)
 		}
 	}
 	fmt.Fprint(b, "\n")
 
 	for _, member := range members {
 		if !member.SqlCompatible {
-			fmt.Fprintf(b, "\tx_%s, err = json.Marshal(x.%s)", member.GoName(), member.GoName())
+			fmt.Fprintf(b, "\tx_%s, err = json.Marshal(x.%s)", member.Name, member.Name)
 			fmt.Fprint(b, `
 	if err != nil {
 		return errors.Stack(err)
@@ -61,9 +61,9 @@ func Insert(pkgName string, def *types.Type) string {
 	fmt.Fprint(b, "\targs := []interface{}{\n")
 	for _, member := range members {
 		if member.SqlCompatible {
-			fmt.Fprintf(b, "\t\t&x.%s,\n", member.GoName())
+			fmt.Fprintf(b, "\t\t&x.%s,\n", member.Name)
 		} else {
-			fmt.Fprintf(b, "\t\t&x_%s,\n", member.GoName())
+			fmt.Fprintf(b, "\t\t&x_%s,\n", member.Name)
 		}
 	}
 	fmt.Fprint(b, "\t}\n\n")
@@ -102,14 +102,14 @@ func InsertTx(pkgName string, def *types.Type) string {
 
 	for _, member := range members {
 		if !member.SqlCompatible {
-			fmt.Fprintf(b, "\tvar x_%s []byte\n", member.GoName())
+			fmt.Fprintf(b, "\tvar x_%s []byte\n", member.Name)
 		}
 	}
 	fmt.Fprint(b, "\n")
 
 	for _, member := range members {
 		if !member.SqlCompatible {
-			fmt.Fprintf(b, "\tx_%s, err = json.Marshal(x.%s)", member.GoName(), member.GoName())
+			fmt.Fprintf(b, "\tx_%s, err = json.Marshal(x.%s)", member.Name, member.Name)
 			fmt.Fprint(b, `
 	if err != nil {
 		return errors.Stack(err)
@@ -122,9 +122,9 @@ func InsertTx(pkgName string, def *types.Type) string {
 	fmt.Fprint(b, "\targs := []interface{}{\n")
 	for _, member := range members {
 		if member.SqlCompatible {
-			fmt.Fprintf(b, "\t\t&x.%s,\n", member.GoName())
+			fmt.Fprintf(b, "\t\t&x.%s,\n", member.Name)
 		} else {
-			fmt.Fprintf(b, "\t\t&x_%s,\n", member.GoName())
+			fmt.Fprintf(b, "\t\t&x_%s,\n", member.Name)
 		}
 	}
 	fmt.Fprint(b, "\t}\n\n")

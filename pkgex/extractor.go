@@ -14,6 +14,8 @@ import (
 
 type extractorType struct {
 	pkgPath string
+	types.Package
+	Fset *token.FileSet
 }
 
 func NewExtractor(pkgPath string) *extractorType {
@@ -35,24 +37,20 @@ func (this *extractorType) Extract() (*types.Package, error) {
 		return nil, errors.Stack(err)
 	}
 
-	pkg := &pkgType{Fset: fset}
+	this.Fset = fset
+
 	for _, astPkg := range astPkgs {
 		if strings.HasSuffix(astPkg.Name, "_test") {
 			continue
 		}
-		ast.Walk(pkg, astPkg)
+		ast.Walk(this, astPkg)
 	}
 
-	pkg.Path = this.pkgPath
-	return pkg, nil
+	this.Path = this.pkgPath
+	return &this.Package, nil
 }
 
-type pkgType struct {
-	types.Package
-	Fset *token.FileSet
-}
-
-func (this *pkgType) Visit(node ast.Node) (w ast.Visitor) {
+func (this *extractorType) Visit(node ast.Node) (w ast.Visitor) {
 
 	if this.Fset == nil {
 		log.Println("fset is nil.")

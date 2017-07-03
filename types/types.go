@@ -23,7 +23,7 @@ func NewType() *Type {
 
 func (this *Type) ContainsMember(name string) bool {
 	for _, member := range this.Members {
-		if member.GoName() == name {
+		if member.Name == name {
 			return true
 		}
 	}
@@ -31,14 +31,8 @@ func (this *Type) ContainsMember(name string) bool {
 	return false
 }
 
-/*
-Members are derived from different sources. Depending on the source, the Go and
-SQL names will be generated differently, and, possibly, functionally.
-*/
-type Member interface {
-	GoType() string
-	GoName() string
-	SqlType() string
-	SqlName() string
-	IsPrimary() bool
+type Member struct {
+	Name   string // Go-friendly (CamelCase) name.
+	Type   string // All types are normalized to best available Go types.
+	Length int    // Length is preserved for DB-specific configurations.
 }

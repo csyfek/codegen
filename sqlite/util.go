@@ -37,13 +37,13 @@ func getSqlType(goType string) (sqlType string, sqlCompatible bool) {
 }
 
 type GoSqlDatum struct {
-	pkger.Member
+	types.Member
 	SqlCompatible bool
 	SqlType       string
 	SqlName       string
 }
 
-func getGoSqlData(structMembers []pkger.Member) []GoSqlDatum {
+func getGoSqlData(structMembers []types.Member) []GoSqlDatum {
 	members := make([]GoSqlDatum, 0)
 	for _, member_ := range structMembers {
 		sqlType, compatible := getSqlType(member_.Type)

@@ -26,13 +26,6 @@ type Column struct {
 	DomainName             *string
 }
 
-func (this *Column) SqlType() string {
-	return this.DataType
-}
-
-func (this *Column) SqlName() string {
-	return this.ColumnName
-}
 
 func (this *Column) GoType() string {
 
