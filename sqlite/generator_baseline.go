@@ -1,6 +1,6 @@
 package sqlite
 
-func Baseline() string {
+func (this *generator) Baseline() string {
 	return `
 package main
 

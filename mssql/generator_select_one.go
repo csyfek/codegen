@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func (this *Generator) SelectOne(pkgName string, typeName string, table string, columns []Column) string {
+func (this *generator) SelectOne(pkgName string, typeName string, table string, columns []Column) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := selectOneSql(table, columns)
@@ -71,7 +71,7 @@ func (this *Generator) SelectOne(pkgName string, typeName string, table string, 
 	return b.String()
 }
 
-func (this *Generator) SelectOneTx(pkgName, typeName, tableName string, columns []Column) string {
+func (this *generator) SelectOneTx(pkgName, typeName, tableName string, columns []Column) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := selectOneSqlTx(tableName, columns)

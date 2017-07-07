@@ -1,13 +1,12 @@
-package mysql
+package mssql
 
-func Baseline() string {
+func (this *generator) Baseline() string {
 	return `
-package main
+package data
 
 import (
 	"database/sql"
-	"encoding/json"
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/jackmanlabs/errors"
 	"sync"
 )
@@ -25,16 +24,13 @@ func db() (*sql.DB, error) {
 		return _db, nil
 	}
 
-	connString := "username:password@tcp(host:port)/database?parseTime=true"
+	connString := "server=host;database=database;user id=username;password=password"
 
 	var err error
-	_db, err = sql.Open("mysql", connString)
+	_db, err = sql.Open("mssql", connString)
 	if err != nil {
 		return nil, errors.Stack(err)
 	}
-
-	_db.SetMaxIdleConns(0)   // There are issues with MySQL/MariaDB and connection maintenance.
-	_db.SetMaxOpenConns(100) // A nice, round number.
 
 	return _db, nil
 }
@@ -51,6 +47,12 @@ func tx() (*sql.Tx, error) {
 	}
 
 	return tx, nil
+}
+
+// This is available assuming that you, like me, want to keep advanced DB
+// operations in another package.
+func Tx() (*sql.Tx, error) {
+	return tx()
 }
 `
 }

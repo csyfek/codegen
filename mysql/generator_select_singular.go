@@ -7,7 +7,7 @@ import (
 	"github.com/serenize/snaker"
 )
 
-func SelectOne(pkgName string, def *types.Type) string {
+func (this *generator) SelectOne(pkgName string, def *types.Type) string {
 
 	members := getGoSqlData(def.Members)
 
@@ -96,7 +96,7 @@ func SelectOne(pkgName string, def *types.Type) string {
 	return b.String()
 }
 
-func SelectOneTx(pkgName string, def *types.Type) string {
+func (this *generator) SelectOneTx(pkgName string, def *types.Type) string {
 
 	members := getGoSqlData(def.Members)
 

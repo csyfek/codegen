@@ -129,7 +129,6 @@ func main() {
 		}
 	}
 
-	var pkg types.Package
 	var extractor types.Extractor
 
 	// No need to go crazy with validation; that's already been done above.
@@ -148,6 +147,7 @@ func main() {
 		extractor = pkgex.NewExtractor(*pkgPathIn)
 	}
 
+	var pkg *types.Package
 	pkg, err := extractor.Extract()
 	if err != nil {
 		log.Fatal(errors.Stack(err))

@@ -9,7 +9,7 @@ import (
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func Create(def *types.Type) string {
+func Schema(def *types.Type) string {
 	members := getGoSqlData(def.Members)
 
 	b := bytes.NewBuffer(nil)

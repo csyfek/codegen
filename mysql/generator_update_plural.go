@@ -1,19 +1,20 @@
-package mssql
+package mysql
 
 import (
 	"bytes"
 	"fmt"
+	"github.com/jackmanlabs/codegen/types"
 )
 
-func (this *Generator) UpdateMany(pkgName, typeName, table string, columns []Column) string {
+func (this *generator) UpdateMany(pkgName string, def *types.Type) string {
 
 	var (
 		b             = bytes.NewBuffer(nil)
-		funcName      = fmt.Sprintf("UpdateOne%ss", typeName)
-		funcNameSlave = fmt.Sprintf("Update%sTx", typeName)
+		funcName      = fmt.Sprintf("Update%ss", def.Name)
+		funcNameSlave = fmt.Sprintf("Update%sTx", def.Name)
 	)
 
-	fmt.Fprintf(b, "func %s(z []%s.%s) error {\n", funcName, pkgName, typeName)
+	fmt.Fprintf(b, "func %s(z []%s.%s) error {\n", funcName, pkgName, def.Name)
 	fmt.Fprint(b, `
 
 	tx, err := tx()
@@ -32,7 +33,7 @@ func (this *Generator) UpdateMany(pkgName, typeName, table string, columns []Col
 
 	err = tx.Commit()
 	if err != nil {
-		return errors.Stack(err)
+		return nil, errors.Stack(err)
 	}
 
 	return nil
@@ -41,15 +42,15 @@ func (this *Generator) UpdateMany(pkgName, typeName, table string, columns []Col
 	return b.String()
 }
 
-func (this *Generator) UpdateManyTx(pkgName, typeName, table string, columns []Column) string {
+func (this *generator) UpdateManyTx(pkgName string, def *types.Type) string {
 
 	var (
 		b             = bytes.NewBuffer(nil)
-		funcName      = fmt.Sprintf("UpdateOne%ssTx", typeName)
-		funcNameSlave = fmt.Sprintf("Update%sTx", typeName)
+		funcName      = fmt.Sprintf("Update%ssTx", def.Name)
+		funcNameSlave = fmt.Sprintf("Update%sTx", def.Name)
 	)
 
-	fmt.Fprintf(b, "func %s(tx *sql.Tx, z []%s.%s) error {\n", funcName, pkgName, typeName)
+	fmt.Fprintf(b, "func %s(tx *sql.Tx, z []%s.%s) error {\n", funcName, pkgName, def.Name)
 	fmt.Fprint(b, `
 
 	for _, x := range z {

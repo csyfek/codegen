@@ -5,12 +5,12 @@ import (
 	"fmt"
 )
 
-func (this *Generator) UpdateOne(pkgName, typeName, table string, columns []Column) string {
+func (this *generator) Insert(pkgName, typeName, tableName string, columns []Column) string {
 
 	b := bytes.NewBuffer(nil)
-	b_sql := updateSql(table, columns)
+	b_sql := insertSql(tableName, columns)
 
-	funcName := fmt.Sprintf("UpdateOne%s", typeName)
+	funcName := fmt.Sprintf("Insert%s", typeName)
 	psName := fmt.Sprintf("ps_%s", funcName)
 
 	fmt.Fprintf(b, "var %s *sql.Stmt\n\n", psName)
@@ -41,9 +41,6 @@ func (this *Generator) UpdateOne(pkgName, typeName, table string, columns []Colu
 	for _, column := range columns {
 		fmt.Fprintf(b, "\t\t&x.%s,\n", column.ColumnName)
 	}
-	if len(columns) > 0 {
-		fmt.Fprintf(b, "\t\t&x.%s,\n", columns[0].ColumnName)
-	}
 	fmt.Fprint(b, "\t}\n\n")
 
 	fmt.Fprintf(b, "\t_, err = %s.Exec(args...)", psName)
@@ -54,21 +51,24 @@ func (this *Generator) UpdateOne(pkgName, typeName, table string, columns []Colu
 
 `)
 
+	fmt.Fprint(b, "\t// nil is returned if no data was present.\n")
 	fmt.Fprint(b, "\treturn nil\n")
+
 	fmt.Fprint(b, "}\n") // end of function
 
 	return b.String()
 }
 
-func (this *Generator) UpdateOneTx(pkgName, typeName, table string, columns []Column) string {
+func (this *generator) InsertTx(pkgName, typeName, table string, columns []Column) string {
 
 	b := bytes.NewBuffer(nil)
-	b_sql := updateSql(table, columns)
+	b_sql := insertSql(table, columns)
 
-	funcName := fmt.Sprintf("Update%sTx", typeName)
+	funcName := fmt.Sprintf("Insert%sTx", typeName)
 
 	fmt.Fprintf(b, "func %s(tx *sql.Tx, x *%s.%s) error {\n", funcName, pkgName, typeName)
 	fmt.Fprint(b, "var err error\n")
+
 	fmt.Fprint(b, "\t\tq := `\n")
 	fmt.Fprintf(b, "%s", b_sql.Bytes())
 	fmt.Fprint(b, "`\n\n")
@@ -78,9 +78,6 @@ func (this *Generator) UpdateOneTx(pkgName, typeName, table string, columns []Co
 	fmt.Fprint(b, "\targs := []interface{}{\n")
 	for _, column := range columns {
 		fmt.Fprintf(b, "\t\t&x.%s,\n", column.ColumnName)
-	}
-	if len(columns) > 0 {
-		fmt.Fprintf(b, "\t\t&x.%s,\n", columns[0].ColumnName)
 	}
 	fmt.Fprint(b, "\t}\n\n")
 
@@ -92,34 +89,37 @@ func (this *Generator) UpdateOneTx(pkgName, typeName, table string, columns []Co
 
 `)
 
+	fmt.Fprint(b, "\t// nil is returned if no data was present.\n")
 	fmt.Fprint(b, "\treturn nil\n")
+
 	fmt.Fprint(b, "}\n") // end of function
 
 	return b.String()
 }
 
-// I have to leave out back ticks from the SQL because of embedding issues.
-// Please refrain from using reserved SQL keywords as struct and column names.
-func updateSql(table string, columns []Column) *bytes.Buffer {
+// I have to leave out backticks from the SQL because of embedding issues.
+// Please refrain from using reserved SQL keywords as struct and member names.
+func insertSql(table string, columns []Column) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 
-	var firstField Column
-	if len(columns) > 0 {
-		firstField = columns[0]
-	}
-
-	fmt.Fprintf(b, "UPDATE %s\n", table)
-	fmt.Fprint(b, "SET\n")
+	fmt.Fprintf(b, "INSERT INTO %s (\n", table)
 	for idx, column := range columns {
 		if idx == len(columns)-1 {
-			fmt.Fprintf(b, "\t%s.%s = ?\n", table, column.ColumnName)
+			fmt.Fprintf(b, "\t%s\n", column.ColumnName)
 		} else {
 			// Note the trailing comma.
-			fmt.Fprintf(b, "\t%s.%s = ?,\n", table, column.ColumnName)
+			fmt.Fprintf(b, "\t%s,\n", column.ColumnName)
 		}
 	}
-	fmt.Fprintf(b, "WHERE %s.%s = ?;\n", table, firstField.ColumnName)
+	fmt.Fprint(b, ") VALUES (")
+	for idx := range columns {
+		if idx == len(columns)-1 {
+			fmt.Fprint(b, "?);\n")
+		} else {
+			fmt.Fprint(b, "?, ")
+		}
+	}
 
 	return b
 }

@@ -1,3 +1,3 @@
 package mssql
 
-type Generator struct{}
+type generator struct{}

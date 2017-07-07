@@ -3,11 +3,11 @@ package sqlite
 import (
 	"database/sql"
 	"fmt"
+	"github.com/jackmanlabs/codegen/types"
 	"github.com/jackmanlabs/errors"
 	_ "github.com/mattn/go-sqlite3"
-	"sync"
 	"strings"
-	"github.com/jackmanlabs/codegen/types"
+	"sync"
 )
 
 func (this *Extractor) db() (*sql.DB, error) {
@@ -42,7 +42,6 @@ func NewExtractor(filename string) *Extractor {
 	return this
 }
 
-
 func (this *Extractor) Extract() (*types.Package, error) {
 
 	tables, err := this.tables()
@@ -53,9 +52,6 @@ func (this *Extractor) Extract() (*types.Package, error) {
 	tableColumns := make(map[string][]Column)
 
 	for _, table := range tables {
-		if !strings.HasPrefix(table, "tbl") {
-			continue
-		}
 
 		columns, err := this.columns(table)
 		if err != nil {
@@ -85,6 +81,7 @@ func (this *Extractor) Extract() (*types.Package, error) {
 	return pkg, nil
 }
 
+// Because this method depends on the per-instance configuration, it's a method.
 func (this *Extractor) tables() ([]string, error) {
 
 	db, err := this.db()
@@ -114,6 +111,7 @@ func (this *Extractor) tables() ([]string, error) {
 	return tables, nil
 }
 
+// Because this method depends on the per-instance configuration, it's a method.
 func (this *Extractor) columns(table string) ([]Column, error) {
 
 	db, err := this.db()

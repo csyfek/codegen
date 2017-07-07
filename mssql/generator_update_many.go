@@ -1,20 +1,19 @@
-package mysql
+package mssql
 
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/types"
 )
 
-func UpdateMany(pkgName string, def *types.Type) string {
+func (this *generator) UpdateMany(pkgName, typeName, table string, columns []Column) string {
 
 	var (
 		b             = bytes.NewBuffer(nil)
-		funcName      = fmt.Sprintf("Update%ss", def.Name)
-		funcNameSlave = fmt.Sprintf("Update%sTx", def.Name)
+		funcName      = fmt.Sprintf("UpdateOne%ss", typeName)
+		funcNameSlave = fmt.Sprintf("Update%sTx", typeName)
 	)
 
-	fmt.Fprintf(b, "func %s(z []%s.%s) error {\n", funcName, pkgName, def.Name)
+	fmt.Fprintf(b, "func %s(z []%s.%s) error {\n", funcName, pkgName, typeName)
 	fmt.Fprint(b, `
 
 	tx, err := tx()
@@ -33,7 +32,7 @@ func UpdateMany(pkgName string, def *types.Type) string {
 
 	err = tx.Commit()
 	if err != nil {
-		return nil, errors.Stack(err)
+		return errors.Stack(err)
 	}
 
 	return nil
@@ -42,15 +41,15 @@ func UpdateMany(pkgName string, def *types.Type) string {
 	return b.String()
 }
 
-func UpdateManyTx(pkgName string, def *types.Type) string {
+func (this *generator) UpdateManyTx(pkgName, typeName, table string, columns []Column) string {
 
 	var (
 		b             = bytes.NewBuffer(nil)
-		funcName      = fmt.Sprintf("Update%ssTx", def.Name)
-		funcNameSlave = fmt.Sprintf("Update%sTx", def.Name)
+		funcName      = fmt.Sprintf("UpdateOne%ssTx", typeName)
+		funcNameSlave = fmt.Sprintf("Update%sTx", typeName)
 	)
 
-	fmt.Fprintf(b, "func %s(tx *sql.Tx, z []%s.%s) error {\n", funcName, pkgName, def.Name)
+	fmt.Fprintf(b, "func %s(tx *sql.Tx, z []%s.%s) error {\n", funcName, pkgName, typeName)
 	fmt.Fprint(b, `
 
 	for _, x := range z {

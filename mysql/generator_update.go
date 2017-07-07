@@ -7,7 +7,7 @@ import (
 	"github.com/serenize/snaker"
 )
 
-func Update(pkgName string, def *types.Type) string {
+func (this *generator) Update(pkgName string, def *types.Type) string {
 
 	members := getGoSqlData(def.Members)
 
@@ -85,7 +85,7 @@ func Update(pkgName string, def *types.Type) string {
 	return b.String()
 }
 
-func UpdateTx(pkgName string, def *types.Type) string {
+func (this *generator) UpdateTx(pkgName string, def *types.Type) string {
 
 	members := getGoSqlData(def.Members)
 

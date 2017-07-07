@@ -7,7 +7,7 @@ import (
 	"github.com/serenize/snaker"
 )
 
-func SelectMany(pkgName string, def *types.Type) string {
+func (this *generator) SelectMany(pkgName string, def *types.Type) string {
 
 	members := getGoSqlData(def.Members)
 
@@ -103,7 +103,7 @@ func SelectMany(pkgName string, def *types.Type) string {
 	return b.String()
 }
 
-func SelectManyTx(pkgName string, def *types.Type) string {
+func (this *generator) SelectManyTx(pkgName string, def *types.Type) string {
 
 	members := getGoSqlData(def.Members)
 
