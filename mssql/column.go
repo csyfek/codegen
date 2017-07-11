@@ -39,7 +39,7 @@ func (this *Column) Member() types.Member {
 	}
 
 	return types.Member{
-		Name:   this.ColumnName,
+		GoName: this.ColumnName,
 		Type:   this.goType(),
 		Length: l,
 	}
@@ -47,7 +47,7 @@ func (this *Column) Member() types.Member {
 
 func (this *Column) goType() string {
 
-	for s, g := range sqlTogo {
+	for s, g := range sqlToGo {
 		if s == this.DataType {
 			return g
 		}

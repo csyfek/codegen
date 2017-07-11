@@ -39,7 +39,7 @@ func (this *Column) Member() types.Member {
 	}
 
 	return types.Member{
-		Name:   this.ColumnName,
+		GoName: this.ColumnName,
 		Type:   this.goType(),
 		Length: l,
 	}

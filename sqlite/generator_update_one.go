@@ -7,12 +7,10 @@ import (
 	"github.com/serenize/snaker"
 )
 
-func Update(pkgName string, def *types.Type) string {
-
-	members := getGoSqlData(def.Members)
+func (this *generator) UpdateOne(pkgName string, def *types.Type) string {
 
 	b := bytes.NewBuffer(nil)
-	b_sql := updateSql(def, members)
+	b_sql := updateSql(def)
 
 	funcName := fmt.Sprintf("Update%s", def.Name)
 	psName := fmt.Sprintf("ps_%s", funcName)
@@ -39,16 +37,16 @@ func Update(pkgName string, def *types.Type) string {
 `)
 	fmt.Fprint(b, "	}\n\n") // end of prepared statement clause
 
-	for _, member := range members {
-		if !member.SqlCompatible {
-			fmt.Fprintf(b, "\tvar x_%s []byte\n", member.Name)
+	for _, member := range def.Members {
+		if _, ok := sqlType(member.Type); !ok {
+			fmt.Fprintf(b, "\tvar x_%s []byte\n", member.GoName)
 		}
 	}
 	fmt.Fprint(b, "\n")
 
-	for _, member := range members {
-		if !member.SqlCompatible {
-			fmt.Fprintf(b, "\tx_%s, err = json.Marshal(x.%s)", member.Name, member.Name)
+	for _, member := range def.Members {
+		if _, ok := sqlType(member.Type); !ok {
+			fmt.Fprintf(b, "\tx_%s, err = json.Marshal(x.%s)", member.GoName, member.GoName)
 			fmt.Fprint(b, `
 	if err != nil {
 		return errors.Stack(err)
@@ -59,15 +57,15 @@ func Update(pkgName string, def *types.Type) string {
 	}
 
 	fmt.Fprint(b, "\targs := []interface{}{\n")
-	for _, member := range members {
-		if member.SqlCompatible {
-			fmt.Fprintf(b, "\t\t&x.%s,\n", member.Name)
+	for _, member := range def.Members {
+		if _, ok := sqlType(member.Type); ok {
+			fmt.Fprintf(b, "\t\t&x.%s,\n", member.GoName)
 		} else {
-			fmt.Fprintf(b, "\t\t&x_%s,\n", member.Name)
+			fmt.Fprintf(b, "\t\t&x_%s,\n", member.GoName)
 		}
 	}
-	if len(members) > 0 {
-		fmt.Fprintf(b, "\t\t&x.%s,\n", members[0].Name)
+	if len(def.Members) > 0 {
+		fmt.Fprintf(b, "\t\t&x.%s,\n", def.Members[0].GoName)
 	}
 	fmt.Fprint(b, "\t}\n\n")
 
@@ -85,12 +83,10 @@ func Update(pkgName string, def *types.Type) string {
 	return b.String()
 }
 
-func UpdateTx(pkgName string, def *types.Type) string {
-
-	members := getGoSqlData(def.Members)
+func (this *generator) UpdateOneTx(pkgName string, def *types.Type) string {
 
 	b := bytes.NewBuffer(nil)
-	b_sql := updateSql(def, members)
+	b_sql := updateSql(def)
 
 	funcName := fmt.Sprintf("Update%sTx", def.Name)
 
@@ -100,16 +96,16 @@ func UpdateTx(pkgName string, def *types.Type) string {
 	fmt.Fprintf(b, "%s", b_sql.Bytes())
 	fmt.Fprint(b, "`\n\n")
 
-	for _, member := range members {
-		if !member.SqlCompatible {
-			fmt.Fprintf(b, "\tvar x_%s []byte\n", member.Name)
+	for _, member := range def.Members {
+		if _, ok := sqlType(member.Type); !ok {
+			fmt.Fprintf(b, "\tvar x_%s []byte\n", member.GoName)
 		}
 	}
 	fmt.Fprint(b, "\n")
 
-	for _, member := range members {
-		if !member.SqlCompatible {
-			fmt.Fprintf(b, "\tx_%s, err = json.Marshal(x.%s)", member.Name, member.Name)
+	for _, member := range def.Members {
+		if _, ok := sqlType(member.Type); !ok {
+			fmt.Fprintf(b, "\tx_%s, err = json.Marshal(x.%s)", member.GoName, member.GoName)
 			fmt.Fprint(b, `
 	if err != nil {
 		return errors.Stack(err)
@@ -120,15 +116,15 @@ func UpdateTx(pkgName string, def *types.Type) string {
 	}
 
 	fmt.Fprint(b, "\targs := []interface{}{\n")
-	for _, member := range members {
-		if member.SqlCompatible {
-			fmt.Fprintf(b, "\t\t&x.%s,\n", member.Name)
+	for _, member := range def.Members {
+		if _, ok := sqlType(member.Type); ok {
+			fmt.Fprintf(b, "\t\t&x.%s,\n", member.GoName)
 		} else {
-			fmt.Fprintf(b, "\t\t&x_%s,\n", member.Name)
+			fmt.Fprintf(b, "\t\t&x_%s,\n", member.GoName)
 		}
 	}
-	if len(members) > 0 {
-		fmt.Fprintf(b, "\t\t&x.%s,\n", members[0].Name)
+	if len(def.Members) > 0 {
+		fmt.Fprintf(b, "\t\t&x.%s,\n", def.Members[0].GoName)
 	}
 	fmt.Fprint(b, "\t}\n\n")
 
@@ -148,19 +144,19 @@ func UpdateTx(pkgName string, def *types.Type) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func updateSql(def *types.Type, members []GoSqlDatum) *bytes.Buffer {
+func updateSql(def *types.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)
 
-	var firstField GoSqlDatum
-	if len(members) > 0 {
-		firstField = members[0]
+	var firstField types.Member
+	if len(def.Members) > 0 {
+		firstField = def.Members[0]
 	}
 
 	fmt.Fprintf(b, "UPDATE %s\n", tableName)
 	fmt.Fprint(b, "SET\n")
-	for idx, member := range members {
+	for idx, member := range def.Members {
 		if idx == len(def.Members)-1 {
 			fmt.Fprintf(b, "\t%s = $%d\n", member.SqlName, idx+1)
 		} else {
@@ -168,7 +164,7 @@ func updateSql(def *types.Type, members []GoSqlDatum) *bytes.Buffer {
 			fmt.Fprintf(b, "\t%s = $%d,\n", member.SqlName, idx+1)
 		}
 	}
-	fmt.Fprintf(b, "WHERE %s.%s = $%d;\n", tableName, firstField.SqlName, len(members)+1)
+	fmt.Fprintf(b, "WHERE %s.%s = $%d;\n", tableName, firstField.SqlName, len(def.Members)+1)
 
 	return b
 }

@@ -9,29 +9,31 @@ import (
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func Schema(def *types.Type) string {
-	members := getGoSqlData(def.Members)
+func (this *generator) Schema(def *types.Type) string {
 
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)
 
-	var firstField GoSqlDatum
-	if len(members) > 0 {
-		firstField = members[0]
+	var firstField types.Member
+	if len(def.Members) > 0 {
+		firstField = def.Members[0]
 	}
 
 	fmt.Fprintf(b, "DROP TABLE IF EXISTS %s;\n\n", tableName)
 	fmt.Fprintf(b, "CREATE TABLE %s (\n", tableName)
-	for idx, member := range members {
+	for idx, member := range def.Members {
+
+		sqlType, _ := sqlType(member.Type)
+
 		if idx == 0 {
 			if member.Type == "string" {
-				member.SqlType = "CHAR(36)"
+				sqlType = "CHAR(36)"
 			}
-			fmt.Fprintf(b, "\t%s %s PRIMARY KEY,\n", member.SqlName, member.SqlType)
-		} else if idx == len(members)-1 {
-			fmt.Fprintf(b, "\t%s %s NOT NULL\n", member.SqlName, member.SqlType)
+			fmt.Fprintf(b, "\t%s %s PRIMARY KEY,\n", member.SqlName, sqlType)
+		} else if idx == len(def.Members)-1 {
+			fmt.Fprintf(b, "\t%s %s NOT NULL\n", member.SqlName, sqlType)
 		} else {
-			fmt.Fprintf(b, "\t%s %s NOT NULL,\n", member.SqlName, member.SqlType)
+			fmt.Fprintf(b, "\t%s %s NOT NULL,\n", member.SqlName, sqlType)
 		}
 	}
 	fmt.Fprintf(b, "\t-- FOREIGN KEY (%s) REFERENCES parent_table (id) ON DELETE CASCADE\n", firstField.SqlName)

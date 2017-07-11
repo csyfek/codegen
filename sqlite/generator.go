@@ -1,6 +1,7 @@
 package sqlite
 
-type generator bool
+type generator struct {
+}
 
 func NewGenerator() *generator {
 	return new(generator)

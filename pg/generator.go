@@ -1,6 +1,7 @@
-package mssql
+package pg
 
-type generator struct{}
+type generator struct {
+}
 
 func NewGenerator() *generator {
 	return new(generator)

@@ -3,18 +3,19 @@ package mssql
 import (
 	"bytes"
 	"fmt"
+	"github.com/jackmanlabs/codegen/types"
 )
 
-func (this *generator) SelectMany(pkgName, typeName, table string, columns []Column) string {
+func (this *generator) SelectMany(pkgName string, def *types.Type) string {
 
 	b := bytes.NewBuffer(nil)
-	b_sql := selectManySql(pkgName, table, columns)
+	b_sql := selectManySql(def)
 
-	funcName := fmt.Sprintf("Get%ss", typeName)
+	funcName := fmt.Sprintf("Get%ss", def.Name)
 	psName := fmt.Sprintf("ps_%s", funcName)
 
 	fmt.Fprintf(b, "var %s *sql.Stmt\n\n", psName)
-	fmt.Fprintf(b, "func %s(/* filter string */) ([]%s.%s, error) {\n", funcName, pkgName, typeName)
+	fmt.Fprintf(b, "func %s(/* filter string */) ([]%s.%s, error) {\n", funcName, pkgName, def.Name)
 	fmt.Fprint(b, `
 	db, err := db()
 	if err != nil {
@@ -50,13 +51,13 @@ func (this *generator) SelectMany(pkgName, typeName, table string, columns []Col
 
 `)
 
-	fmt.Fprintf(b, "\tvar z []%s.%s = make([]%s.%s, 0)\n", pkgName, typeName, pkgName, typeName)
+	fmt.Fprintf(b, "\tvar z []%s.%s = make([]%s.%s, 0)\n", pkgName, def.Name, pkgName, def.Name)
 	fmt.Fprint(b, "\tfor rows.Next() {\n")
-	fmt.Fprintf(b, "\t\tvar x %s.%s\n", pkgName, typeName)
+	fmt.Fprintf(b, "\t\tvar x %s.%s\n", pkgName, def.Name)
 
 	fmt.Fprint(b, "\t\ttargets := []interface{}{\n")
-	for _, column := range columns {
-		fmt.Fprintf(b, "\t\t\t&x.%s,\n", column.ColumnName)
+	for _, column := range def.Members {
+		fmt.Fprintf(b, "\t\t\t&x.%s,\n", column.GoName)
 	}
 
 	fmt.Fprint(b, "\t\t}\n") // end of targets declaration.
@@ -78,14 +79,14 @@ func (this *generator) SelectMany(pkgName, typeName, table string, columns []Col
 	return b.String()
 }
 
-func (this *generator) SelectManyTx(pkgName, typeName, tableName string, columns []Column) string {
+func (this *generator) SelectManyTx(pkgName string, def *types.Type) string {
 
 	b := bytes.NewBuffer(nil)
-	b_sql := selectManySqlTx(pkgName, tableName, columns)
+	b_sql := selectManySqlTx(def)
 
-	funcName := fmt.Sprintf("Get%ssTx", typeName)
+	funcName := fmt.Sprintf("Get%ssTx", def.Name)
 
-	fmt.Fprintf(b, "func %s(tx *sql.Tx /*, filter string */) ([]%s.%s, error) {\n", funcName, pkgName, typeName)
+	fmt.Fprintf(b, "func %s(tx *sql.Tx /*, filter string */) ([]%s.%s, error) {\n", funcName, pkgName, def.Name)
 
 	fmt.Fprint(b, "\t\tq := `\n")
 	fmt.Fprintf(b, "%s", b_sql.Bytes())
@@ -106,13 +107,13 @@ func (this *generator) SelectManyTx(pkgName, typeName, tableName string, columns
 
 `)
 
-	fmt.Fprintf(b, "\tvar z []%s.%s = make([]%s.%s, 0)\n", pkgName, typeName, pkgName, typeName)
+	fmt.Fprintf(b, "\tvar z []%s.%s = make([]%s.%s, 0)\n", pkgName, def.Name, pkgName, def.Name)
 	fmt.Fprint(b, "\tfor rows.Next() {\n")
-	fmt.Fprintf(b, "\t\tvar x %s.%s\n", pkgName, typeName)
+	fmt.Fprintf(b, "\t\tvar x %s.%s\n", pkgName, def.Name)
 
 	fmt.Fprint(b, "\t\ttargets := []interface{}{\n")
-	for _, column := range columns {
-		fmt.Fprintf(b, "\t\t\t&x.%s,\n", column.ColumnName)
+	for _, column := range def.Members {
+		fmt.Fprintf(b, "\t\t\t&x.%s,\n", column.GoName)
 	}
 
 	fmt.Fprint(b, `
@@ -138,19 +139,19 @@ func (this *generator) SelectManyTx(pkgName, typeName, tableName string, columns
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and column names.
-func selectManySql(pkgName string, table string, columns []Column) *bytes.Buffer {
+func selectManySql(def *types.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 
 	fmt.Fprint(b, "SELECT\n")
-	for idx, column := range columns {
-		fmt.Fprintf(b, "\t%s", column.ColumnName)
-		if idx != len(columns)-1 {
+	for idx, column := range def.Members {
+		fmt.Fprintf(b, "\t%s", column.SqlName)
+		if idx != len(def.Members)-1 {
 			fmt.Fprint(b, ",") // trailing comma except on last line.
 		}
 		fmt.Fprintln(b)
 	}
-	fmt.Fprintf(b, "FROM %s;\n", table)
+	fmt.Fprintf(b, "FROM %s;\n", def.Table)
 	fmt.Fprint(b, "-- Update your filter criteria here:\n")
 	fmt.Fprint(b, "-- WHERE filter = ?;\n")
 
@@ -158,19 +159,19 @@ func selectManySql(pkgName string, table string, columns []Column) *bytes.Buffer
 }
 
 // SELECT for transactions require some slight changes.
-func selectManySqlTx(pkgName string, table string, columns []Column) *bytes.Buffer {
+func selectManySqlTx(def *types.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 
 	fmt.Fprint(b, "SELECT\n")
-	for idx, column := range columns {
-		fmt.Fprintf(b, "\t%s", column.ColumnName)
-		if idx != len(columns)-1 {
+	for idx, column := range def.Members {
+		fmt.Fprintf(b, "\t%s", column.SqlName)
+		if idx != len(def.Members)-1 {
 			fmt.Fprint(b, ",") // trailing comma except on last line.
 		}
 		fmt.Fprintln(b)
 	}
-	fmt.Fprintf(b, "FROM %s\n", table)
+	fmt.Fprintf(b, "FROM %s\n", def.Table)
 	fmt.Fprint(b, "-- Update your filter criteria here:\n")
 	fmt.Fprint(b, "-- WHERE filter = ?\n")
 	fmt.Fprint(b, "LIMIT 1\n")

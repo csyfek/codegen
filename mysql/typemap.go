@@ -26,3 +26,8 @@ var sqlToGo map[string]string = map[string]string{
 	"TINYINT":         "bool",
 	"VARCHAR(255)":    "string",
 }
+
+func sqlType(goType string) (string, bool) {
+	sqlType, ok := goToSql[goType]
+	return sqlType, ok
+}

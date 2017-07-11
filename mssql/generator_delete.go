@@ -3,14 +3,15 @@ package mssql
 import (
 	"bytes"
 	"fmt"
+	"github.com/jackmanlabs/codegen/types"
 )
 
-func (this *generator) Delete(typeName, table string, columns []Column) string {
+func (this *generator) Delete(def *types.Type) string {
 
 	b := bytes.NewBuffer(nil)
-	b_sql := deleteSql(table, columns)
+	b_sql := deleteSql(def)
 
-	funcName := fmt.Sprintf("Delete%s", typeName)
+	funcName := fmt.Sprintf("Delete%s", def.Name)
 	psName := fmt.Sprintf("ps_%s", funcName)
 
 	fmt.Fprintf(b, "var %s *sql.Stmt\n\n", psName)
@@ -49,12 +50,12 @@ func (this *generator) Delete(typeName, table string, columns []Column) string {
 	return b.String()
 }
 
-func (this *generator) DeleteTx(typeName string, table string, columns []Column) string {
+func (this *generator) DeleteTx(def *types.Type) string {
 
 	b := bytes.NewBuffer(nil)
-	b_sql := deleteSql(table, columns)
+	b_sql := deleteSql(def)
 
-	funcName := fmt.Sprintf("Delete%sTx", typeName)
+	funcName := fmt.Sprintf("Delete%sTx", def.Name)
 
 	fmt.Fprintf(b, "func %s(tx *sql.Tx, id string) error {\n", funcName)
 	fmt.Fprintln(b, "q := `")
@@ -79,14 +80,14 @@ func (this *generator) DeleteTx(typeName string, table string, columns []Column)
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func deleteSql(table string, columns []Column) *bytes.Buffer {
+func deleteSql(def *types.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 
-	fmt.Fprintf(b, "DELETE FROM %s\n", table)
-	if len(columns) > 0 {
-		column := columns[0]
-		fmt.Fprintf(b, "\tWHERE %s.%s = ?;\n", table, column.ColumnName)
+	fmt.Fprintf(b, "DELETE FROM %s\n", def.Table)
+	if len(def.Members) > 0 {
+		column := def.Members[0]
+		fmt.Fprintf(b, "\tWHERE %s.%s = ?;\n", def.Table, column.SqlName)
 	} else {
 		fmt.Fprint(b, "\t-- Insert your filter criteria here.\n")
 	}

@@ -89,8 +89,8 @@ func (this *extractorType) Visit(node ast.Node) (w ast.Visitor) {
 		}
 
 		member := types.Member{
-			Type: typ,
-			Name: name,
+			Type:   typ,
+			GoName: name,
 		}
 
 		parent.Members = append(parent.Members, member)

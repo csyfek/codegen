@@ -9,6 +9,7 @@ type Package struct {
 
 type Type struct {
 	Name            string
+	Table           string
 	Members         []Member
 	EmbeddedStructs []string
 	UnderlyingType  string
@@ -23,7 +24,7 @@ func NewType() *Type {
 
 func (this *Type) ContainsMember(name string) bool {
 	for _, member := range this.Members {
-		if member.Name == name {
+		if member.GoName == name {
 			return true
 		}
 	}
@@ -32,7 +33,16 @@ func (this *Type) ContainsMember(name string) bool {
 }
 
 type Member struct {
-	Name   string // Go-friendly (CamelCase) name.
-	Type   string // All types are normalized to best available Go types.
-	Length int    // Length is preserved for DB-specific configurations.
+	GoName  string // Go-friendly (CamelCase) name.
+	SqlName string // Name to be used for SQL schemas and operations.
+	Type    string // All types are normalized to best available Go types.
+	Length  int    // Length is preserved for DB-specific configurations.
+
+	// After much debate and trial-and-error, I've settled on keeping the GoName
+	// and the SqlName distinct and accessible as strings. Therefore, the caller
+	// should be responsible for knowing if and how these values are set and
+	// used.
+	//
+	// The hope is that the Type and Member objects can be used for translations
+	// both to and from SQL schemas/databases.
 }

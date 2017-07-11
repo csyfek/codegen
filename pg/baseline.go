@@ -1,8 +1,8 @@
 package pg
 
-// TODO: Supprt https://github.com/jackc/pgx
+// TODO: Support https://github.com/jackc/pgx
 
-func Baseline() string {
+func (this *generator) Baseline() string {
 	return `
 package main
 

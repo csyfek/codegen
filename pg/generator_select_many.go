@@ -7,12 +7,10 @@ import (
 	"github.com/serenize/snaker"
 )
 
-func SelectMany(pkgName string, def *types.Type) string {
-
-	members := getGoSqlData(def.Members)
+func (this *generator) SelectMany(pkgName string, def *types.Type) string {
 
 	b := bytes.NewBuffer(nil)
-	b_sql := selectManySql(def, members)
+	b_sql := selectManySql(def)
 
 	funcName := fmt.Sprintf("Get%ss", def.Name)
 	psName := fmt.Sprintf("ps_%s", funcName)
@@ -51,18 +49,18 @@ func SelectMany(pkgName string, def *types.Type) string {
 	fmt.Fprintf(b, "\tvar z []%s.%s = make([]%s.%s, 0)\n", pkgName, def.Name, pkgName, def.Name)
 	fmt.Fprint(b, "\tfor rows.Next() {\n")
 	fmt.Fprintf(b, "\t\tvar x %s.%s\n", pkgName, def.Name)
-	for _, member := range members {
-		if !member.SqlCompatible {
-			fmt.Fprintf(b, "\t\tvar x_%s []byte\n", member.Name)
+	for _, member := range def.Members {
+		if _, ok := sqlType(member.Type); !ok {
+			fmt.Fprintf(b, "\t\tvar x_%s []byte\n", member.GoName)
 		}
 	}
 
 	fmt.Fprint(b, "\t\ttargets := []interface{}{\n")
-	for _, member := range members {
-		if member.SqlCompatible {
-			fmt.Fprintf(b, "\t\t\t&x.%s,\n", member.Name)
+	for _, member := range def.Members {
+		if _, ok := sqlType(member.Type); ok {
+			fmt.Fprintf(b, "\t\t\t&x.%s,\n", member.GoName)
 		} else {
-			fmt.Fprintf(b, "\t\t\t&x_%s,\n", member.Name)
+			fmt.Fprintf(b, "\t\t\t&x_%s,\n", member.GoName)
 		}
 	}
 
@@ -75,9 +73,9 @@ func SelectMany(pkgName string, def *types.Type) string {
 
 `)
 
-	for _, member := range members {
-		if !member.SqlCompatible {
-			fmt.Fprintf(b, "\t\terr = json.Unmarshal(x_%s, &x.%s)", member.Name, member.Name)
+	for _, member := range def.Members {
+		if _, ok := sqlType(member.Type); !ok {
+			fmt.Fprintf(b, "\t\terr = json.Unmarshal(x_%s, &x.%s)", member.GoName, member.GoName)
 			fmt.Fprint(b, `
 		if err != nil {
 			return z, errors.Stack(err)
@@ -97,12 +95,10 @@ func SelectMany(pkgName string, def *types.Type) string {
 	return b.String()
 }
 
-func SelectManyTx(pkgName string, def *types.Type) string {
-
-	members := getGoSqlData(def.Members)
+func (this *generator) SelectManyTx(pkgName string, def *types.Type) string {
 
 	b := bytes.NewBuffer(nil)
-	b_sql := selectManySql(def, members)
+	b_sql := selectManySql(def)
 
 	funcName := fmt.Sprintf("Get%ssTx", def.Name)
 
@@ -125,18 +121,18 @@ func SelectManyTx(pkgName string, def *types.Type) string {
 	fmt.Fprintf(b, "\tvar z []%s.%s = make([]%s.%s, 0)\n", pkgName, def.Name, pkgName, def.Name)
 	fmt.Fprint(b, "\tfor rows.Next() {\n")
 	fmt.Fprintf(b, "\t\tvar x %s.%s\n", pkgName, def.Name)
-	for _, member := range members {
-		if !member.SqlCompatible {
-			fmt.Fprintf(b, "\t\tvar x_%s []byte\n", member.Name)
+	for _, member := range def.Members {
+		if _, ok := sqlType(member.Type); !ok {
+			fmt.Fprintf(b, "\t\tvar x_%s []byte\n", member.GoName)
 		}
 	}
 
 	fmt.Fprint(b, "\t\ttargets := []interface{}{\n")
-	for _, member := range members {
-		if member.SqlCompatible {
-			fmt.Fprintf(b, "\t\t\t&x.%s,\n", member.Name)
+	for _, member := range def.Members {
+		if _, ok := sqlType(member.Type); ok {
+			fmt.Fprintf(b, "\t\t\t&x.%s,\n", member.GoName)
 		} else {
-			fmt.Fprintf(b, "\t\t\t&x_%s,\n", member.Name)
+			fmt.Fprintf(b, "\t\t\t&x_%s,\n", member.GoName)
 		}
 	}
 
@@ -149,9 +145,9 @@ func SelectManyTx(pkgName string, def *types.Type) string {
 
 `)
 
-	for _, member := range members {
-		if !member.SqlCompatible {
-			fmt.Fprintf(b, "\t\terr = json.Unmarshal(x_%s, &x.%s)", member.Name, member.Name)
+	for _, member := range def.Members {
+		if _, ok := sqlType(member.Type); !ok {
+			fmt.Fprintf(b, "\t\terr = json.Unmarshal(x_%s, &x.%s)", member.GoName, member.GoName)
 			fmt.Fprint(b, `
 		if err != nil {
 			return z, errors.Stack(err)
@@ -173,18 +169,18 @@ func SelectManyTx(pkgName string, def *types.Type) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func selectManySql(def *types.Type, members []GoSqlDatum) *bytes.Buffer {
+func selectManySql(def *types.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)
 
-	var firstField GoSqlDatum
-	if len(members) > 0 {
-		firstField = members[0]
+	var firstField types.Member
+	if len(def.Members) > 0 {
+		firstField = def.Members[0]
 	}
 
 	fmt.Fprint(b, "SELECT\n")
-	for idx, member := range members {
+	for idx, member := range def.Members {
 		if idx == len(def.Members)-1 {
 			fmt.Fprintf(b, "\t%s.%s\n", tableName, member.SqlName)
 		} else {

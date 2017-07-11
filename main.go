@@ -252,7 +252,7 @@ func main() {
 
 func mergeStructs(dst, src *types.Type) {
 	for _, srcMember := range src.Members {
-		exists := dst.ContainsMember(srcMember.Name)
+		exists := dst.ContainsMember(srcMember.GoName)
 		if !exists {
 			dst.Members = append(dst.Members, srcMember)
 		}

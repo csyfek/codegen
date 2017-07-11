@@ -2,19 +2,19 @@ package types
 
 type SqlGenerator interface {
 	Baseline() string
-	Schema(typeName string, children []Member) string
-	Delete(typeName string, children []Member) string
-	DeleteTx(typeName string, children []Member) string
-	InsertOne(pkgName string, typeName string, children []Member) string
-	InsertOneTx(pkgName string, typeName string, children []Member) string
-	SelectMany(pkgName string, typeName string, children []Member) string
-	SelectManyTx(pkgName string, typeName string, children []Member) string
-	SelectOne(pkgName string, typeName string, children []Member) string
-	SelectOneTx(pkgName string, typeName string, children []Member) string
-	UpdateMany(pkgName string, typeName string, children []Member) string
-	UpdateManyTx(pkgName string, typeName string, children []Member) string
-	UpdateOne(pkgName string, typeName string, children []Member) string
-	UpdateOneTx(pkgName string, typeName string, children []Member) string
+	Schema(def *Type) string
+	Delete(def *Type) string
+	DeleteTx(def *Type) string
+	InsertOne(pkgName string, def *Type) string
+	InsertOneTx(pkgName string, def *Type) string
+	SelectMany(pkgName string, def *Type) string
+	SelectManyTx(pkgName string, def *Type) string
+	SelectOne(pkgName string, def *Type) string
+	SelectOneTx(pkgName string, def *Type) string
+	UpdateMany(pkgName string, def *Type) string
+	UpdateManyTx(pkgName string, def *Type) string
+	UpdateOne(pkgName string, def *Type) string
+	UpdateOneTx(pkgName string, def *Type) string
 }
 
 type Extractor interface {

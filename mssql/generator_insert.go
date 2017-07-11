@@ -3,18 +3,19 @@ package mssql
 import (
 	"bytes"
 	"fmt"
+	"github.com/jackmanlabs/codegen/types"
 )
 
-func (this *generator) Insert(pkgName, typeName, tableName string, columns []Column) string {
+func (this *generator) InsertOne(pkgName string, def *types.Type) string {
 
 	b := bytes.NewBuffer(nil)
-	b_sql := insertSql(tableName, columns)
+	b_sql := insertSql(def)
 
-	funcName := fmt.Sprintf("Insert%s", typeName)
+	funcName := fmt.Sprintf("Insert%s", def.Name)
 	psName := fmt.Sprintf("ps_%s", funcName)
 
 	fmt.Fprintf(b, "var %s *sql.Stmt\n\n", psName)
-	fmt.Fprintf(b, "func %s(x *%s.%s) error {\n", funcName, pkgName, typeName)
+	fmt.Fprintf(b, "func %s(x *%s.%s) error {\n", funcName, pkgName, def.Name)
 	fmt.Fprint(b, `
 	db, err := db()
 	if err != nil {
@@ -38,8 +39,8 @@ func (this *generator) Insert(pkgName, typeName, tableName string, columns []Col
 	fmt.Fprint(b, "\n")
 
 	fmt.Fprint(b, "\targs := []interface{}{\n")
-	for _, column := range columns {
-		fmt.Fprintf(b, "\t\t&x.%s,\n", column.ColumnName)
+	for _, column := range def.Members {
+		fmt.Fprintf(b, "\t\t&x.%s,\n", column.GoName)
 	}
 	fmt.Fprint(b, "\t}\n\n")
 
@@ -59,14 +60,14 @@ func (this *generator) Insert(pkgName, typeName, tableName string, columns []Col
 	return b.String()
 }
 
-func (this *generator) InsertTx(pkgName, typeName, table string, columns []Column) string {
+func (this *generator) InsertOneTx(pkgName string, def *types.Type) string {
 
 	b := bytes.NewBuffer(nil)
-	b_sql := insertSql(table, columns)
+	b_sql := insertSql(def)
 
-	funcName := fmt.Sprintf("Insert%sTx", typeName)
+	funcName := fmt.Sprintf("Insert%sTx", def.Name)
 
-	fmt.Fprintf(b, "func %s(tx *sql.Tx, x *%s.%s) error {\n", funcName, pkgName, typeName)
+	fmt.Fprintf(b, "func %s(tx *sql.Tx, x *%s.%s) error {\n", funcName, pkgName, def.Name)
 	fmt.Fprint(b, "var err error\n")
 
 	fmt.Fprint(b, "\t\tq := `\n")
@@ -76,8 +77,8 @@ func (this *generator) InsertTx(pkgName, typeName, table string, columns []Colum
 	fmt.Fprint(b, "\n")
 
 	fmt.Fprint(b, "\targs := []interface{}{\n")
-	for _, column := range columns {
-		fmt.Fprintf(b, "\t\t&x.%s,\n", column.ColumnName)
+	for _, column := range def.Members {
+		fmt.Fprintf(b, "\t\t&x.%s,\n", column.GoName)
 	}
 	fmt.Fprint(b, "\t}\n\n")
 
@@ -99,22 +100,22 @@ func (this *generator) InsertTx(pkgName, typeName, table string, columns []Colum
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func insertSql(table string, columns []Column) *bytes.Buffer {
+func insertSql(def *types.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 
-	fmt.Fprintf(b, "INSERT INTO %s (\n", table)
-	for idx, column := range columns {
-		if idx == len(columns)-1 {
-			fmt.Fprintf(b, "\t%s\n", column.ColumnName)
+	fmt.Fprintf(b, "INSERT INTO %s (\n", def.Table)
+	for idx, column := range def.Members {
+		if idx == len(def.Members)-1 {
+			fmt.Fprintf(b, "\t%s\n", column.SqlName)
 		} else {
 			// Note the trailing comma.
-			fmt.Fprintf(b, "\t%s,\n", column.ColumnName)
+			fmt.Fprintf(b, "\t%s,\n", column.SqlName)
 		}
 	}
 	fmt.Fprint(b, ") VALUES (")
-	for idx := range columns {
-		if idx == len(columns)-1 {
+	for idx := range def.Members {
+		if idx == len(def.Members)-1 {
 			fmt.Fprint(b, "?);\n")
 		} else {
 			fmt.Fprint(b, "?, ")

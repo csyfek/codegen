@@ -3,18 +3,19 @@ package mssql
 import (
 	"bytes"
 	"fmt"
+	"github.com/jackmanlabs/codegen/types"
 )
 
-func (this *generator) SelectOne(pkgName string, typeName string, table string, columns []Column) string {
+func (this *generator) SelectOne(pkgName string, def *types.Type) string {
 
 	b := bytes.NewBuffer(nil)
-	b_sql := selectOneSql(table, columns)
+	b_sql := selectOneSql(def)
 
-	funcName := fmt.Sprintf("Get%s", typeName)
+	funcName := fmt.Sprintf("Get%s", def.Name)
 	psName := fmt.Sprintf("ps_%s", funcName)
 
 	fmt.Fprintf(b, "var %s *sql.Stmt\n\n", psName)
-	fmt.Fprintf(b, "func %s(id string) (*%s.%s, error) {\n", funcName, pkgName, typeName)
+	fmt.Fprintf(b, "func %s(id string) (*%s.%s, error) {\n", funcName, pkgName, def.Name)
 	fmt.Fprint(b, `
 	db, err := db()
 	if err != nil {
@@ -44,13 +45,13 @@ func (this *generator) SelectOne(pkgName string, typeName string, table string, 
 
 `)
 
-	fmt.Fprintf(b, "\tvar x *%s.%s\n", pkgName, typeName)
+	fmt.Fprintf(b, "\tvar x *%s.%s\n", pkgName, def.Name)
 	fmt.Fprint(b, "\tif rows.Next() {\n")
-	fmt.Fprintf(b, "\t\tx = new(%s.%s)\n", pkgName, typeName)
+	fmt.Fprintf(b, "\t\tx = new(%s.%s)\n", pkgName, def.Name)
 
 	fmt.Fprint(b, "\t\ttargets := []interface{}{\n")
-	for _, column := range columns {
-		fmt.Fprintf(b, "\t\t\t&x.%s,\n", column.ColumnName)
+	for _, column := range def.Members {
+		fmt.Fprintf(b, "\t\t\t&x.%s,\n", column.GoName)
 	}
 
 	fmt.Fprint(b, "\t\t}\n") // end of targets declaration.
@@ -71,10 +72,10 @@ func (this *generator) SelectOne(pkgName string, typeName string, table string, 
 	return b.String()
 }
 
-func (this *generator) SelectOneTx(pkgName, typeName, tableName string, columns []Column) string {
+func (this *generator) SelectOneTx(pkgName string, def *types.Type) string {
 
 	b := bytes.NewBuffer(nil)
-	b_sql := selectOneSqlTx(tableName, columns)
+	b_sql := selectOneSqlTx(def)
 
 	funcName := fmt.Sprintf("Get%sTx", typeName)
 
@@ -98,7 +99,7 @@ func (this *generator) SelectOneTx(pkgName, typeName, tableName string, columns 
 	fmt.Fprintf(b, "\t\tx = new(%s.%s)\n", pkgName, typeName)
 
 	fmt.Fprint(b, "\t\ttargets := []interface{}{\n")
-	for _, column := range columns {
+	for _, column := range def.Members {
 		fmt.Fprintf(b, "\t\t\t&x.%s,\n", column.ColumnName)
 	}
 
@@ -122,24 +123,24 @@ func (this *generator) SelectOneTx(pkgName, typeName, tableName string, columns 
 
 // I have to leave out back ticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and column names.
-func selectOneSql(tableName string, columns []Column) *bytes.Buffer {
+func selectOneSql(def *types.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 
 	var firstField Column
-	if len(columns) > 0 {
-		firstField = columns[0]
+	if len(def.Members) > 0 {
+		firstField = def.Members[0]
 	}
 
 	fmt.Fprint(b, "SELECT\n")
-	for idx, column := range columns {
-		fmt.Fprintf(b, "\t%s", column.ColumnName)
-		if idx != len(columns)-1 {
+	for idx, column := range def.Members {
+		fmt.Fprintf(b, "\t%s", column.SqlName)
+		if idx != len(def.Members)-1 {
 			fmt.Fprint(b, ",")
 		}
 		fmt.Fprintln(b)
 	}
-	fmt.Fprintf(b, "FROM %s\n", tableName)
+	fmt.Fprintf(b, "FROM %s\n", def.Table)
 	fmt.Fprintf(b, "WHERE %s = ?\n", firstField.ColumnName)
 	fmt.Fprint(b, "LIMIT 1;\n")
 
@@ -147,24 +148,24 @@ func selectOneSql(tableName string, columns []Column) *bytes.Buffer {
 }
 
 // SELECT for transactions require some slight changes.
-func selectOneSqlTx(tableName string, columns []Column) *bytes.Buffer {
+func selectOneSqlTx(def *types.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 
 	var firstField Column
-	if len(columns) > 0 {
-		firstField = columns[0]
+	if len(def.Members) > 0 {
+		firstField = def.Members[0]
 	}
 
 	fmt.Fprint(b, "SELECT\n")
-	for idx, column := range columns {
-		fmt.Fprintf(b, "\t%s", column.ColumnName)
-		if idx != len(columns)-1 {
+	for idx, column := range def.Members {
+		fmt.Fprintf(b, "\t%s", column.SqlName)
+		if idx != len(def.Members)-1 {
 			fmt.Fprint(b, ",") // trailing comma except on last line.
 		}
 		fmt.Fprintln(b)
 	}
-	fmt.Fprintf(b, "FROM %s\n", tableName)
+	fmt.Fprintf(b, "FROM %s\n", def.Table)
 	fmt.Fprintf(b, "WHERE %s = ?\n", firstField.ColumnName)
 	fmt.Fprint(b, "LIMIT 1\n")
 	fmt.Fprint(b, "FOR UPDATE;\n")

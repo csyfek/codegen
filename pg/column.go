@@ -39,9 +39,11 @@ func (this *Column) Member() types.Member {
 	}
 
 	return types.Member{
-		Name:   this.ColumnName,
-		Type:   this.goType(),
-		Length: l,
+		// We expect the Go and SQL names to be the same for MSSQL.
+		GoName:  this.ColumnName,
+		SqlName: this.ColumnName,
+		Type:    this.goType(),
+		Length:  l,
 	}
 }
 

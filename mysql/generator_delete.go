@@ -9,10 +9,8 @@ import (
 
 func (this *generator) Delete(def *types.Type) string {
 
-	members := getGoSqlData(def.Members)
-
 	b := bytes.NewBuffer(nil)
-	b_sql := deleteSql(def, members)
+	b_sql := deleteSql(def)
 
 	funcName := fmt.Sprintf("Delete%s", def.Name)
 	psName := fmt.Sprintf("ps_%s", funcName)
@@ -55,10 +53,8 @@ func (this *generator) Delete(def *types.Type) string {
 
 func (this *generator) DeleteTx(def *types.Type) string {
 
-	members := getGoSqlData(def.Members)
-
 	b := bytes.NewBuffer(nil)
-	b_sql := deleteSql(def, members)
+	b_sql := deleteSql(def)
 
 	funcName := fmt.Sprintf("Delete%sTx", def.Name)
 
@@ -85,14 +81,14 @@ func (this *generator) DeleteTx(def *types.Type) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func deleteSql(def *types.Type, members []GoSqlDatum) *bytes.Buffer {
+func deleteSql(def *types.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)
 
 	fmt.Fprintf(b, "DELETE FROM %s\n", tableName)
-	if len(members) > 0 {
-		member := members[0]
+	if len(def.Members) > 0 {
+		member := def.Members[0]
 		fmt.Fprintf(b, "\tWHERE %s.%s = ?;\n", tableName, member.SqlName)
 	} else {
 		fmt.Fprint(b, "\t-- Insert your filter criteria here.\n")
