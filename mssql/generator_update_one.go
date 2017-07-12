@@ -9,13 +9,13 @@ import (
 func (this *generator) UpdateOne(pkgName string, def *types.Type) string {
 
 	b := bytes.NewBuffer(nil)
-	b_sql := updateSql(table, columns)
+	b_sql := updateSql(def)
 
-	funcName := fmt.Sprintf("UpdateOne%s", typeName)
+	funcName := fmt.Sprintf("UpdateOne%s", def.Name)
 	psName := fmt.Sprintf("ps_%s", funcName)
 
 	fmt.Fprintf(b, "var %s *sql.Stmt\n\n", psName)
-	fmt.Fprintf(b, "func %s(x *%s.%s) error {\n", funcName, pkgName, typeName)
+	fmt.Fprintf(b, "func %s(x *%s.%s) error {\n", funcName, pkgName, def.Name)
 	fmt.Fprint(b, `
 	db, err := db()
 	if err != nil {
@@ -39,11 +39,11 @@ func (this *generator) UpdateOne(pkgName string, def *types.Type) string {
 	fmt.Fprint(b, "\n")
 
 	fmt.Fprint(b, "\targs := []interface{}{\n")
-	for _, column := range columns {
-		fmt.Fprintf(b, "\t\t&x.%s,\n", column.ColumnName)
+	for _, column := range def.Members {
+		fmt.Fprintf(b, "\t\t&x.%s,\n", column.GoName)
 	}
-	if len(columns) > 0 {
-		fmt.Fprintf(b, "\t\t&x.%s,\n", columns[0].ColumnName)
+	if len(def.Members) > 0 {
+		fmt.Fprintf(b, "\t\t&x.%s,\n", def.Members[0].GoName)
 	}
 	fmt.Fprint(b, "\t}\n\n")
 
@@ -64,11 +64,11 @@ func (this *generator) UpdateOne(pkgName string, def *types.Type) string {
 func (this *generator) UpdateOneTx(pkgName string, def *types.Type) string {
 
 	b := bytes.NewBuffer(nil)
-	b_sql := updateSql(table, columns)
+	b_sql := updateSql(def)
 
-	funcName := fmt.Sprintf("Update%sTx", typeName)
+	funcName := fmt.Sprintf("Update%sTx", def.Name)
 
-	fmt.Fprintf(b, "func %s(tx *sql.Tx, x *%s.%s) error {\n", funcName, pkgName, typeName)
+	fmt.Fprintf(b, "func %s(tx *sql.Tx, x *%s.%s) error {\n", funcName, pkgName, def.Name)
 	fmt.Fprint(b, "var err error\n")
 	fmt.Fprint(b, "\t\tq := `\n")
 	fmt.Fprintf(b, "%s", b_sql.Bytes())
@@ -78,10 +78,10 @@ func (this *generator) UpdateOneTx(pkgName string, def *types.Type) string {
 
 	fmt.Fprint(b, "\targs := []interface{}{\n")
 	for _, column := range def.Members {
-		fmt.Fprintf(b, "\t\t&x.%s,\n", column.ColumnName)
+		fmt.Fprintf(b, "\t\t&x.%s,\n", column.GoName)
 	}
 	if len(def.Members) > 0 {
-		fmt.Fprintf(b, "\t\t&x.%s,\n", def.Members[0].ColumnName)
+		fmt.Fprintf(b, "\t\t&x.%s,\n", def.Members[0].GoName)
 	}
 	fmt.Fprint(b, "\t}\n\n")
 
@@ -105,22 +105,22 @@ func updateSql(def *types.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 
-	var firstField Column
+	var firstField types.Member
 	if len(def.Members) > 0 {
 		firstField = def.Members[0]
 	}
 
-	fmt.Fprintf(b, "UPDATE %s\n", table)
+	fmt.Fprintf(b, "UPDATE %s\n", def.Table)
 	fmt.Fprint(b, "SET\n")
 	for idx, column := range def.Members {
 		if idx == len(def.Members)-1 {
-			fmt.Fprintf(b, "\t%s.%s = ?\n", table, column.ColumnName)
+			fmt.Fprintf(b, "\t%s.%s = ?\n", def.Table, column.SqlName)
 		} else {
 			// Note the trailing comma.
-			fmt.Fprintf(b, "\t%s.%s = ?,\n", table, column.ColumnName)
+			fmt.Fprintf(b, "\t%s.%s = ?,\n", def.Table, column.SqlName)
 		}
 	}
-	fmt.Fprintf(b, "WHERE %s.%s = ?;\n", table, firstField.ColumnName)
+	fmt.Fprintf(b, "WHERE %s.%s = ?;\n", def.Table, firstField.SqlName)
 
 	return b
 }

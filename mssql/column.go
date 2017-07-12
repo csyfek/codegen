@@ -39,9 +39,10 @@ func (this *Column) Member() types.Member {
 	}
 
 	return types.Member{
-		GoName: this.ColumnName,
-		Type:   this.goType(),
-		Length: l,
+		GoName:  this.ColumnName, // Our test DB uses CamelCase for column names.
+		SqlName: this.ColumnName,
+		Type:    this.goType(),
+		Length:  l,
 	}
 }
 

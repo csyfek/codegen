@@ -3,6 +3,7 @@ package mysql
 import (
 	"database/sql"
 	"fmt"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/jackmanlabs/codegen/types"
 	"github.com/jackmanlabs/errors"
 	"strings"
@@ -17,10 +18,14 @@ func (this *Extractor) db() (*sql.DB, error) {
 		return this._db, nil
 	}
 
-	connString := fmt.Sprintf("server=%s;database=%s;user id=%s;password=%s", this.hostname, this.database, this.username, this.password)
+	connString := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s?parseTime=true",
+		this.username,
+		this.password,
+		this.hostname,
+		this.database)
 
 	var err error
-	this._db, err = sql.Open("mssql", connString)
+	this._db, err = sql.Open("mysql", connString)
 	if err != nil {
 		return nil, errors.Stack(err)
 	}

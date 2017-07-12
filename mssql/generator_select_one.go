@@ -77,9 +77,9 @@ func (this *generator) SelectOneTx(pkgName string, def *types.Type) string {
 	b := bytes.NewBuffer(nil)
 	b_sql := selectOneSqlTx(def)
 
-	funcName := fmt.Sprintf("Get%sTx", typeName)
+	funcName := fmt.Sprintf("Get%sTx", def.Name)
 
-	fmt.Fprintf(b, "func %s(tx *sql.Tx, id string) (*%s.%s, error) {\n", funcName, pkgName, typeName)
+	fmt.Fprintf(b, "func %s(tx *sql.Tx, id string) (*%s.%s, error) {\n", funcName, pkgName, def.Name)
 	fmt.Fprint(b, "\t\tq := `\n")
 	fmt.Fprintf(b, "%s", b_sql.Bytes())
 	fmt.Fprint(b, "`\n\n")
@@ -94,13 +94,13 @@ func (this *generator) SelectOneTx(pkgName string, def *types.Type) string {
 
 `)
 
-	fmt.Fprintf(b, "\tvar x *%s.%s\n", pkgName, typeName)
+	fmt.Fprintf(b, "\tvar x *%s.%s\n", pkgName, def.Name)
 	fmt.Fprint(b, "\tif rows.Next() {\n")
-	fmt.Fprintf(b, "\t\tx = new(%s.%s)\n", pkgName, typeName)
+	fmt.Fprintf(b, "\t\tx = new(%s.%s)\n", pkgName, def.Name)
 
 	fmt.Fprint(b, "\t\ttargets := []interface{}{\n")
 	for _, column := range def.Members {
-		fmt.Fprintf(b, "\t\t\t&x.%s,\n", column.ColumnName)
+		fmt.Fprintf(b, "\t\t\t&x.%s,\n", column.GoName)
 	}
 
 	fmt.Fprint(b, "\t\t}\n") // end of targets declaration.
@@ -127,7 +127,7 @@ func selectOneSql(def *types.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 
-	var firstField Column
+	var firstField types.Member
 	if len(def.Members) > 0 {
 		firstField = def.Members[0]
 	}
@@ -141,7 +141,7 @@ func selectOneSql(def *types.Type) *bytes.Buffer {
 		fmt.Fprintln(b)
 	}
 	fmt.Fprintf(b, "FROM %s\n", def.Table)
-	fmt.Fprintf(b, "WHERE %s = ?\n", firstField.ColumnName)
+	fmt.Fprintf(b, "WHERE %s = ?\n", firstField.SqlName)
 	fmt.Fprint(b, "LIMIT 1;\n")
 
 	return b
@@ -152,7 +152,7 @@ func selectOneSqlTx(def *types.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 
-	var firstField Column
+	var firstField types.Member
 	if len(def.Members) > 0 {
 		firstField = def.Members[0]
 	}
@@ -166,7 +166,7 @@ func selectOneSqlTx(def *types.Type) *bytes.Buffer {
 		fmt.Fprintln(b)
 	}
 	fmt.Fprintf(b, "FROM %s\n", def.Table)
-	fmt.Fprintf(b, "WHERE %s = ?\n", firstField.ColumnName)
+	fmt.Fprintf(b, "WHERE %s = ?\n", firstField.SqlName)
 	fmt.Fprint(b, "LIMIT 1\n")
 	fmt.Fprint(b, "FOR UPDATE;\n")
 

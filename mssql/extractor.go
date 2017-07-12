@@ -3,6 +3,7 @@ package mssql
 import (
 	"database/sql"
 	"fmt"
+	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/jackmanlabs/codegen/types"
 	"github.com/jackmanlabs/errors"
 	"strings"
@@ -79,11 +80,16 @@ func (this *Extractor) Extract() (*types.Package, error) {
 	for table, columns := range tableColumns {
 
 		t := types.NewType()
+
+		// Our test DB uses a CamelCase name with a 'tbl' prefix.
 		t.Name = strings.TrimPrefix(table, "tbl")
+		t.Table = t.Name
 
 		for _, column := range columns {
 			t.Members = append(t.Members, column.Member())
 		}
+
+		pkg.Types = append(pkg.Types, t)
 	}
 
 	return pkg, nil
@@ -113,6 +119,8 @@ func (this *Extractor) tables() ([]string, error) {
 		}
 
 		tables = append(tables, s)
+
+		//log.Print("FOUND TABLE: ", s)
 	}
 
 	return tables, nil
@@ -194,6 +202,9 @@ WHERE TABLE_NAME = ?;
 			return nil, errors.Stack(err)
 		}
 		columns = append(columns, c)
+
+		//log.Printf("TABLE: %s\tFOUND COLUMN: %s", table, c.ColumnName)
+
 	}
 
 	return columns, nil

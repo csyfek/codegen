@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"github.com/jackmanlabs/codegen/mssql"
@@ -10,8 +11,12 @@ import (
 	"github.com/jackmanlabs/codegen/sqlite"
 	"github.com/jackmanlabs/codegen/types"
 	"github.com/jackmanlabs/errors"
+	"github.com/serenize/snaker"
+	"io"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 var (
@@ -114,6 +119,26 @@ func main() {
 		log.Println("Writing to stdout.")
 		log.Println("If you want to dump to a directory, specify a target directory with the 'out' flag.")
 		log.Println("If you want to use the current directory, use '.' or './'.")
+	} else {
+		*outputPath = strings.TrimSuffix(*outputPath, "/")
+		dir, err := os.Open(*outputPath)
+		if err != nil {
+			log.Fatal(errors.Stack(err))
+		}
+
+		dirstat, err := dir.Stat()
+		if err != nil {
+			log.Fatal(errors.Stack(err))
+		}
+
+		if !dirstat.IsDir() {
+			log.Fatal("The output path must be a directory.")
+		}
+
+		pkgPath = packagePath(*outputPath)
+		log.Print("OUTPUT PATH: \t", *outputPath)
+		log.Print("PACKAGE PATH:\t", pkgPath)
+
 	}
 
 	if *driver != "" {
@@ -155,7 +180,7 @@ func main() {
 
 	structMap := make(map[string]*types.Type)
 
-	// Prepare to flatten the structs for MySQL generation by making them addressable.
+	// Prepare to flatten the structs for output generation by making them addressable.
 	for _, s := range pkg.Types {
 		structMap[s.Name] = s
 	}
@@ -195,59 +220,8 @@ func main() {
 	}
 
 	if *dst == "bindings" || *dst == "everything" {
-		for _, sdef := range pkg.Types {
-
-			fmt.Println("/*============================================================================*/")
-			fmt.Println()
-			fmt.Println(generator.SelectOne(pkg.Name, sdef))
-			fmt.Println()
-			fmt.Println("/*============================================================================*/")
-			fmt.Println()
-			fmt.Println(generator.SelectOneTx(pkg.Name, sdef))
-			fmt.Println()
-			fmt.Println("/*============================================================================*/")
-			fmt.Println()
-			fmt.Println(generator.SelectMany(pkg.Name, sdef))
-			fmt.Println()
-			fmt.Println("/*============================================================================*/")
-			fmt.Println()
-			fmt.Println(generator.SelectManyTx(pkg.Name, sdef))
-			fmt.Println()
-			fmt.Println("/*============================================================================*/")
-			fmt.Println()
-			fmt.Println(generator.UpdateOne(pkg.Name, sdef))
-			fmt.Println()
-			fmt.Println("/*============================================================================*/")
-			fmt.Println()
-			fmt.Println(generator.UpdateOneTx(pkg.Name, sdef))
-			fmt.Println()
-			fmt.Println("/*============================================================================*/")
-			fmt.Println()
-			fmt.Println(generator.UpdateMany(pkg.Name, sdef))
-			fmt.Println()
-			fmt.Println("/*============================================================================*/")
-			fmt.Println()
-			fmt.Println(generator.UpdateManyTx(pkg.Name, sdef))
-			fmt.Println()
-			fmt.Println("/*============================================================================*/")
-			fmt.Println()
-			fmt.Println(generator.InsertOne(pkg.Name, sdef))
-			fmt.Println()
-			fmt.Println("/*============================================================================*/")
-			fmt.Println()
-			fmt.Println(generator.InsertOneTx(pkg.Name, sdef))
-			fmt.Println()
-			fmt.Println("/*============================================================================*/")
-			fmt.Println()
-			fmt.Println(generator.Delete(sdef))
-			fmt.Println()
-			fmt.Println("/*============================================================================*/")
-			fmt.Println()
-			fmt.Println(generator.DeleteTx(sdef))
-			fmt.Println()
-		}
+		generateBindings(*outputPath, generator, pkg)
 	}
-
 }
 
 func mergeStructs(dst, src *types.Type) {
@@ -257,4 +231,151 @@ func mergeStructs(dst, src *types.Type) {
 			dst.Members = append(dst.Members, srcMember)
 		}
 	}
+}
+
+func generateBindings(basePath string, generator types.SqlGenerator, pkg *types.Package) error {
+
+	var (
+		f    io.WriteCloser
+		path string
+	)
+
+	if basePath == "" {
+		f = os.Stdout
+	} else {
+		path = basePath + "/data"
+		d, err := os.Open(path)
+		if os.IsNotExist(err) {
+			err = os.Mkdir(path, os.ModeDir|os.ModePerm)
+			if err != nil {
+				return errors.Stack(err)
+			}
+		} else if err != nil {
+			return errors.Stack(err)
+		} else {
+			d.Close()
+		}
+
+		// Write baseline file.
+
+		f, err = os.Create(path + "/db.go")
+		if err != nil {
+			return errors.Stack(err)
+		}
+
+		f.Write([]byte(generator.Baseline()))
+
+		err = f.Close()
+		if err != nil {
+			return errors.Stack(err)
+		}
+	}
+
+	for _, def := range pkg.Types {
+
+		b := bytes.NewBuffer(nil)
+
+		fmt.Fprint(b, `
+package data
+
+import(
+	"database/sql"
+	"github.com/jackmanlabs/errors"
+)
+
+`)
+
+		if pkgPath != "" {
+			fmt.Fprintln(b)
+			fmt.Fprintln(b, "import (")
+			fmt.Fprintln(b, "\""+pkgPath+"/types\"")
+			fmt.Fprintln(b, ")")
+			fmt.Fprintln(b)
+		}
+
+		fmt.Fprintln(b)
+		fmt.Fprintln(b, "//##############################################################################")
+		fmt.Fprintln(b, "// TABLE: "+def.Table)
+		fmt.Fprintln(b, "// TYPE:  "+def.Name)
+		fmt.Fprintln(b, "//##############################################################################")
+		fmt.Fprintln(b)
+
+		fmt.Fprint(b, generator.SelectOne(pkg.Name, def))
+		fmt.Fprint(b, "\n\n/*============================================================================*/\n\n")
+		fmt.Fprint(b, generator.SelectOneTx(pkg.Name, def))
+		fmt.Fprint(b, "\n\n/*============================================================================*/\n\n")
+		fmt.Fprint(b, generator.SelectMany(pkg.Name, def))
+		fmt.Fprint(b, "\n\n/*============================================================================*/\n\n")
+		fmt.Fprint(b, generator.SelectManyTx(pkg.Name, def))
+		fmt.Fprint(b, "\n\n/*============================================================================*/\n\n")
+		fmt.Fprint(b, generator.InsertOne(pkg.Name, def))
+		fmt.Fprint(b, "\n\n/*============================================================================*/\n\n")
+		fmt.Fprint(b, generator.InsertOneTx(pkg.Name, def))
+		fmt.Fprint(b, "\n\n/*============================================================================*/\n\n")
+		fmt.Fprint(b, generator.UpdateOne(pkg.Name, def))
+		fmt.Fprint(b, "\n\n/*============================================================================*/\n\n")
+		fmt.Fprint(b, generator.UpdateOneTx(pkg.Name, def))
+		fmt.Fprint(b, "\n\n/*============================================================================*/\n\n")
+		fmt.Fprint(b, generator.UpdateMany(pkg.Name, def))
+		fmt.Fprint(b, "\n\n/*============================================================================*/\n\n")
+		fmt.Fprint(b, generator.UpdateManyTx(pkg.Name, def))
+		fmt.Fprint(b, "\n\n/*============================================================================*/\n\n")
+		fmt.Fprint(b, generator.Delete(def))
+		fmt.Fprint(b, "\n\n/*============================================================================*/\n\n")
+		fmt.Fprint(b, generator.DeleteTx(def))
+		fmt.Fprint(b, "\n\n/*============================================================================*/\n\n")
+
+		if basePath == "" {
+			_, err := io.Copy(os.Stdout, b)
+			if err != nil {
+				return errors.Stack(err)
+			}
+		} else {
+			filename := snaker.CamelToSnake(def.Name)
+			filename = "bindings_" + filename + ".go"
+
+			f, err := os.Create(path + "/" + filename)
+			if err != nil {
+				return errors.Stack(err)
+			}
+
+			_, err = io.Copy(f, b)
+			if err != nil {
+				return errors.Stack(err)
+			}
+
+			err = f.Close()
+			if err != nil {
+				return errors.Stack(err)
+			}
+		}
+	}
+
+	return nil
+}
+
+func packagePath(path string) string {
+
+	var err error
+
+	path, err = filepath.Abs(path)
+	if err != nil {
+		log.Print(errors.Stack(err))
+		return ""
+	}
+
+	gopath := os.Getenv("GOPATH")
+	gopath, err = filepath.Abs(gopath)
+	if err != nil {
+		log.Print(errors.Stack(err))
+		return ""
+	}
+
+	if !strings.HasPrefix(path, gopath) {
+		return ""
+	}
+
+	pkgpath := strings.TrimPrefix(path, gopath+"/src/")
+
+	return pkgpath
 }
