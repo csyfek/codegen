@@ -19,21 +19,17 @@ import (
 	"strings"
 )
 
-var (
-	pkgPath string
-)
-
 func main() {
 	var (
-		driver     *string = flag.String("driver", "mysql", "The SQL driver relevant to your request; one of 'sqlite', 'mysql', 'pg', or 'mssql'.")
-		pkgPathIn  *string = flag.String("pkg", "", "The package that you want to use for source material.")
-		database   *string = flag.String("db", "", "The name of the database you want to analyze.")
-		hostname   *string = flag.String("host", "", "The host (IP address or hostname) that hosts the database you want to analyze.")
-		outputPath *string = flag.String("out", "", "The path where resulting files will be deposited. Without a specified path, stdout will be used if possible.")
-		password   *string = flag.String("pass", "", "The password of the user specificed by 'username'.")
-		username   *string = flag.String("user", "", "The username on the database you want to analyze.")
-		src        *string = flag.String("src", "", "The source of data that interests you; one of 'pkg' or 'db'.")
-		dst        *string = flag.String("dst", "", "The desired output, one of 'types', 'control', 'bindings', 'rest', 'schema', or 'everything'.")
+		driver          *string = flag.String("driver", "mysql", "The SQL driver relevant to your request; one of 'sqlite', 'mysql', 'pg', or 'mssql'.")
+		importPathTypes *string = flag.String("pkg", "", "The package that you want to use for source material.")
+		database        *string = flag.String("db", "", "The name of the database you want to analyze.")
+		hostname        *string = flag.String("host", "", "The host (IP address or hostname) that hosts the database you want to analyze.")
+		outputRoot      *string = flag.String("out", "", "The path where resulting files will be deposited. Without a specified path, stdout will be used if possible.")
+		password        *string = flag.String("pass", "", "The password of the user specified by 'username'.")
+		username        *string = flag.String("user", "", "The username on the database you want to analyze.")
+		src             *string = flag.String("src", "", "The source of data that interests you; one of 'pkg' or 'db'.")
+		dst             *string = flag.String("dst", "", "The desired output, one of 'types', 'control', 'bindings', 'rest', 'schema', or 'everything'.")
 	)
 
 	flag.Parse()
@@ -64,7 +60,7 @@ func main() {
 		}
 	case "pkg":
 		switch {
-		case *pkgPathIn == "":
+		case *importPathTypes == "":
 			flag.Usage()
 			log.Println("When the 'src' argument is 'pkg', the 'pkg' argument is required.")
 			os.Exit(1)
@@ -100,7 +96,7 @@ func main() {
 			flag.Usage()
 			log.Println("When the 'dst' argument is 'everything', the 'driver' argument is required.")
 			os.Exit(1)
-		case *outputPath == "":
+		case *outputRoot == "":
 			flag.Usage()
 			log.Println("Multiple languages can not be sanely printed to stdout.")
 			log.Println("Please specify a target directory with the 'out' flag.")
@@ -114,17 +110,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	if *outputPath == "" {
+	if *outputRoot == "" {
 		flag.Usage()
-		log.Println("Writing to stdout.")
-		log.Println("If you want to dump to a directory, specify a target directory with the 'out' flag.")
+		log.Println("An output directory must be specified.")
 		log.Println("If you want to use the current directory, use '.' or './'.")
+		os.Exit(1)
 	} else {
-		*outputPath = strings.TrimSuffix(*outputPath, "/")
-		dir, err := os.Open(*outputPath)
+		*outputRoot = strings.TrimSuffix(*outputRoot, "/")
+		dir, err := os.Open(*outputRoot)
 		if err != nil {
 			log.Fatal(errors.Stack(err))
 		}
+		defer dir.Close()
 
 		dirstat, err := dir.Stat()
 		if err != nil {
@@ -135,10 +132,15 @@ func main() {
 			log.Fatal("The output path must be a directory.")
 		}
 
-		pkgPath = packagePath(*outputPath)
-		log.Print("OUTPUT PATH: \t", *outputPath)
-		log.Print("PACKAGE PATH:\t", pkgPath)
+		log.Print("OUTPUT PATH: \t", *outputRoot)
+	}
 
+	if *src != "pkg" && (*dst == "types" || *dst == "everything") {
+		*importPathTypes = packagePath(*outputRoot + "/types")
+	}
+
+	if len(*importPathTypes) != 0 {
+		log.Print("PACKAGE PATH:\t", *importPathTypes)
 	}
 
 	if *driver != "" {
@@ -169,7 +171,7 @@ func main() {
 			extractor = mssql.NewExtractor(*username, *password, *hostname, *database)
 		}
 	} else {
-		extractor = pkgex.NewExtractor(*pkgPathIn)
+		extractor = pkgex.NewExtractor(*importPathTypes)
 	}
 
 	var pkg *types.Package
@@ -220,7 +222,7 @@ func main() {
 	}
 
 	if *dst == "bindings" || *dst == "everything" {
-		generateBindings(*outputPath, generator, pkg)
+		generateBindings(*outputRoot, *importPathTypes, generator, pkg)
 	}
 }
 
@@ -233,42 +235,38 @@ func mergeStructs(dst, src *types.Type) {
 	}
 }
 
-func generateBindings(basePath string, generator types.SqlGenerator, pkg *types.Package) error {
+func generateBindings(outputRoot, importPathTypes string, generator types.SqlGenerator, pkg *types.Package) error {
 
 	var (
 		f    io.WriteCloser
 		path string
 	)
 
-	if basePath == "" {
-		f = os.Stdout
+	path = outputRoot + "/data"
+	d, err := os.Open(path)
+	if os.IsNotExist(err) {
+		err = os.Mkdir(path, os.ModeDir|os.ModePerm)
+		if err != nil {
+			return errors.Stack(err)
+		}
+	} else if err != nil {
+		return errors.Stack(err)
 	} else {
-		path = basePath + "/data"
-		d, err := os.Open(path)
-		if os.IsNotExist(err) {
-			err = os.Mkdir(path, os.ModeDir|os.ModePerm)
-			if err != nil {
-				return errors.Stack(err)
-			}
-		} else if err != nil {
-			return errors.Stack(err)
-		} else {
-			d.Close()
-		}
+		d.Close()
+	}
 
-		// Write baseline file.
+	// Write baseline file.
 
-		f, err = os.Create(path + "/db.go")
-		if err != nil {
-			return errors.Stack(err)
-		}
+	f, err = os.Create(path + "/db.go")
+	if err != nil {
+		return errors.Stack(err)
+	}
 
-		f.Write([]byte(generator.Baseline()))
+	f.Write([]byte(generator.Baseline()))
 
-		err = f.Close()
-		if err != nil {
-			return errors.Stack(err)
-		}
+	err = f.Close()
+	if err != nil {
+		return errors.Stack(err)
 	}
 
 	for _, def := range pkg.Types {
@@ -285,10 +283,10 @@ import(
 
 `)
 
-		if pkgPath != "" {
+		if importPathTypes != "" {
 			fmt.Fprintln(b)
 			fmt.Fprintln(b, "import (")
-			fmt.Fprintln(b, "\""+pkgPath+"/types\"")
+			fmt.Fprintln(b, "\""+importPathTypes+"\"")
 			fmt.Fprintln(b, ")")
 			fmt.Fprintln(b)
 		}
@@ -325,29 +323,22 @@ import(
 		fmt.Fprint(b, generator.DeleteTx(def))
 		fmt.Fprint(b, "\n\n/*============================================================================*/\n\n")
 
-		if basePath == "" {
-			_, err := io.Copy(os.Stdout, b)
-			if err != nil {
-				return errors.Stack(err)
-			}
-		} else {
-			filename := snaker.CamelToSnake(def.Name)
-			filename = "bindings_" + filename + ".go"
+		filename := snaker.CamelToSnake(def.Name)
+		filename = "bindings_" + filename + ".go"
 
-			f, err := os.Create(path + "/" + filename)
-			if err != nil {
-				return errors.Stack(err)
-			}
+		f, err := os.Create(path + "/" + filename)
+		if err != nil {
+			return errors.Stack(err)
+		}
 
-			_, err = io.Copy(f, b)
-			if err != nil {
-				return errors.Stack(err)
-			}
+		_, err = io.Copy(f, b)
+		if err != nil {
+			return errors.Stack(err)
+		}
 
-			err = f.Close()
-			if err != nil {
-				return errors.Stack(err)
-			}
+		err = f.Close()
+		if err != nil {
+			return errors.Stack(err)
 		}
 	}
 
