@@ -195,6 +195,18 @@ func main() {
 		}
 	}
 
+	// Depending on the source, the SQL names may not be set. Set them now to default values.
+	if *dst == "bindings" || *dst == "everything" || *dst == "schema" {
+		for _, def := range pkg.Types {
+			def.Table = snaker.CamelToSnake(def.Name)
+			for mid, member := range def.Members {
+				if member.SqlName == "" {
+					def.Members[mid].SqlName = snaker.CamelToSnake(member.GoName)
+				}
+			}
+		}
+	}
+
 	var generator types.SqlGenerator
 	if *dst == "bindings" || *dst == "everything" || *dst == "schema" {
 		switch *driver {
@@ -211,14 +223,7 @@ func main() {
 	}
 
 	if *dst == "schema" || *dst == "everything" {
-		for _, sdef := range pkg.Types {
-
-			fmt.Println("-- -----------------------------------------------------------------------------")
-			fmt.Println()
-			fmt.Println(generator.Schema(sdef))
-			fmt.Println()
-			//fmt.Println("-- -----------------------------------------------------------------------------")
-		}
+		generateSchema(*outputRoot, generator, pkg)
 	}
 
 	if *dst == "bindings" || *dst == "everything" {
@@ -233,6 +238,46 @@ func mergeStructs(dst, src *types.Type) {
 			dst.Members = append(dst.Members, srcMember)
 		}
 	}
+}
+
+func generateSchema(outputRoot string, generator types.SqlGenerator, pkg *types.Package) error {
+
+	var (
+		f    io.WriteCloser
+		path string
+	)
+
+	path = outputRoot + "/data"
+	d, err := os.Open(path)
+	if os.IsNotExist(err) {
+		err = os.Mkdir(path, os.ModeDir|os.ModePerm)
+		if err != nil {
+			return errors.Stack(err)
+		}
+	} else if err != nil {
+		return errors.Stack(err)
+	} else {
+		err = d.Close()
+		if err != nil {
+			return errors.Stack(err)
+		}
+	}
+
+	// Write baseline file.
+
+	f, err = os.Create(path + "/schema.sql")
+	if err != nil {
+		return errors.Stack(err)
+	}
+
+	f.Write([]byte(generator.Schema(pkg)))
+
+	err = f.Close()
+	if err != nil {
+		return errors.Stack(err)
+	}
+
+	return nil
 }
 
 func generateBindings(outputRoot, importPathTypes string, generator types.SqlGenerator, pkg *types.Package) error {
@@ -252,12 +297,15 @@ func generateBindings(outputRoot, importPathTypes string, generator types.SqlGen
 	} else if err != nil {
 		return errors.Stack(err)
 	} else {
-		d.Close()
+		err = d.Close()
+		if err != nil {
+			return errors.Stack(err)
+		}
 	}
 
 	// Write baseline file.
 
-	f, err = os.Create(path + "/db.go")
+	f, err = os.Create(path + "/bindings.go")
 	if err != nil {
 		return errors.Stack(err)
 	}
@@ -270,6 +318,10 @@ func generateBindings(outputRoot, importPathTypes string, generator types.SqlGen
 	}
 
 	for _, def := range pkg.Types {
+
+		if def.UnderlyingType != "struct" {
+			continue
+		}
 
 		b := bytes.NewBuffer(nil)
 
@@ -284,11 +336,7 @@ import(
 `)
 
 		if importPathTypes != "" {
-			fmt.Fprintln(b)
-			fmt.Fprintln(b, "import (")
-			fmt.Fprintln(b, "\""+importPathTypes+"\"")
-			fmt.Fprintln(b, ")")
-			fmt.Fprintln(b)
+			fmt.Fprintf(b, "\nimport \""+importPathTypes+"\"\n\n")
 		}
 
 		fmt.Fprintln(b)

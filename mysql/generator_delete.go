@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/jackmanlabs/codegen/types"
-	"github.com/serenize/snaker"
 )
 
 func (this *generator) Delete(def *types.Type) string {
@@ -84,12 +83,11 @@ func (this *generator) DeleteTx(def *types.Type) string {
 func deleteSql(def *types.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
-	tableName := snaker.CamelToSnake(def.Name)
 
-	fmt.Fprintf(b, "DELETE FROM %s\n", tableName)
+	fmt.Fprintf(b, "DELETE FROM %s\n", def.Table)
 	if len(def.Members) > 0 {
 		member := def.Members[0]
-		fmt.Fprintf(b, "\tWHERE %s.%s = ?;\n", tableName, member.SqlName)
+		fmt.Fprintf(b, "\tWHERE %s.%s = ?;\n", def.Table, member.SqlName)
 	} else {
 		fmt.Fprint(b, "\t-- Insert your filter criteria here.\n")
 	}

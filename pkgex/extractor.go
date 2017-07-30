@@ -38,6 +38,7 @@ func (this *extractorType) Extract() (*types.Package, error) {
 	}
 
 	this.Fset = fset
+	this.Imports = make(map[string][]string)
 
 	for _, astPkg := range astPkgs {
 		if strings.HasSuffix(astPkg.Name, "_test") {
@@ -67,6 +68,9 @@ func (this *extractorType) Visit(node ast.Node) (w ast.Visitor) {
 		newType := types.NewType()
 		newType.Name = t.Name.String()
 		newType.UnderlyingType = resolveTypeExpression(t.Type)
+
+		//log.Printf("Type: %s\tUnderlyingType: %s", newType.Name, newType.UnderlyingType)
+
 		this.Types = append(this.Types, newType)
 
 	case *ast.Field:
@@ -102,14 +106,23 @@ func (this *extractorType) Visit(node ast.Node) (w ast.Visitor) {
 		return nil
 
 	case *ast.ImportSpec:
-		path := t.Path.Value
-		//path = strings.Trim(path, "\"")
-		name := t.Name.Name
+		//ast.Print(this.Fset, t)
+
+		var (
+			path string = t.Path.Value
+			name string
+		)
+
+		// Store the alias name if possible, otherwise empty string.
+		if t.Name != nil {
+			name = t.Name.Name
+		}
+
 		names, ok := this.Imports[path]
 		if !ok {
 			names = make([]string, 0)
 		}
-		if !sContains(names, t.Name.Name) {
+		if !sContains(names, name) {
 			names = append(names, name)
 		}
 		this.Imports[path] = names
@@ -123,7 +136,7 @@ func (this *extractorType) Visit(node ast.Node) (w ast.Visitor) {
 	case nil:
 
 	default:
-		log.Printf("unexpected type %T\n", t) // %T prints whatever type t has
+		//log.Printf("unexpected type %T\n", t) // %T prints whatever type t has
 
 	}
 

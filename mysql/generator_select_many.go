@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/jackmanlabs/codegen/types"
-	"github.com/serenize/snaker"
 )
 
 func (this *generator) SelectMany(pkgName string, def *types.Type) string {
@@ -55,19 +54,11 @@ func (this *generator) SelectMany(pkgName string, def *types.Type) string {
 	fmt.Fprintf(b, "\tvar z []%s.%s = make([]%s.%s, 0)\n", pkgName, def.Name, pkgName, def.Name)
 	fmt.Fprint(b, "\tfor rows.Next() {\n")
 	fmt.Fprintf(b, "\t\tvar x %s.%s\n", pkgName, def.Name)
-	for _, member := range def.Members {
-		if _, ok := sqlType(member.Type); !ok {
-			fmt.Fprintf(b, "\t\tvar x_%s []byte\n", member.GoName)
-		}
-	}
+
 
 	fmt.Fprint(b, "\t\ttargets := []interface{}{\n")
 	for _, member := range def.Members {
-		if _, ok := sqlType(member.Type); ok {
 			fmt.Fprintf(b, "\t\t\t&x.%s,\n", member.GoName)
-		} else {
-			fmt.Fprintf(b, "\t\t\t&x_%s,\n", member.GoName)
-		}
 	}
 
 	fmt.Fprint(b, "\t\t}\n") // end of targets declaration.
@@ -78,18 +69,6 @@ func (this *generator) SelectMany(pkgName string, def *types.Type) string {
 		}
 
 `)
-
-	for _, member := range def.Members {
-		if _, ok := sqlType(member.Type); !ok {
-			fmt.Fprintf(b, "\t\terr = json.Unmarshal(x_%s, &x.%s)", member.GoName, member.GoName)
-			fmt.Fprint(b, `
-		if err != nil {
-			return z, errors.Stack(err)
-		}
-
-`)
-		}
-	}
 
 	fmt.Fprint(b, "\t\tz = append(z, x)\n")
 	fmt.Fprint(b, "\t}\n\n") // end of scan clause.
@@ -132,19 +111,10 @@ func (this *generator) SelectManyTx(pkgName string, def *types.Type) string {
 	fmt.Fprintf(b, "\tvar z []%s.%s = make([]%s.%s, 0)\n", pkgName, def.Name, pkgName, def.Name)
 	fmt.Fprint(b, "\tfor rows.Next() {\n")
 	fmt.Fprintf(b, "\t\tvar x %s.%s\n", pkgName, def.Name)
-	for _, member := range def.Members {
-		if _, ok := sqlType(member.Type); !ok {
-			fmt.Fprintf(b, "\t\tvar x_%s []byte\n", member.GoName)
-		}
-	}
 
 	fmt.Fprint(b, "\t\ttargets := []interface{}{\n")
 	for _, member := range def.Members {
-		if _, ok := sqlType(member.Type); ok {
 			fmt.Fprintf(b, "\t\t\t&x.%s,\n", member.GoName)
-		} else {
-			fmt.Fprintf(b, "\t\t\t&x_%s,\n", member.GoName)
-		}
 	}
 
 	fmt.Fprint(b, `
@@ -157,17 +127,6 @@ func (this *generator) SelectManyTx(pkgName string, def *types.Type) string {
 
 `)
 
-	for _, member := range def.Members {
-		if _, ok := sqlType(member.Type); !ok {
-			fmt.Fprintf(b, "\t\terr = json.Unmarshal(x_%s, &x.%s)", member.GoName, member.GoName)
-			fmt.Fprint(b, `
-		if err != nil {
-			return z, errors.Stack(err)
-		}
-
-`)
-		}
-	}
 
 	fmt.Fprint(b, `
 		z = append(z, x)
@@ -185,20 +144,19 @@ func (this *generator) SelectManyTx(pkgName string, def *types.Type) string {
 func selectManySql(def *types.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
-	tableName := snaker.CamelToSnake(def.Name)
 
 	fmt.Fprint(b, "SELECT\n")
 	for idx, member := range def.Members {
 		if idx == len(def.Members)-1 {
-			fmt.Fprintf(b, "\t%s.%s\n", tableName, member.SqlName)
+			fmt.Fprintf(b, "\t%s.%s\n", def.Table, member.SqlName)
 		} else {
 			// Note the trailing comma.
-			fmt.Fprintf(b, "\t%s.%s,\n", tableName, member.SqlName)
+			fmt.Fprintf(b, "\t%s.%s,\n", def.Table, member.SqlName)
 		}
 	}
-	fmt.Fprintf(b, "FROM %s;\n", tableName)
+	fmt.Fprintf(b, "FROM %s;\n", def.Table)
 	fmt.Fprint(b, "-- Update your filter criteria here:\n")
-	fmt.Fprintf(b, "-- WHERE %s.filter = ?;\n", tableName)
+	fmt.Fprintf(b, "-- WHERE %s.filter = ?;\n", def.Table)
 
 	return b
 }
@@ -207,20 +165,19 @@ func selectManySql(def *types.Type) *bytes.Buffer {
 func selectManySqlTx(def *types.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
-	tableName := snaker.CamelToSnake(def.Name)
 
 	fmt.Fprint(b, "SELECT\n")
 	for idx, member := range def.Members {
 		if idx == len(def.Members)-1 {
-			fmt.Fprintf(b, "\t%s.%s\n", tableName, member.SqlName)
+			fmt.Fprintf(b, "\t%s.%s\n", def.Table, member.SqlName)
 		} else {
 			// Note the trailing comma.
-			fmt.Fprintf(b, "\t%s.%s,\n", tableName, member.SqlName)
+			fmt.Fprintf(b, "\t%s.%s,\n", def.Table, member.SqlName)
 		}
 	}
-	fmt.Fprintf(b, "FROM %s\n", tableName)
+	fmt.Fprintf(b, "FROM %s\n", def.Table)
 	fmt.Fprint(b, "-- Update your filter criteria here:\n")
-	fmt.Fprintf(b, "-- WHERE %s.filter = ?\n", tableName)
+	fmt.Fprintf(b, "-- WHERE %s.filter = ?\n", def.Table)
 	fmt.Fprint(b, "LIMIT 1\n")
 	fmt.Fprint(b, "FOR UPDATE;\n")
 

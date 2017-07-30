@@ -33,7 +33,7 @@ func (this *generator) UpdateMany(pkgName string, def *types.Type) string {
 
 	err = tx.Commit()
 	if err != nil {
-		return nil, errors.Stack(err)
+		return errors.Stack(err)
 	}
 
 	return nil

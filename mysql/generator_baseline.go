@@ -2,11 +2,10 @@ package mysql
 
 func (this *generator) Baseline() string {
 	return `
-package main
+package data
 
 import (
 	"database/sql"
-	"encoding/json"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jackmanlabs/errors"
 	"sync"

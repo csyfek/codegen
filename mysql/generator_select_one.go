@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/jackmanlabs/codegen/types"
-	"github.com/serenize/snaker"
 )
 
 func (this *generator) SelectOne(pkgName string, def *types.Type) string {
@@ -49,19 +48,10 @@ func (this *generator) SelectOne(pkgName string, def *types.Type) string {
 	fmt.Fprintf(b, "\tvar x *%s.%s\n", pkgName, def.Name)
 	fmt.Fprint(b, "\tif rows.Next() {\n")
 	fmt.Fprintf(b, "\t\tx = new(%s.%s)\n", pkgName, def.Name)
-	for _, member := range def.Members {
-		if _, ok := sqlType(member.Type); !ok {
-			fmt.Fprintf(b, "\t\tvar x_%s []byte\n", member.GoName)
-		}
-	}
 
 	fmt.Fprint(b, "\t\ttargets := []interface{}{\n")
 	for _, member := range def.Members {
-		if _, ok := sqlType(member.Type); ok {
-			fmt.Fprintf(b, "\t\t\t&x.%s,\n", member.GoName)
-		} else {
-			fmt.Fprintf(b, "\t\t\t&x_%s,\n", member.GoName)
-		}
+		fmt.Fprintf(b, "\t\t\t&x.%s,\n", member.GoName)
 	}
 
 	fmt.Fprint(b, "\t\t}\n") // end of targets declaration.
@@ -72,18 +62,6 @@ func (this *generator) SelectOne(pkgName string, def *types.Type) string {
 		}
 
 `)
-
-	for _, member := range def.Members {
-		if _, ok := sqlType(member.Type); !ok {
-			fmt.Fprintf(b, "\t\terr = json.Unmarshal(x_%s, &x.%s)", member.GoName, member.GoName)
-			fmt.Fprint(b, `
-		if err != nil {
-			return x, errors.Stack(err)
-		}
-
-`)
-		}
-	}
 
 	fmt.Fprint(b, "\t}\n\n") // end of scan clause.
 	fmt.Fprint(b, "\t// nil is returned if no data was present.\n")
@@ -119,19 +97,10 @@ func (this *generator) SelectOneTx(pkgName string, def *types.Type) string {
 	fmt.Fprintf(b, "\tvar x *%s.%s\n", pkgName, def.Name)
 	fmt.Fprint(b, "\tif rows.Next() {\n")
 	fmt.Fprintf(b, "\t\tx = new(%s.%s)\n", pkgName, def.Name)
-	for _, member := range def.Members {
-		if _, ok := sqlType(member.Type); !ok {
-			fmt.Fprintf(b, "\t\tvar x_%s []byte\n", member.GoName)
-		}
-	}
 
 	fmt.Fprint(b, "\t\ttargets := []interface{}{\n")
 	for _, member := range def.Members {
-		if _, ok := sqlType(member.Type); ok {
-			fmt.Fprintf(b, "\t\t\t&x.%s,\n", member.GoName)
-		} else {
-			fmt.Fprintf(b, "\t\t\t&x_%s,\n", member.GoName)
-		}
+		fmt.Fprintf(b, "\t\t\t&x.%s,\n", member.GoName)
 	}
 
 	fmt.Fprint(b, "\t\t}\n") // end of targets declaration.
@@ -142,18 +111,6 @@ func (this *generator) SelectOneTx(pkgName string, def *types.Type) string {
 		}
 
 `)
-
-	for _, member := range def.Members {
-		if _, ok := sqlType(member.Type); !ok {
-			fmt.Fprintf(b, "\t\terr = json.Unmarshal(x_%s, &x.%s)", member.GoName, member.GoName)
-			fmt.Fprint(b, `
-		if err != nil {
-			return x, errors.Stack(err)
-		}
-
-`)
-		}
-	}
 
 	fmt.Fprint(b, "\t}\n\n") // end of scan clause.
 	fmt.Fprint(b, "\t// nil is returned if no data was present.\n")
@@ -169,7 +126,6 @@ func (this *generator) SelectOneTx(pkgName string, def *types.Type) string {
 func selectOneSql(def *types.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
-	tableName := snaker.CamelToSnake(def.Name)
 
 	var firstField types.Member
 	if len(def.Members) > 0 {
@@ -179,14 +135,14 @@ func selectOneSql(def *types.Type) *bytes.Buffer {
 	fmt.Fprint(b, "SELECT\n")
 	for idx, member := range def.Members {
 		if idx == len(def.Members)-1 {
-			fmt.Fprintf(b, "\t%s.%s\n", tableName, member.SqlName)
+			fmt.Fprintf(b, "\t%s.%s\n", def.Table, member.SqlName)
 		} else {
 			// Note the trailing comma.
-			fmt.Fprintf(b, "\t%s.%s,\n", tableName, member.SqlName)
+			fmt.Fprintf(b, "\t%s.%s,\n", def.Table, member.SqlName)
 		}
 	}
-	fmt.Fprintf(b, "FROM %s\n", tableName)
-	fmt.Fprintf(b, "WHERE %s.%s = ?\n", tableName, firstField.SqlName)
+	fmt.Fprintf(b, "FROM %s\n", def.Table)
+	fmt.Fprintf(b, "WHERE %s.%s = ?\n", def.Table, firstField.SqlName)
 	fmt.Fprint(b, "LIMIT 1;\n")
 
 	return b
@@ -196,7 +152,6 @@ func selectOneSql(def *types.Type) *bytes.Buffer {
 func selectOneSqlTx(def *types.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
-	tableName := snaker.CamelToSnake(def.Name)
 
 	var firstField types.Member
 	if len(def.Members) > 0 {
@@ -206,14 +161,14 @@ func selectOneSqlTx(def *types.Type) *bytes.Buffer {
 	fmt.Fprint(b, "SELECT\n")
 	for idx, member := range def.Members {
 		if idx == len(def.Members)-1 {
-			fmt.Fprintf(b, "\t%s.%s\n", tableName, member.SqlName)
+			fmt.Fprintf(b, "\t%s.%s\n", def.Table, member.SqlName)
 		} else {
 			// Note the trailing comma.
-			fmt.Fprintf(b, "\t%s.%s,\n", tableName, member.SqlName)
+			fmt.Fprintf(b, "\t%s.%s,\n", def.Table, member.SqlName)
 		}
 	}
-	fmt.Fprintf(b, "FROM %s\n", tableName)
-	fmt.Fprintf(b, "WHERE %s.%s = ?\n", tableName, firstField.SqlName)
+	fmt.Fprintf(b, "FROM %s\n", def.Table)
+	fmt.Fprintf(b, "WHERE %s.%s = ?\n", def.Table, firstField.SqlName)
 	fmt.Fprint(b, "LIMIT 1\n")
 	fmt.Fprint(b, "FOR UPDATE;\n")
 

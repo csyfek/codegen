@@ -2,7 +2,7 @@ package types
 
 type SqlGenerator interface {
 	Baseline() string
-	Schema(def *Type) string
+	Schema(pkg *Package) string
 	Delete(def *Type) string
 	DeleteTx(def *Type) string
 	InsertOne(pkgName string, def *Type) string

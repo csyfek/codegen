@@ -7,10 +7,25 @@ import (
 	"github.com/serenize/snaker"
 )
 
+
+
+
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func (this *generator) Schema(def *types.Type) string {
+func (this *generator) Schema(pkg *types.Package) string {
 
+	b := bytes.NewBuffer(nil)
+
+	for _, def := range pkg.Types {
+		fmt.Fprint(b, "\n\n/-- ----------------------------------------------------------------------------\n\n")
+		b.WriteString(this.typeSchema(def))
+		fmt.Fprint(b, "\n\n/-- ----------------------------------------------------------------------------\n\n")
+	}
+
+	return b.String()
+}
+
+func (this *generator) typeSchema(def *types.Type) string {
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)
 
