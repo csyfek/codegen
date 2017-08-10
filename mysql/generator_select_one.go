@@ -3,10 +3,10 @@ package mysql
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/types"
+	"github.com/jackmanlabs/codegen/common"
 )
 
-func (this *generator) SelectOne(pkgName string, def *types.Type) string {
+func (this *generator) SelectOne(pkgName string, def *common.Type) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := selectOneSql(def)
@@ -72,7 +72,7 @@ func (this *generator) SelectOne(pkgName string, def *types.Type) string {
 	return b.String()
 }
 
-func (this *generator) SelectOneTx(pkgName string, def *types.Type) string {
+func (this *generator) SelectOneTx(pkgName string, def *common.Type) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := selectOneSqlTx(def)
@@ -123,11 +123,11 @@ func (this *generator) SelectOneTx(pkgName string, def *types.Type) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func selectOneSql(def *types.Type) *bytes.Buffer {
+func selectOneSql(def *common.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 
-	var firstField types.Member
+	var firstField common.Member
 	if len(def.Members) > 0 {
 		firstField = def.Members[0]
 	}
@@ -149,11 +149,11 @@ func selectOneSql(def *types.Type) *bytes.Buffer {
 }
 
 // SELECT for transactions require some slight changes.
-func selectOneSqlTx(def *types.Type) *bytes.Buffer {
+func selectOneSqlTx(def *common.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 
-	var firstField types.Member
+	var firstField common.Member
 	if len(def.Members) > 0 {
 		firstField = def.Members[0]
 	}

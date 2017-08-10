@@ -3,11 +3,11 @@ package pg
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/types"
+	"github.com/jackmanlabs/codegen/common"
 	"github.com/serenize/snaker"
 )
 
-func (this *generator) SelectOne(pkgName string, def *types.Type) string {
+func (this *generator) SelectOne(pkgName string, def *common.Type) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := selectOneSql(def)
@@ -50,14 +50,14 @@ func (this *generator) SelectOne(pkgName string, def *types.Type) string {
 	fmt.Fprint(b, "\tif rows.Next() {\n")
 	fmt.Fprintf(b, "\t\tx = new(%s.%s)\n", pkgName, def.Name)
 	for _, member := range def.Members {
-		if _, ok := sqlType(member.Type); !ok {
+		if _, ok := sqlType(member.GoType); !ok {
 			fmt.Fprintf(b, "\t\tvar x_%s []byte\n", member.GoName)
 		}
 	}
 
 	fmt.Fprint(b, "\t\ttargets := []interface{}{\n")
 	for _, member := range def.Members {
-		if _, ok := sqlType(member.Type); ok {
+		if _, ok := sqlType(member.GoType); ok {
 			fmt.Fprintf(b, "\t\t\t&x.%s,\n", member.GoName)
 		} else {
 			fmt.Fprintf(b, "\t\t\t&x_%s,\n", member.GoName)
@@ -74,7 +74,7 @@ func (this *generator) SelectOne(pkgName string, def *types.Type) string {
 `)
 
 	for _, member := range def.Members {
-		if _, ok := sqlType(member.Type); !ok {
+		if _, ok := sqlType(member.GoType); !ok {
 			fmt.Fprintf(b, "\t\terr = json.Unmarshal(x_%s, &x.%s)", member.GoName, member.GoName)
 			fmt.Fprint(b, `
 		if err != nil {
@@ -94,7 +94,7 @@ func (this *generator) SelectOne(pkgName string, def *types.Type) string {
 	return b.String()
 }
 
-func (this *generator) SelectOneTx(pkgName string, def *types.Type) string {
+func (this *generator) SelectOneTx(pkgName string, def *common.Type) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := selectOneSql(def)
@@ -120,14 +120,14 @@ func (this *generator) SelectOneTx(pkgName string, def *types.Type) string {
 	fmt.Fprint(b, "\tif rows.Next() {\n")
 	fmt.Fprintf(b, "\t\tx = new(%s.%s)\n", pkgName, def.Name)
 	for _, member := range def.Members {
-		if _, ok := sqlType(member.Type); !ok {
+		if _, ok := sqlType(member.GoType); !ok {
 			fmt.Fprintf(b, "\t\tvar x_%s []byte\n", member.GoName)
 		}
 	}
 
 	fmt.Fprint(b, "\t\ttargets := []interface{}{\n")
 	for _, member := range def.Members {
-		if _, ok := sqlType(member.Type); ok {
+		if _, ok := sqlType(member.GoType); ok {
 			fmt.Fprintf(b, "\t\t\t&x.%s,\n", member.GoName)
 		} else {
 			fmt.Fprintf(b, "\t\t\t&x_%s,\n", member.GoName)
@@ -144,7 +144,7 @@ func (this *generator) SelectOneTx(pkgName string, def *types.Type) string {
 `)
 
 	for _, member := range def.Members {
-		if _, ok := sqlType(member.Type); !ok {
+		if _, ok := sqlType(member.GoType); !ok {
 			fmt.Fprintf(b, "\t\terr = json.Unmarshal(x_%s, &x.%s)", member.GoName, member.GoName)
 			fmt.Fprint(b, `
 		if err != nil {
@@ -166,12 +166,12 @@ func (this *generator) SelectOneTx(pkgName string, def *types.Type) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func selectOneSql(def *types.Type) *bytes.Buffer {
+func selectOneSql(def *common.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)
 
-	var firstField types.Member
+	var firstField common.Member
 	if len(def.Members) > 0 {
 		firstField = def.Members[0]
 	}

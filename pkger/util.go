@@ -1,4 +1,4 @@
-package pkgex
+package pkger
 
 import (
 	"fmt"

@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/denisenkom/go-mssqldb"
-	"github.com/jackmanlabs/codegen/types"
+	"github.com/jackmanlabs/codegen/common"
 	"github.com/jackmanlabs/errors"
 	"strings"
 	"sync"
@@ -48,7 +48,7 @@ func NewExtractor(username, password, hostname, database string) *Extractor {
 	return this
 }
 
-func (this *Extractor) Extract() (*types.Package, error) {
+func (this *Extractor) Extract() (*common.Package, error) {
 
 	tables, err := this.tables()
 	if err != nil {
@@ -70,8 +70,8 @@ func (this *Extractor) Extract() (*types.Package, error) {
 		tableColumns[table] = columns
 	}
 
-	pkg := &types.Package{
-		Types:   make([]*types.Type, 0),
+	pkg := &common.Package{
+		Types:   make([]*common.Type, 0),
 		Imports: nil,
 		Name:    "",
 		Path:    "",
@@ -79,11 +79,16 @@ func (this *Extractor) Extract() (*types.Package, error) {
 
 	for table, columns := range tableColumns {
 
-		t := types.NewType()
+		t := common.NewType()
+
+		t.Table = table
+
+		// This is required to trigger binding generation.
+		// Basically, if it's a table, which is always true, it gets translated into a struct.
+		t.UnderlyingType = "struct"
 
 		// Our test DB uses a CamelCase name with a 'tbl' prefix.
 		t.Name = strings.TrimPrefix(table, "tbl")
-		t.Table = t.Name
 
 		for _, column := range columns {
 			t.Members = append(t.Members, column.Member())
@@ -204,7 +209,6 @@ WHERE TABLE_NAME = ?;
 		columns = append(columns, c)
 
 		//log.Printf("TABLE: %s\tFOUND COLUMN: %s", table, c.ColumnName)
-
 	}
 
 	return columns, nil

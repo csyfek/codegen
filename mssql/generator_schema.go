@@ -3,42 +3,45 @@ package mssql
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/types"
-	"github.com/serenize/snaker"
+	"github.com/jackmanlabs/codegen/common"
 )
-
-
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func (this *generator) Schema(pkg *types.Package) string {
+func (this *generator) Schema(pkg *common.Package) string {
 
 	b := bytes.NewBuffer(nil)
 
 	for _, def := range pkg.Types {
-		fmt.Fprint(b, "\n\n/-- ----------------------------------------------------------------------------\n\n")
+		b.WriteString(this.typeDrop(def))
+	}
+
+	fmt.Fprint(b, "\n\n-- -----------------------------------------------------------------------------\n\n")
+
+	for _, def := range pkg.Types {
 		b.WriteString(this.typeSchema(def))
-		fmt.Fprint(b, "\n\n/-- ----------------------------------------------------------------------------\n\n")
+		fmt.Fprint(b, "\n\n-- -----------------------------------------------------------------------------\n\n")
 	}
 
 	return b.String()
 }
 
-func (this *generator) typeSchema(def *types.Type) string {
-	b := bytes.NewBuffer(nil)
-	tableName := snaker.CamelToSnake(def.Name)
+func (this *generator) typeDrop(def *common.Type) string {
+	return fmt.Sprintf("DROP TABLE IF EXISTS %s;\n", def.Table)
+}
 
-	var firstField types.Member
+func (this *generator) typeSchema(def *common.Type) string {
+	b := bytes.NewBuffer(nil)
+
+	var firstField common.Member
 	if len(def.Members) > 0 {
 		firstField = def.Members[0]
 	}
 
-	fmt.Fprintf(b, "DROP TABLE IF EXISTS %s;\n\n", tableName)
-
-	fmt.Fprintf(b, "CREATE TABLE %s (\n", tableName)
+	fmt.Fprintf(b, "CREATE TABLE %s (\n", def.Table)
 	for idx, member := range def.Members {
 
-		sqlType, _ := sqlType(member.Type)
+		sqlType, _ := sqlType(member.GoType)
 
 		if idx == 0 {
 			//if member.GoType() == "string" {
@@ -52,11 +55,7 @@ func (this *generator) typeSchema(def *types.Type) string {
 		}
 	}
 	fmt.Fprintf(b, "\t-- FOREIGN KEY (%s) REFERENCES parent_table (id) ON DELETE CASCADE\n", firstField.SqlName)
-	fmt.Fprintf(b, ")\n")
-	fmt.Fprint(b, "\t-- ENGINE = TokuDB\n")
-	fmt.Fprint(b, "\tENGINE = InnoDB\n")
-	fmt.Fprint(b, "\tROW_FORMAT = COMPRESSED -- Requires Barracuda file format.\n")
-	fmt.Fprint(b, "\tDEFAULT CHARSET = utf8;\n")
+	fmt.Fprint(b, ");\n")
 
 	return b.String()
 }

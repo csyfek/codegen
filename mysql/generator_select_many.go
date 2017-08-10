@@ -3,10 +3,10 @@ package mysql
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/types"
+	"github.com/jackmanlabs/codegen/common"
 )
 
-func (this *generator) SelectMany(pkgName string, def *types.Type) string {
+func (this *generator) SelectMany(pkgName string, def *common.Type) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := selectManySql(def)
@@ -55,10 +55,9 @@ func (this *generator) SelectMany(pkgName string, def *types.Type) string {
 	fmt.Fprint(b, "\tfor rows.Next() {\n")
 	fmt.Fprintf(b, "\t\tvar x %s.%s\n", pkgName, def.Name)
 
-
 	fmt.Fprint(b, "\t\ttargets := []interface{}{\n")
 	for _, member := range def.Members {
-			fmt.Fprintf(b, "\t\t\t&x.%s,\n", member.GoName)
+		fmt.Fprintf(b, "\t\t\t&x.%s,\n", member.GoName)
 	}
 
 	fmt.Fprint(b, "\t\t}\n") // end of targets declaration.
@@ -80,7 +79,7 @@ func (this *generator) SelectMany(pkgName string, def *types.Type) string {
 	return b.String()
 }
 
-func (this *generator) SelectManyTx(pkgName string, def *types.Type) string {
+func (this *generator) SelectManyTx(pkgName string, def *common.Type) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := selectManySqlTx(def)
@@ -114,7 +113,7 @@ func (this *generator) SelectManyTx(pkgName string, def *types.Type) string {
 
 	fmt.Fprint(b, "\t\ttargets := []interface{}{\n")
 	for _, member := range def.Members {
-			fmt.Fprintf(b, "\t\t\t&x.%s,\n", member.GoName)
+		fmt.Fprintf(b, "\t\t\t&x.%s,\n", member.GoName)
 	}
 
 	fmt.Fprint(b, `
@@ -126,7 +125,6 @@ func (this *generator) SelectManyTx(pkgName string, def *types.Type) string {
 		}
 
 `)
-
 
 	fmt.Fprint(b, `
 		z = append(z, x)
@@ -141,7 +139,7 @@ func (this *generator) SelectManyTx(pkgName string, def *types.Type) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func selectManySql(def *types.Type) *bytes.Buffer {
+func selectManySql(def *common.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 
@@ -162,7 +160,7 @@ func selectManySql(def *types.Type) *bytes.Buffer {
 }
 
 // SELECT for transactions require some slight changes.
-func selectManySqlTx(def *types.Type) *bytes.Buffer {
+func selectManySqlTx(def *common.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 

@@ -3,10 +3,10 @@ package mssql
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/types"
+	"github.com/jackmanlabs/codegen/common"
 )
 
-func (this *generator) SelectMany(pkgName string, def *types.Type) string {
+func (this *generator) SelectMany(pkgName string, def *common.Type) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := selectManySql(def)
@@ -79,7 +79,7 @@ func (this *generator) SelectMany(pkgName string, def *types.Type) string {
 	return b.String()
 }
 
-func (this *generator) SelectManyTx(pkgName string, def *types.Type) string {
+func (this *generator) SelectManyTx(pkgName string, def *common.Type) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := selectManySqlTx(def)
@@ -139,7 +139,7 @@ func (this *generator) SelectManyTx(pkgName string, def *types.Type) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and column names.
-func selectManySql(def *types.Type) *bytes.Buffer {
+func selectManySql(def *common.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 
@@ -159,7 +159,7 @@ func selectManySql(def *types.Type) *bytes.Buffer {
 }
 
 // SELECT for transactions require some slight changes.
-func selectManySqlTx(def *types.Type) *bytes.Buffer {
+func selectManySqlTx(def *common.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 

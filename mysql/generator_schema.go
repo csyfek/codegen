@@ -3,25 +3,25 @@ package mysql
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/types"
+	"github.com/jackmanlabs/codegen/common"
 	"strings"
 )
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func (this *generator) Schema(pkg *types.Package) string {
+func (this *generator) Schema(pkg *common.Package) string {
 
 	// We need to take enum types and extract their underlying types for the type caster.
-	typeMap := make(map[string]*types.Type)
+	typeMap := make(map[string]*common.Type)
 	for _, def := range pkg.Types {
 		typeMap[def.Name] = def
 	}
 
 	for _, def := range pkg.Types {
 		for memberId, member := range def.Members {
-			if _, sqlTypeOk := sqlType(member.Type); !sqlTypeOk {
-				if t, underlyingTypeOk := typeMap[member.Type]; underlyingTypeOk {
-					def.Members[memberId].Type = t.UnderlyingType
+			if _, sqlTypeOk := sqlType(member.GoType); !sqlTypeOk {
+				if t, underlyingTypeOk := typeMap[member.GoType]; underlyingTypeOk {
+					def.Members[memberId].GoType = t.UnderlyingType
 				}
 			}
 		}
@@ -42,10 +42,10 @@ func (this *generator) Schema(pkg *types.Package) string {
 	return b.String()
 }
 
-func (this *generator) typeSchema(def *types.Type) string {
+func (this *generator) typeSchema(def *common.Type) string {
 	b := bytes.NewBuffer(nil)
 
-	var firstField types.Member
+	var firstField common.Member
 	if len(def.Members) > 0 {
 		firstField = def.Members[0]
 	}
@@ -58,12 +58,12 @@ func (this *generator) typeSchema(def *types.Type) string {
 	for idx, member := range def.Members {
 
 		var typeSql string
-		if member.Type == "string" && (idx == 0 || strings.HasSuffix(member.SqlName, "_id")) {
+		if member.GoType == "string" && (idx == 0 || strings.HasSuffix(member.SqlName, "_id")) {
 			// Assume UUID.
 			typeSql = "CHAR(36)"
 		} else {
 			var ok bool
-			typeSql, ok = sqlType(member.Type)
+			typeSql, ok = sqlType(member.GoType)
 			if !ok {
 				continue
 			}
@@ -80,7 +80,7 @@ func (this *generator) typeSchema(def *types.Type) string {
 		}
 	}
 
-	if columnQty == 0{
+	if columnQty == 0 {
 		return ""
 	}
 

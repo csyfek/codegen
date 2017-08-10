@@ -3,11 +3,11 @@ package pg
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/types"
+	"github.com/jackmanlabs/codegen/common"
 	"github.com/serenize/snaker"
 )
 
-func (this *generator) Delete(def *types.Type) string {
+func (this *generator) Delete(def *common.Type) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := deleteSql(def)
@@ -51,7 +51,7 @@ func (this *generator) Delete(def *types.Type) string {
 	return b.String()
 }
 
-func (this *generator) DeleteTx(def *types.Type) string {
+func (this *generator) DeleteTx(def *common.Type) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := deleteSql(def)
@@ -80,7 +80,7 @@ func (this *generator) DeleteTx(def *types.Type) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func deleteSql(def *types.Type) *bytes.Buffer {
+func deleteSql(def *common.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)

@@ -3,11 +3,11 @@ package pg
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/types"
+	"github.com/jackmanlabs/codegen/common"
 	"github.com/serenize/snaker"
 )
 
-func (this *generator) UpdateOne(pkgName string, def *types.Type) string {
+func (this *generator) UpdateOne(pkgName string, def *common.Type) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := updateSql(def)
@@ -38,14 +38,14 @@ func (this *generator) UpdateOne(pkgName string, def *types.Type) string {
 	fmt.Fprint(b, "	}\n\n") // end of prepared statement clause
 
 	for _, member := range def.Members {
-		if _, ok := sqlType(member.Type); !ok {
+		if _, ok := sqlType(member.GoType); !ok {
 			fmt.Fprintf(b, "\tvar x_%s []byte\n", member.GoName)
 		}
 	}
 	fmt.Fprint(b, "\n")
 
 	for _, member := range def.Members {
-		if _, ok := sqlType(member.Type); !ok {
+		if _, ok := sqlType(member.GoType); !ok {
 			fmt.Fprintf(b, "\tx_%s, err = json.Marshal(x.%s)", member.GoName, member.GoName)
 			fmt.Fprint(b, `
 	if err != nil {
@@ -58,7 +58,7 @@ func (this *generator) UpdateOne(pkgName string, def *types.Type) string {
 
 	fmt.Fprint(b, "\targs := []interface{}{\n")
 	for _, member := range def.Members {
-		if _, ok := sqlType(member.Type); ok {
+		if _, ok := sqlType(member.GoType); ok {
 			fmt.Fprintf(b, "\t\t&x.%s,\n", member.GoName)
 		} else {
 			fmt.Fprintf(b, "\t\t&x_%s,\n", member.GoName)
@@ -83,7 +83,7 @@ func (this *generator) UpdateOne(pkgName string, def *types.Type) string {
 	return b.String()
 }
 
-func (this *generator) UpdateOneTx(pkgName string, def *types.Type) string {
+func (this *generator) UpdateOneTx(pkgName string, def *common.Type) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := updateSql(def)
@@ -97,14 +97,14 @@ func (this *generator) UpdateOneTx(pkgName string, def *types.Type) string {
 	fmt.Fprint(b, "`\n\n")
 
 	for _, member := range def.Members {
-		if _, ok := sqlType(member.Type); !ok {
+		if _, ok := sqlType(member.GoType); !ok {
 			fmt.Fprintf(b, "\tvar x_%s []byte\n", member.GoName)
 		}
 	}
 	fmt.Fprint(b, "\n")
 
 	for _, member := range def.Members {
-		if _, ok := sqlType(member.Type); !ok {
+		if _, ok := sqlType(member.GoType); !ok {
 			fmt.Fprintf(b, "\tx_%s, err = json.Marshal(x.%s)", member.GoName, member.GoName)
 			fmt.Fprint(b, `
 	if err != nil {
@@ -117,7 +117,7 @@ func (this *generator) UpdateOneTx(pkgName string, def *types.Type) string {
 
 	fmt.Fprint(b, "\targs := []interface{}{\n")
 	for _, member := range def.Members {
-		if _, ok := sqlType(member.Type); ok {
+		if _, ok := sqlType(member.GoType); ok {
 			fmt.Fprintf(b, "\t\t&x.%s,\n", member.GoName)
 		} else {
 			fmt.Fprintf(b, "\t\t&x_%s,\n", member.GoName)
@@ -144,12 +144,12 @@ func (this *generator) UpdateOneTx(pkgName string, def *types.Type) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func updateSql(def *types.Type) *bytes.Buffer {
+func updateSql(def *common.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)
 
-	var firstField types.Member
+	var firstField common.Member
 	if len(def.Members) > 0 {
 		firstField = def.Members[0]
 	}

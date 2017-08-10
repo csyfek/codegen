@@ -3,10 +3,10 @@ package mssql
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/types"
+	"github.com/jackmanlabs/codegen/common"
 )
 
-func (this *generator) SelectOne(pkgName string, def *types.Type) string {
+func (this *generator) SelectOne(pkgName string, def *common.Type) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := selectOneSql(def)
@@ -50,8 +50,8 @@ func (this *generator) SelectOne(pkgName string, def *types.Type) string {
 	fmt.Fprintf(b, "\t\tx = new(%s.%s)\n", pkgName, def.Name)
 
 	fmt.Fprint(b, "\t\ttargets := []interface{}{\n")
-	for _, column := range def.Members {
-		fmt.Fprintf(b, "\t\t\t&x.%s,\n", column.GoName)
+	for _, member := range def.Members {
+		fmt.Fprintf(b, "\t\t\t&x.%s,\n", member.GoName)
 	}
 
 	fmt.Fprint(b, "\t\t}\n") // end of targets declaration.
@@ -72,7 +72,7 @@ func (this *generator) SelectOne(pkgName string, def *types.Type) string {
 	return b.String()
 }
 
-func (this *generator) SelectOneTx(pkgName string, def *types.Type) string {
+func (this *generator) SelectOneTx(pkgName string, def *common.Type) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := selectOneSqlTx(def)
@@ -99,8 +99,8 @@ func (this *generator) SelectOneTx(pkgName string, def *types.Type) string {
 	fmt.Fprintf(b, "\t\tx = new(%s.%s)\n", pkgName, def.Name)
 
 	fmt.Fprint(b, "\t\ttargets := []interface{}{\n")
-	for _, column := range def.Members {
-		fmt.Fprintf(b, "\t\t\t&x.%s,\n", column.GoName)
+	for _, member := range def.Members {
+		fmt.Fprintf(b, "\t\t\t&x.%s,\n", member.GoName)
 	}
 
 	fmt.Fprint(b, "\t\t}\n") // end of targets declaration.
@@ -121,52 +121,54 @@ func (this *generator) SelectOneTx(pkgName string, def *types.Type) string {
 	return b.String()
 }
 
-// I have to leave out back ticks from the SQL because of embedding issues.
-// Please refrain from using reserved SQL keywords as struct and column names.
-func selectOneSql(def *types.Type) *bytes.Buffer {
+// I have to leave out backticks from the SQL because of embedding issues.
+// Please refrain from using reserved SQL keywords as struct and member names.
+func selectOneSql(def *common.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 
-	var firstField types.Member
+	var firstField common.Member
 	if len(def.Members) > 0 {
 		firstField = def.Members[0]
 	}
 
 	fmt.Fprint(b, "SELECT\n")
-	for idx, column := range def.Members {
-		fmt.Fprintf(b, "\t%s", column.SqlName)
-		if idx != len(def.Members)-1 {
-			fmt.Fprint(b, ",")
+	for idx, member := range def.Members {
+		if idx == len(def.Members)-1 {
+			fmt.Fprintf(b, "\t%s.%s\n", def.Table, member.SqlName)
+		} else {
+			// Note the trailing comma.
+			fmt.Fprintf(b, "\t%s.%s,\n", def.Table, member.SqlName)
 		}
-		fmt.Fprintln(b)
 	}
 	fmt.Fprintf(b, "FROM %s\n", def.Table)
-	fmt.Fprintf(b, "WHERE %s = ?\n", firstField.SqlName)
+	fmt.Fprintf(b, "WHERE %s.%s = ?\n", def.Table, firstField.SqlName)
 	fmt.Fprint(b, "LIMIT 1;\n")
 
 	return b
 }
 
 // SELECT for transactions require some slight changes.
-func selectOneSqlTx(def *types.Type) *bytes.Buffer {
+func selectOneSqlTx(def *common.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 
-	var firstField types.Member
+	var firstField common.Member
 	if len(def.Members) > 0 {
 		firstField = def.Members[0]
 	}
 
 	fmt.Fprint(b, "SELECT\n")
-	for idx, column := range def.Members {
-		fmt.Fprintf(b, "\t%s", column.SqlName)
-		if idx != len(def.Members)-1 {
-			fmt.Fprint(b, ",") // trailing comma except on last line.
+	for idx, member := range def.Members {
+		if idx == len(def.Members)-1 {
+			fmt.Fprintf(b, "\t%s.%s\n", def.Table, member.SqlName)
+		} else {
+			// Note the trailing comma.
+			fmt.Fprintf(b, "\t%s.%s,\n", def.Table, member.SqlName)
 		}
-		fmt.Fprintln(b)
 	}
 	fmt.Fprintf(b, "FROM %s\n", def.Table)
-	fmt.Fprintf(b, "WHERE %s = ?\n", firstField.SqlName)
+	fmt.Fprintf(b, "WHERE %s.%s = ?\n", def.Table, firstField.SqlName)
 	fmt.Fprint(b, "LIMIT 1\n")
 	fmt.Fprint(b, "FOR UPDATE;\n")
 

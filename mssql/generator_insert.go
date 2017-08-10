@@ -3,10 +3,10 @@ package mssql
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/types"
+	"github.com/jackmanlabs/codegen/common"
 )
 
-func (this *generator) InsertOne(pkgName string, def *types.Type) string {
+func (this *generator) InsertOne(pkgName string, def *common.Type) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := insertSql(def)
@@ -60,7 +60,7 @@ func (this *generator) InsertOne(pkgName string, def *types.Type) string {
 	return b.String()
 }
 
-func (this *generator) InsertOneTx(pkgName string, def *types.Type) string {
+func (this *generator) InsertOneTx(pkgName string, def *common.Type) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := insertSql(def)
@@ -100,7 +100,7 @@ func (this *generator) InsertOneTx(pkgName string, def *types.Type) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func insertSql(def *types.Type) *bytes.Buffer {
+func insertSql(def *common.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 

@@ -3,15 +3,13 @@ package pg
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/types"
+	"github.com/jackmanlabs/codegen/common"
 	"github.com/serenize/snaker"
 )
 
-
-
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func (this *generator) Schema(pkg *types.Package) string {
+func (this *generator) Schema(pkg *common.Package) string {
 
 	b := bytes.NewBuffer(nil)
 
@@ -24,11 +22,11 @@ func (this *generator) Schema(pkg *types.Package) string {
 	return b.String()
 }
 
-func (this *generator) typeSchema(def *types.Type) string {
+func (this *generator) typeSchema(def *common.Type) string {
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)
 
-	var firstField types.Member
+	var firstField common.Member
 	if len(def.Members) > 0 {
 		firstField = def.Members[0]
 	}
@@ -37,10 +35,10 @@ func (this *generator) typeSchema(def *types.Type) string {
 	fmt.Fprintf(b, "CREATE TABLE %s (\n", tableName)
 	for idx, member := range def.Members {
 
-		sqlType, _ := sqlType(member.Type)
+		sqlType, _ := sqlType(member.GoType)
 
 		if idx == 0 {
-			if member.Type == "string" {
+			if member.GoType == "string" {
 				sqlType = "CHAR(36)"
 			}
 			fmt.Fprintf(b, "\t%s %s PRIMARY KEY,\n", member.SqlName, sqlType)

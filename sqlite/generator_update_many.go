@@ -3,10 +3,10 @@ package sqlite
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/types"
+	"github.com/jackmanlabs/codegen/common"
 )
 
-func (this *generator) UpdateMany(pkgName string, def *types.Type) string {
+func (this *generator) UpdateMany(pkgName string, def *common.Type) string {
 
 	var (
 		b             = bytes.NewBuffer(nil)
@@ -42,7 +42,7 @@ func (this *generator) UpdateMany(pkgName string, def *types.Type) string {
 	return b.String()
 }
 
-func (this *generator) UpdateManyTx(pkgName string, def *types.Type) string {
+func (this *generator) UpdateManyTx(pkgName string, def *common.Type) string {
 
 	var (
 		b             = bytes.NewBuffer(nil)

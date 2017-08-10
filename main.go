@@ -1,18 +1,16 @@
 package main
 
 import (
-	"bytes"
 	"flag"
-	"fmt"
+	"github.com/jackmanlabs/codegen/common"
 	"github.com/jackmanlabs/codegen/mssql"
 	"github.com/jackmanlabs/codegen/mysql"
 	"github.com/jackmanlabs/codegen/pg"
-	"github.com/jackmanlabs/codegen/pkgex"
+	"github.com/jackmanlabs/codegen/pkger"
 	"github.com/jackmanlabs/codegen/sqlite"
-	"github.com/jackmanlabs/codegen/types"
 	"github.com/jackmanlabs/errors"
+	"github.com/segmentio/go-camelcase"
 	"github.com/serenize/snaker"
-	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -139,8 +137,24 @@ func main() {
 		*importPathTypes = packagePath(*outputRoot + "/types")
 	}
 
+	// TODO: Allow the user to specify existing type, control, and data packages.
+
+	var importPathControl string
+	if importPathControl == "" && (*dst == "control" || *dst == "everything") {
+		importPathControl = packagePath(*outputRoot + "/control")
+	}
+
+	var importPathData string
+	if importPathData == "" && (*dst == "control" || *dst == "everything") {
+		importPathData = packagePath(*outputRoot + "/data")
+	}
+
 	if len(*importPathTypes) != 0 {
-		log.Print("PACKAGE PATH:\t", *importPathTypes)
+		log.Print("PACKAGE PATH TYPES:  \t", *importPathTypes)
+	}
+
+	if len(importPathControl) != 0 {
+		log.Print("PACKAGE PATH CONTROL:\t", importPathControl)
 	}
 
 	if *driver != "" {
@@ -156,7 +170,7 @@ func main() {
 		}
 	}
 
-	var extractor types.Extractor
+	var extractor common.Extractor
 
 	// No need to go crazy with validation; that's already been done above.
 	if *src == "db" {
@@ -171,16 +185,21 @@ func main() {
 			extractor = mssql.NewExtractor(*username, *password, *hostname, *database)
 		}
 	} else {
-		extractor = pkgex.NewExtractor(*importPathTypes)
+		extractor = pkger.NewExtractor(*importPathTypes)
 	}
 
-	var pkg *types.Package
+	var pkg *common.Package
 	pkg, err := extractor.Extract()
 	if err != nil {
 		log.Fatal(errors.Stack(err))
 	}
 
-	structMap := make(map[string]*types.Type)
+	// Only the package extractor generates a package name, but it's needed if we generate bindings, for example.
+	if pkg.Name == "" {
+		pkg.Name = "types"
+	}
+
+	structMap := make(map[string]*common.Type)
 
 	// Prepare to flatten the structs for output generation by making them addressable.
 	for _, s := range pkg.Types {
@@ -198,16 +217,30 @@ func main() {
 	// Depending on the source, the SQL names may not be set. Set them now to default values.
 	if *dst == "bindings" || *dst == "everything" || *dst == "schema" {
 		for _, def := range pkg.Types {
-			def.Table = snaker.CamelToSnake(def.Name)
+
+			if def.Table == "" {
+				def.Table = snaker.CamelToSnake(def.Name)
+			}
+
 			for mid, member := range def.Members {
 				if member.SqlName == "" {
 					def.Members[mid].SqlName = snaker.CamelToSnake(member.GoName)
 				}
 			}
+
 		}
 	}
 
-	var generator types.SqlGenerator
+	// We also need to set the JSON names to something convention-friendly.
+	if *dst == "rest" || *dst == "everything" {
+		for _, def := range pkg.Types {
+			for m, member := range def.Members {
+				def.Members[m].JsonName = camelcase.Camelcase(member.GoName)
+			}
+		}
+	}
+
+	var generator common.SqlGenerator
 	if *dst == "bindings" || *dst == "everything" || *dst == "schema" {
 		switch *driver {
 		case "sqlite":
@@ -219,7 +252,6 @@ func main() {
 		case "mssql":
 			generator = mssql.NewGenerator()
 		}
-
 	}
 
 	if *dst == "schema" || *dst == "everything" {
@@ -229,168 +261,27 @@ func main() {
 	if *dst == "bindings" || *dst == "everything" {
 		generateBindings(*outputRoot, *importPathTypes, generator, pkg)
 	}
+
+	if *dst == "types" || *dst == "everything" {
+		generateTypes(*outputRoot, pkg)
+	}
+
+	if *dst == "rest" || *dst == "everything" {
+		generateRest(*outputRoot, []string{*importPathTypes, importPathControl}, pkg)
+	}
+
+	if *dst == "control" || *dst == "everything" {
+		generateControls(*outputRoot, []string{*importPathTypes, importPathData}, pkg)
+	}
 }
 
-func mergeStructs(dst, src *types.Type) {
+func mergeStructs(dst, src *common.Type) {
 	for _, srcMember := range src.Members {
 		exists := dst.ContainsMember(srcMember.GoName)
 		if !exists {
 			dst.Members = append(dst.Members, srcMember)
 		}
 	}
-}
-
-func generateSchema(outputRoot string, generator types.SqlGenerator, pkg *types.Package) error {
-
-	var (
-		f    io.WriteCloser
-		path string
-	)
-
-	path = outputRoot + "/data"
-	d, err := os.Open(path)
-	if os.IsNotExist(err) {
-		err = os.Mkdir(path, os.ModeDir|os.ModePerm)
-		if err != nil {
-			return errors.Stack(err)
-		}
-	} else if err != nil {
-		return errors.Stack(err)
-	} else {
-		err = d.Close()
-		if err != nil {
-			return errors.Stack(err)
-		}
-	}
-
-	// Write baseline file.
-
-	f, err = os.Create(path + "/schema.sql")
-	if err != nil {
-		return errors.Stack(err)
-	}
-
-	f.Write([]byte(generator.Schema(pkg)))
-
-	err = f.Close()
-	if err != nil {
-		return errors.Stack(err)
-	}
-
-	return nil
-}
-
-func generateBindings(outputRoot, importPathTypes string, generator types.SqlGenerator, pkg *types.Package) error {
-
-	var (
-		f    io.WriteCloser
-		path string
-	)
-
-	path = outputRoot + "/data"
-	d, err := os.Open(path)
-	if os.IsNotExist(err) {
-		err = os.Mkdir(path, os.ModeDir|os.ModePerm)
-		if err != nil {
-			return errors.Stack(err)
-		}
-	} else if err != nil {
-		return errors.Stack(err)
-	} else {
-		err = d.Close()
-		if err != nil {
-			return errors.Stack(err)
-		}
-	}
-
-	// Write baseline file.
-
-	f, err = os.Create(path + "/bindings.go")
-	if err != nil {
-		return errors.Stack(err)
-	}
-
-	f.Write([]byte(generator.Baseline()))
-
-	err = f.Close()
-	if err != nil {
-		return errors.Stack(err)
-	}
-
-	for _, def := range pkg.Types {
-
-		if def.UnderlyingType != "struct" {
-			continue
-		}
-
-		b := bytes.NewBuffer(nil)
-
-		fmt.Fprint(b, `
-package data
-
-import(
-	"database/sql"
-	"github.com/jackmanlabs/errors"
-)
-
-`)
-
-		if importPathTypes != "" {
-			fmt.Fprintf(b, "\nimport \""+importPathTypes+"\"\n\n")
-		}
-
-		fmt.Fprintln(b)
-		fmt.Fprintln(b, "//##############################################################################")
-		fmt.Fprintln(b, "// TABLE: "+def.Table)
-		fmt.Fprintln(b, "// TYPE:  "+def.Name)
-		fmt.Fprintln(b, "//##############################################################################")
-		fmt.Fprintln(b)
-
-		fmt.Fprint(b, generator.SelectOne(pkg.Name, def))
-		fmt.Fprint(b, "\n\n/*============================================================================*/\n\n")
-		fmt.Fprint(b, generator.SelectOneTx(pkg.Name, def))
-		fmt.Fprint(b, "\n\n/*============================================================================*/\n\n")
-		fmt.Fprint(b, generator.SelectMany(pkg.Name, def))
-		fmt.Fprint(b, "\n\n/*============================================================================*/\n\n")
-		fmt.Fprint(b, generator.SelectManyTx(pkg.Name, def))
-		fmt.Fprint(b, "\n\n/*============================================================================*/\n\n")
-		fmt.Fprint(b, generator.InsertOne(pkg.Name, def))
-		fmt.Fprint(b, "\n\n/*============================================================================*/\n\n")
-		fmt.Fprint(b, generator.InsertOneTx(pkg.Name, def))
-		fmt.Fprint(b, "\n\n/*============================================================================*/\n\n")
-		fmt.Fprint(b, generator.UpdateOne(pkg.Name, def))
-		fmt.Fprint(b, "\n\n/*============================================================================*/\n\n")
-		fmt.Fprint(b, generator.UpdateOneTx(pkg.Name, def))
-		fmt.Fprint(b, "\n\n/*============================================================================*/\n\n")
-		fmt.Fprint(b, generator.UpdateMany(pkg.Name, def))
-		fmt.Fprint(b, "\n\n/*============================================================================*/\n\n")
-		fmt.Fprint(b, generator.UpdateManyTx(pkg.Name, def))
-		fmt.Fprint(b, "\n\n/*============================================================================*/\n\n")
-		fmt.Fprint(b, generator.Delete(def))
-		fmt.Fprint(b, "\n\n/*============================================================================*/\n\n")
-		fmt.Fprint(b, generator.DeleteTx(def))
-		fmt.Fprint(b, "\n\n/*============================================================================*/\n\n")
-
-		filename := snaker.CamelToSnake(def.Name)
-		filename = "bindings_" + filename + ".go"
-
-		f, err := os.Create(path + "/" + filename)
-		if err != nil {
-			return errors.Stack(err)
-		}
-
-		_, err = io.Copy(f, b)
-		if err != nil {
-			return errors.Stack(err)
-		}
-
-		err = f.Close()
-		if err != nil {
-			return errors.Stack(err)
-		}
-	}
-
-	return nil
 }
 
 func packagePath(path string) string {
