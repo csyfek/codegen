@@ -48,7 +48,7 @@ func generateTypes(outputRoot string, pkg *common.Package) error {
 
 		fmt.Fprintf(f, "package %s\n\n", pkg.Name)
 
-		strct, importPaths := pkger.GenerateStruct(def)
+		model, importPaths := pkger.GenerateModel(def)
 
 		fmt.Fprint(f, "import(\n")
 		for _, importPath := range importPaths {
@@ -56,7 +56,7 @@ func generateTypes(outputRoot string, pkg *common.Package) error {
 		}
 		fmt.Fprint(f, ")\n\n")
 
-		fmt.Fprint(f, strct)
+		fmt.Fprint(f, model)
 
 		err = f.Close()
 		if err != nil {

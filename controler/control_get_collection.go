@@ -12,8 +12,8 @@ func GetCollection(def *common.Type) string {
 	b := bytes.NewBuffer(nil)
 	models := plural(model)
 
-	fmt.Fprintf(b, "func Get%s(filters map[string]interface{}) ([]types.%s, error) {\n", models, model)
-	fmt.Fprintf(b, "z, err := data.Get%s()\n", models)
+	fmt.Fprintf(b, "func Get%s(filter filters.%s) ([]types.%s, error) {\n", models, model, model)
+	fmt.Fprintf(b, "z, err := data.Get%s(filter)\n", models)
 	fmt.Fprint(b, `
 	if err != nil {
 		return z, errors.Stack(err)

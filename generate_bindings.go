@@ -10,7 +10,7 @@ import (
 	"os"
 )
 
-func generateBindings(outputRoot, importPathTypes string, generator common.SqlGenerator, pkg *common.Package) error {
+func generateBindings(outputRoot string, importPaths []string, generator common.SqlGenerator, pkg *common.Package) error {
 
 	var (
 		f    io.WriteCloser
@@ -61,13 +61,14 @@ package data
 import(
 	"database/sql"
 	"github.com/jackmanlabs/errors"
-)
-
 `)
 
-		if importPathTypes != "" {
-			fmt.Fprintf(b, "\nimport \""+importPathTypes+"\"\n\n")
+		for _, importPath := range importPaths {
+			if importPath != "" {
+				fmt.Fprintf(b, "\t\"%s\"\n", importPath)
+			}
 		}
+		fmt.Fprint(b, ")\n\n")
 
 		fmt.Fprintln(b)
 		fmt.Fprintln(b, "//##############################################################################")

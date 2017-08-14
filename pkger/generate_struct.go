@@ -9,7 +9,7 @@ import (
 
 // https://google.github.io/styleguide/jsoncstyleguide.xml#Property_Name_Format
 
-func GenerateStruct(def *common.Type) (string, []string) {
+func GenerateModel(def *common.Type) (string, []string) {
 	var (
 		b       *bytes.Buffer = bytes.NewBuffer(nil)
 		imports []string      = make([]string, 0)
