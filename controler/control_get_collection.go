@@ -13,7 +13,7 @@ func GetCollection(def *common.Type) string {
 	models := plural(model)
 
 	fmt.Fprintf(b, "func Get%s(filters map[string]interface{}) ([]types.%s, error) {\n", models, model)
-	fmt.Fprintf(b, "z, err := data.Get%s()\n", models)
+	fmt.Fprintf(b, "\tz, err := data.Get%s(filters map[string]interface{})\n", models)
 	fmt.Fprint(b, `
 	if err != nil {
 		return z, errors.Stack(err)
@@ -21,7 +21,7 @@ func GetCollection(def *common.Type) string {
 
 	return z, nil
 }
-	`)
+`)
 
 	return b.String()
 }
