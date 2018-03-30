@@ -3,11 +3,11 @@ package pg
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/common"
+	"github.com/jackmanlabs/codegen"
 	"github.com/serenize/snaker"
 )
 
-func (this *generator) SelectMany(pkgName string, def *common.Type) string {
+func (this *generator) SelectMany(pkgName string, def *codegen.Type) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := selectManySql(def)
@@ -95,7 +95,7 @@ func (this *generator) SelectMany(pkgName string, def *common.Type) string {
 	return b.String()
 }
 
-func (this *generator) SelectManyTx(pkgName string, def *common.Type) string {
+func (this *generator) SelectManyTx(pkgName string, def *codegen.Type) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := selectManySql(def)
@@ -169,12 +169,12 @@ func (this *generator) SelectManyTx(pkgName string, def *common.Type) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func selectManySql(def *common.Type) *bytes.Buffer {
+func selectManySql(def *codegen.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)
 
-	var firstField common.Member
+	var firstField codegen.Member
 	if len(def.Members) > 0 {
 		firstField = def.Members[0]
 	}

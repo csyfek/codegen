@@ -1,7 +1,7 @@
 package pkger
 
 import (
-	"github.com/jackmanlabs/codegen/common"
+	"github.com/jackmanlabs/codegen"
 	"github.com/jackmanlabs/errors"
 	"go/ast"
 	"go/build"
@@ -14,7 +14,7 @@ import (
 
 type extractorType struct {
 	pkgPath string
-	common.Package
+	codegen.Package
 	Fset *token.FileSet
 }
 
@@ -24,7 +24,7 @@ func NewExtractor(pkgPath string) *extractorType {
 	}
 }
 
-func (this *extractorType) Extract() (*common.Package, error) {
+func (this *extractorType) Extract() (*codegen.Package, error) {
 
 	buildPkg, err := build.Import(this.pkgPath, "", 0)
 	if err != nil {
@@ -65,7 +65,7 @@ func (this *extractorType) Visit(node ast.Node) (w ast.Visitor) {
 
 	case *ast.TypeSpec:
 
-		newType := common.NewType()
+		newType := codegen.NewType()
 		newType.Name = t.Name.String()
 		newType.UnderlyingType = resolveTypeExpression(t.Type)
 
@@ -92,7 +92,7 @@ func (this *extractorType) Visit(node ast.Node) (w ast.Visitor) {
 			return nil
 		}
 
-		member := common.Member{
+		member := codegen.Member{
 			GoType: typ,
 			GoName: name,
 		}

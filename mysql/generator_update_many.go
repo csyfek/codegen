@@ -3,10 +3,10 @@ package mysql
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/common"
+	"github.com/jackmanlabs/codegen"
 )
 
-func (this *generator) UpdateMany(pkgName string, def *common.Type) string {
+func (this *generator) UpdateMany(pkgName string, def *codegen.Type) string {
 
 	var (
 		b             = bytes.NewBuffer(nil)
@@ -42,7 +42,7 @@ func (this *generator) UpdateMany(pkgName string, def *common.Type) string {
 	return b.String()
 }
 
-func (this *generator) UpdateManyTx(pkgName string, def *common.Type) string {
+func (this *generator) UpdateManyTx(pkgName string, def *codegen.Type) string {
 
 	var (
 		b             = bytes.NewBuffer(nil)

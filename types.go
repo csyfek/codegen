@@ -1,4 +1,4 @@
-package common
+package codegen
 
 type Package struct {
 	Types   []*Type

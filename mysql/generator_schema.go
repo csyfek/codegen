@@ -3,16 +3,16 @@ package mysql
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/common"
+	"github.com/jackmanlabs/codegen"
 	"strings"
 )
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func (this *generator) Schema(pkg *common.Package) string {
+func (this *generator) Schema(pkg *codegen.Package) string {
 
 	// We need to take enum types and extract their underlying types for the type caster.
-	typeMap := make(map[string]*common.Type)
+	typeMap := make(map[string]*codegen.Type)
 	for _, def := range pkg.Types {
 		typeMap[def.Name] = def
 	}
@@ -42,10 +42,10 @@ func (this *generator) Schema(pkg *common.Package) string {
 	return b.String()
 }
 
-func (this *generator) typeSchema(def *common.Type) string {
+func (this *generator) typeSchema(def *codegen.Type) string {
 	b := bytes.NewBuffer(nil)
 
-	var firstField common.Member
+	var firstField codegen.Member
 	if len(def.Members) > 0 {
 		firstField = def.Members[0]
 	}

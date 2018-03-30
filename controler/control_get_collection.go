@@ -2,12 +2,12 @@ package controler
 
 import (
 	"bytes"
-	"github.com/jackmanlabs/codegen/common"
+	"github.com/jackmanlabs/codegen"
 	"github.com/jackmanlabs/errors"
 	"text/template"
 )
 
-func GetCollection(def *common.Type) (string, error) {
+func GetCollection(def *codegen.Type) (string, error) {
 
 	model := def.Name
 	b := bytes.NewBuffer(nil)

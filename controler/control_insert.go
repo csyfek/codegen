@@ -3,10 +3,10 @@ package controler
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/common"
+	"github.com/jackmanlabs/codegen"
 )
 
-func Insert(def *common.Type) string {
+func Insert(def *codegen.Type) string {
 
 	// TODO: Find a better way of determining the primary key.
 	pkey := def.Members[0]

@@ -1,6 +1,6 @@
 package mysql
 
-import "github.com/jackmanlabs/codegen/common"
+import "github.com/jackmanlabs/codegen"
 
 type Column struct {
 	TableCatalog           string
@@ -28,7 +28,7 @@ type Column struct {
 	DomainName             *string
 }
 
-func (this *Column) Member() common.Member {
+func (this *Column) Member() codegen.Member {
 
 	var l int
 
@@ -38,7 +38,7 @@ func (this *Column) Member() common.Member {
 		l = *this.NumericPrecision
 	}
 
-	return common.Member{
+	return codegen.Member{
 		GoName: this.ColumnName,
 		GoType: this.goType(),
 		Length: l,

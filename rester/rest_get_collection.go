@@ -3,10 +3,10 @@ package rester
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/common"
+	"github.com/jackmanlabs/codegen"
 )
 
-func GetCollection(def *common.Type) (string, string) {
+func GetCollection(def *codegen.Type) (string, string) {
 
 	resourceName := resource(def.Name)
 	models := plural(def.Name)

@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/jackmanlabs/codegen/common"
+	"github.com/jackmanlabs/codegen"
 	"github.com/jackmanlabs/errors"
 	"strings"
 	"sync"
@@ -52,7 +52,7 @@ func NewExtractor(username, password, hostname, database string) *Extractor {
 	return this
 }
 
-func (this *Extractor) Extract() (*common.Package, error) {
+func (this *Extractor) Extract() (*codegen.Package, error) {
 
 	tables, err := this.tables()
 	if err != nil {
@@ -71,8 +71,8 @@ func (this *Extractor) Extract() (*common.Package, error) {
 		tableColumns[table] = columns
 	}
 
-	pkg := &common.Package{
-		Types:   make([]*common.Type, 0),
+	pkg := &codegen.Package{
+		Types:   make([]*codegen.Type, 0),
 		Imports: nil,
 		Name:    "",
 		Path:    "",
@@ -80,7 +80,7 @@ func (this *Extractor) Extract() (*common.Package, error) {
 
 	for table, columns := range tableColumns {
 
-		t := common.NewType()
+		t := codegen.NewType()
 		t.Name = strings.TrimPrefix(table, "tbl")
 
 		for _, column := range columns {

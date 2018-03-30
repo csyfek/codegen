@@ -3,13 +3,13 @@ package pg
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/common"
+	"github.com/jackmanlabs/codegen"
 	"github.com/serenize/snaker"
 )
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func (this *generator) Schema(pkg *common.Package) string {
+func (this *generator) Schema(pkg *codegen.Package) string {
 
 	b := bytes.NewBuffer(nil)
 
@@ -22,11 +22,11 @@ func (this *generator) Schema(pkg *common.Package) string {
 	return b.String()
 }
 
-func (this *generator) typeSchema(def *common.Type) string {
+func (this *generator) typeSchema(def *codegen.Type) string {
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)
 
-	var firstField common.Member
+	var firstField codegen.Member
 	if len(def.Members) > 0 {
 		firstField = def.Members[0]
 	}

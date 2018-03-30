@@ -3,10 +3,10 @@ package mssql
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/common"
+	"github.com/jackmanlabs/codegen"
 )
 
-func (this *generator) UpdateOne(pkgName string, def *common.Type) string {
+func (this *generator) UpdateOne(pkgName string, def *codegen.Type) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := updateSql(def)
@@ -61,7 +61,7 @@ func (this *generator) UpdateOne(pkgName string, def *common.Type) string {
 	return b.String()
 }
 
-func (this *generator) UpdateOneTx(pkgName string, def *common.Type) string {
+func (this *generator) UpdateOneTx(pkgName string, def *codegen.Type) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := updateSql(def)
@@ -101,11 +101,11 @@ func (this *generator) UpdateOneTx(pkgName string, def *common.Type) string {
 
 // I have to leave out back ticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and column names.
-func updateSql(def *common.Type) *bytes.Buffer {
+func updateSql(def *codegen.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 
-	var firstField common.Member
+	var firstField codegen.Member
 	if len(def.Members) > 0 {
 		firstField = def.Members[0]
 	}

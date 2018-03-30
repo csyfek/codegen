@@ -3,10 +3,10 @@ package controler
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/common"
+	"github.com/jackmanlabs/codegen"
 )
 
-func Upsert(def *common.Type) string {
+func Upsert(def *codegen.Type) string {
 
 	model := def.Name
 	handler := bytes.NewBuffer(nil)

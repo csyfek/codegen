@@ -3,7 +3,7 @@ package sqlite
 import (
 	"database/sql"
 	"fmt"
-	"github.com/jackmanlabs/codegen/common"
+	"github.com/jackmanlabs/codegen"
 	"github.com/jackmanlabs/errors"
 	_ "github.com/mattn/go-sqlite3"
 	"strings"
@@ -42,7 +42,7 @@ func NewExtractor(filename string) *Extractor {
 	return this
 }
 
-func (this *Extractor) Extract() (*common.Package, error) {
+func (this *Extractor) Extract() (*codegen.Package, error) {
 
 	tables, err := this.tables()
 	if err != nil {
@@ -61,8 +61,8 @@ func (this *Extractor) Extract() (*common.Package, error) {
 		tableColumns[table] = columns
 	}
 
-	pkg := &common.Package{
-		Types:   make([]*common.Type, 0),
+	pkg := &codegen.Package{
+		Types:   make([]*codegen.Type, 0),
 		Imports: nil,
 		Name:    "",
 		Path:    "",
@@ -70,7 +70,7 @@ func (this *Extractor) Extract() (*common.Package, error) {
 
 	for table, columns := range tableColumns {
 
-		t := common.NewType()
+		t := codegen.NewType()
 		t.Name = strings.TrimPrefix(table, "tbl")
 
 		for _, column := range columns {

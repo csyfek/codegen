@@ -1,6 +1,6 @@
 package sqlite
 
-import "github.com/jackmanlabs/codegen/common"
+import "github.com/jackmanlabs/codegen"
 
 // TODO: This column is borrowed from MSSQL as a template.
 type Column struct {
@@ -29,7 +29,7 @@ type Column struct {
 	DomainName             *string
 }
 
-func (this *Column) Member() common.Member {
+func (this *Column) Member() codegen.Member {
 
 	var l int
 
@@ -39,7 +39,7 @@ func (this *Column) Member() common.Member {
 		l = *this.NumericPrecision
 	}
 
-	return common.Member{
+	return codegen.Member{
 		GoName: this.ColumnName,
 		GoType: this.goType(),
 		Length: l,

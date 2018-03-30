@@ -3,13 +3,13 @@ package pkger
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/common"
+	"github.com/jackmanlabs/codegen"
 	"github.com/segmentio/go-camelcase"
 )
 
 // https://google.github.io/styleguide/jsoncstyleguide.xml#Property_Name_Format
 
-func GenerateModel(def *common.Type) (string, []string) {
+func GenerateModel(def *codegen.Type) (string, []string) {
 	var (
 		b       *bytes.Buffer = bytes.NewBuffer(nil)
 		imports []string      = make([]string, 0)

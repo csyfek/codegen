@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/jackmanlabs/codegen/common"
+	"github.com/jackmanlabs/codegen"
 	"github.com/jackmanlabs/errors"
 	"log"
 	"os"

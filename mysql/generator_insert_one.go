@@ -3,10 +3,10 @@ package mysql
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/common"
+	"github.com/jackmanlabs/codegen"
 )
 
-func (this *generator) InsertOne(pkgName string, def *common.Type) string {
+func (this *generator) InsertOne(pkgName string, def *codegen.Type) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := insertSql(def)
@@ -58,7 +58,7 @@ func (this *generator) InsertOne(pkgName string, def *common.Type) string {
 	return b.String()
 }
 
-func (this *generator) InsertOneTx(pkgName string, def *common.Type) string {
+func (this *generator) InsertOneTx(pkgName string, def *codegen.Type) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := insertSql(def)
@@ -96,7 +96,7 @@ func (this *generator) InsertOneTx(pkgName string, def *common.Type) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func insertSql(def *common.Type) *bytes.Buffer {
+func insertSql(def *codegen.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 

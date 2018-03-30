@@ -3,10 +3,10 @@ package rester
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/common"
+	"github.com/jackmanlabs/codegen"
 )
 
-func GetOne(def *common.Type) (string, string) {
+func GetOne(def *codegen.Type) (string, string) {
 
 	resourceName := resource(def.Name)
 	model := def.Name

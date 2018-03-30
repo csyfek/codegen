@@ -3,10 +3,10 @@ package mysql
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/common"
+	"github.com/jackmanlabs/codegen"
 )
 
-func (this *generator) SelectMany(pkgName string, def *common.Type) string {
+func (this *generator) SelectMany(pkgName string, def *codegen.Type) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := selectManySql(def)
@@ -79,7 +79,7 @@ func (this *generator) SelectMany(pkgName string, def *common.Type) string {
 	return b.String()
 }
 
-func (this *generator) SelectManyTx(pkgName string, def *common.Type) string {
+func (this *generator) SelectManyTx(pkgName string, def *codegen.Type) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := selectManySqlTx(def)
@@ -139,7 +139,7 @@ func (this *generator) SelectManyTx(pkgName string, def *common.Type) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func selectManySql(def *common.Type) *bytes.Buffer {
+func selectManySql(def *codegen.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 
@@ -160,7 +160,7 @@ func selectManySql(def *common.Type) *bytes.Buffer {
 }
 
 // SELECT for transactions require some slight changes.
-func selectManySqlTx(def *common.Type) *bytes.Buffer {
+func selectManySqlTx(def *codegen.Type) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 

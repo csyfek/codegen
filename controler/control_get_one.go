@@ -3,10 +3,10 @@ package controler
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/common"
+	"github.com/jackmanlabs/codegen"
 )
 
-func GetOne(def *common.Type) string {
+func GetOne(def *codegen.Type) string {
 
 	model := def.Name
 	handler := bytes.NewBuffer(nil)

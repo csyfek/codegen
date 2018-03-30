@@ -3,12 +3,12 @@ package mssql
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen/common"
+	"github.com/jackmanlabs/codegen"
 )
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func (this *generator) Schema(pkg *common.Package) string {
+func (this *generator) Schema(pkg *codegen.Package) string {
 
 	b := bytes.NewBuffer(nil)
 
@@ -26,14 +26,14 @@ func (this *generator) Schema(pkg *common.Package) string {
 	return b.String()
 }
 
-func (this *generator) typeDrop(def *common.Type) string {
+func (this *generator) typeDrop(def *codegen.Type) string {
 	return fmt.Sprintf("DROP TABLE IF EXISTS %s;\n", def.Table)
 }
 
-func (this *generator) typeSchema(def *common.Type) string {
+func (this *generator) typeSchema(def *codegen.Type) string {
 	b := bytes.NewBuffer(nil)
 
-	var firstField common.Member
+	var firstField codegen.Member
 	if len(def.Members) > 0 {
 		firstField = def.Members[0]
 	}
