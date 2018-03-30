@@ -15,7 +15,7 @@ func (this *generator) SelectMany(pkgName string, def *common.Type) string {
 	psName := fmt.Sprintf("ps_%s", funcName)
 
 	fmt.Fprintf(b, "var %s *sql.Stmt\n\n", psName)
-	fmt.Fprintf(b, "func %s(/* filter string */) ([]%s.%s, error) {\n", funcName, pkgName, def.Name)
+	fmt.Fprintf(b, "func %s(filter filters.%s) ([]%s.%s, error) {\n", funcName, def.Name, pkgName, def.Name)
 	fmt.Fprint(b, `
 	db, err := db()
 	if err != nil {
@@ -86,7 +86,7 @@ func (this *generator) SelectManyTx(pkgName string, def *common.Type) string {
 
 	funcName := fmt.Sprintf("Get%ssTx", def.Name)
 
-	fmt.Fprintf(b, "func %s(tx *sql.Tx /*, filter string */) ([]%s.%s, error) {\n", funcName, pkgName, def.Name)
+	fmt.Fprintf(b, "func %s(tx *sql.Tx ,filter filters.%s) ([]%s.%s, error) {\n", funcName, def.Name, pkgName, def.Name)
 
 	fmt.Fprint(b, "\t\tq := `\n")
 	fmt.Fprintf(b, "%s", b_sql.Bytes())

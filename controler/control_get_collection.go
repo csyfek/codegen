@@ -2,26 +2,41 @@ package controler
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/jackmanlabs/codegen/common"
+	"github.com/jackmanlabs/errors"
+	"text/template"
 )
 
-func GetCollection(def *common.Type) string {
+func GetCollection(def *common.Type) (string, error) {
 
 	model := def.Name
 	b := bytes.NewBuffer(nil)
-	models := plural(model)
 
-	fmt.Fprintf(b, "func Get%s(filters map[string]interface{}) ([]types.%s, error) {\n", models, model)
-	fmt.Fprintf(b, "\tz, err := data.Get%s(filters map[string]interface{})\n", models)
-	fmt.Fprint(b, `
+	values := map[string]string{
+		"singular": model,
+		"plural":   plural(model),
+	}
+
+	pattern := `
+func Get{{.plural}}(filters map[string]interface{}) ([]types.{{.singular}}, error) {
+	tz, err := data.Get{{.plural}}(filter filters.{{.singular}})
 	if err != nil {
-		return z, errors.Stack(err)
+			return z, errors.Stack(err)
 	}
 
 	return z, nil
 }
-`)
+`
 
-	return b.String()
+	tmpl, err := template.ParseGlob(pattern)
+	if err != nil {
+		return "", errors.Stack(err)
+	}
+
+	err = tmpl.Execute(b, values)
+	if err != nil {
+		return "", errors.Stack(err)
+	}
+
+	return b.String(), nil
 }

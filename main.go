@@ -121,12 +121,12 @@ func main() {
 		}
 		defer dir.Close()
 
-		dirstat, err := dir.Stat()
+		dirStat, err := dir.Stat()
 		if err != nil {
 			log.Fatal(errors.Stack(err))
 		}
 
-		if !dirstat.IsDir() {
+		if !dirStat.IsDir() {
 			log.Fatal("The output path must be a directory.")
 		}
 
@@ -147,6 +147,11 @@ func main() {
 	var importPathData string
 	if importPathData == "" && (*dst == "control" || *dst == "everything") {
 		importPathData = packagePath(*outputRoot + "/data")
+	}
+
+	var importPathFilters string
+	if importPathFilters == "" && (*dst == "types" || *dst == "everything") {
+		importPathFilters = packagePath(*outputRoot + "/filters")
 	}
 
 	if len(*importPathTypes) != 0 {
@@ -259,19 +264,20 @@ func main() {
 	}
 
 	if *dst == "bindings" || *dst == "everything" {
-		generateBindings(*outputRoot, *importPathTypes, generator, pkg)
+		generateBindings(*outputRoot, []string{*importPathTypes, importPathFilters}, generator, pkg)
 	}
 
 	if *dst == "types" || *dst == "everything" {
 		generateTypes(*outputRoot, pkg)
+		generateFilters(*outputRoot, pkg)
 	}
 
 	if *dst == "rest" || *dst == "everything" {
-		generateRest(*outputRoot, []string{*importPathTypes, importPathControl}, pkg)
+		generateRest(*outputRoot, []string{*importPathTypes, importPathControl, importPathFilters}, pkg)
 	}
 
 	if *dst == "control" || *dst == "everything" {
-		generateControls(*outputRoot, []string{*importPathTypes, importPathData}, pkg)
+		generateControls(*outputRoot, []string{*importPathTypes, importPathData, importPathFilters}, pkg)
 	}
 }
 
