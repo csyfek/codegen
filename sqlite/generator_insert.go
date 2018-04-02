@@ -1,169 +1,100 @@
 package sqlite
 
 import (
-	"bytes"
-	"fmt"
 	"github.com/jackmanlabs/codegen"
 	"github.com/serenize/snaker"
+	"github.com/jackmanlabs/errors"
 )
 
-func (this *generator) InsertOne(pkgName string, def *codegen.Type) string {
+func (this *generator) InsertOne(pkgName string, def *codegen.Type) (string, error) {
 
-	b := bytes.NewBuffer(nil)
-	b_sql := insertSql(def)
-
-	funcName := fmt.Sprintf("Insert%s", def.Name)
-	psName := fmt.Sprintf("ps_%s", funcName)
-
-	fmt.Fprintf(b, "var %s *sql.Stmt\n\n", psName)
-	fmt.Fprintf(b, "func %s(x *%s.%s) error {\n", funcName, pkgName, def.Name)
-	fmt.Fprint(b, `
-	db, err := db()
-	if err != nil {
-		return errors.Stack(err)
+	data := map[string]interface{}{
+		"model":   def.Name,
+		"members": def.Members,
+		"table":   snaker.CamelToSnake(def.Name),
 	}
 
-`)
-	fmt.Fprintf(b, "\tif %s == nil{\n", psName)
-	fmt.Fprint(b, "\t\tq := `\n")
-	fmt.Fprintf(b, "%s", b_sql.Bytes())
-	fmt.Fprint(b, "`\n\n")
+	s, err := render(templateInsertOne, map[string]string{"templateInsertSql": templateInsertSql}, data)
+	if err != nil {
+		return "", errors.Stack(err)
+	}
 
-	fmt.Fprintf(b, "\t\t%s, err = db.Prepare(q)", psName)
-	fmt.Fprint(b, `
+	return s, nil
+}
+
+func (this *generator) InsertOneTx(pkgName string, def *codegen.Type) (string, error) {
+
+	data := map[string]interface{}{
+		"model":   def.Name,
+		"members": def.Members,
+		"table":   snaker.CamelToSnake(def.Name),
+	}
+
+	s, err := render(templateInsertOneTx, map[string]string{"templateInsertSql": templateInsertSql}, data)
+	if err != nil {
+		return "", errors.Stack(err)
+	}
+
+	return s, nil
+
+}
+
+var templateInsertOne string = `
+var psInsert{{.model}} *sql.Stmt
+
+func  (this *SqliteDataSource) Insert{{.model}}(x *{{.modelPackageName}}.{{.model}}) error {
+
+	var err error
+
+	if psInsert{{.model}} == nil{
+		q := {{template "templateInsertSql" .}}
+
+		psInsert{{.model}}, err = this.Prepare(q)
 		if err != nil {
 			return errors.Stack(err)
 		}
-`)
-	fmt.Fprint(b, "	}\n\n") // end of prepared statement clause
-
-	for _, member := range def.Members {
-		if _, ok := sqlType(member.GoType); !ok {
-			fmt.Fprintf(b, "\tvar x_%s []byte\n", member.GoName)
-		}
 	}
-	fmt.Fprint(b, "\n")
 
-	for _, member := range def.Members {
-		if _, ok := sqlType(member.GoType); !ok {
-			fmt.Fprintf(b, "\tx_%s, err = json.Marshal(x.%s)", member.GoName, member.GoName)
-			fmt.Fprint(b, `
+	args := []interface{}{
+{{range .members}}&x.{{.GoName}},
+{{end}}
+	}
+
+	_, err = psInsert{{.model}}.Exec(args...)
 	if err != nil {
 		return errors.Stack(err)
 	}
 
-`)
-		}
-	}
-
-	fmt.Fprint(b, "\targs := []interface{}{\n")
-	for _, member := range def.Members {
-		if _, ok := sqlType(member.GoType); ok {
-			fmt.Fprintf(b, "\t\t&x.%s,\n", member.GoName)
-		} else {
-			fmt.Fprintf(b, "\t\t&x_%s,\n", member.GoName)
-		}
-	}
-	fmt.Fprint(b, "\t}\n\n")
-
-	fmt.Fprintf(b, "\t_, err = %s.Exec(args...)", psName)
-	fmt.Fprint(b, `
-	if err != nil {
-		return errors.Stack(err)
-	}
-
-`)
-
-	fmt.Fprint(b, "\t// nil is returned if no data was present.\n")
-	fmt.Fprint(b, "\treturn nil\n")
-
-	fmt.Fprint(b, "}\n") // end of function
-
-	return b.String()
+	return nil
 }
+`
 
-func (this *generator) InsertOneTx(pkgName string, def *codegen.Type) string {
+var templateInsertOneTx string = `
 
-	b := bytes.NewBuffer(nil)
-	b_sql := insertSql(def)
+	func  (this *SqliteDataSource) Insert{{.model}}Tx(tx *sql.Tx, x *{{.modelPackageName}}.{{.model}}) error {
 
-	funcName := fmt.Sprintf("Insert%sTx", def.Name)
+	var err error
 
-	fmt.Fprintf(b, "func %s(tx *sql.Tx, x *%s.%s) error {\n", funcName, pkgName, def.Name)
-	fmt.Fprint(b, "var err error\n")
-	fmt.Fprint(b, "\t\tq := `\n")
-	fmt.Fprintf(b, "%s", b_sql.Bytes())
-	fmt.Fprint(b, "`\n\n")
+	q := {{template "templateInsertSql" .}}
 
-	for _, member := range def.Members {
-		if _, ok := sqlType(member.GoType); !ok {
-			fmt.Fprintf(b, "\tvar x_%s []byte\n", member.GoName)
-		}
+	args := []interface{}{
+{{range .members}}&x.{{.GoName}},
+{{end}}
 	}
-	fmt.Fprint(b, "\n")
 
-	for _, member := range def.Members {
-		if _, ok := sqlType(member.GoType); !ok {
-			fmt.Fprintf(b, "\tx_%s, err = json.Marshal(x.%s)", member.GoName, member.GoName)
-			fmt.Fprint(b, `
+	_, err = tx.Exec(q, args...)
 	if err != nil {
 		return errors.Stack(err)
 	}
 
-`)
-		}
-	}
-
-	fmt.Fprint(b, "\targs := []interface{}{\n")
-	for _, member := range def.Members {
-		if _, ok := sqlType(member.GoType); ok {
-			fmt.Fprintf(b, "\t\t&x.%s,\n", member.GoName)
-		} else {
-			fmt.Fprintf(b, "\t\t&x_%s,\n", member.GoName)
-		}
-	}
-	fmt.Fprint(b, "\t}\n\n")
-
-	fmt.Fprint(b, "\t_, err = tx.Exec(q, args...)")
-	fmt.Fprint(b, `
-	if err != nil {
-		return errors.Stack(err)
-	}
-
-`)
-
-	fmt.Fprint(b, "\t// nil is returned if no data was present.\n")
-	fmt.Fprint(b, "\treturn nil\n")
-
-	fmt.Fprint(b, "}\n") // end of function
-
-	return b.String()
+	return nil
 }
+`
 
-// I have to leave out backticks from the SQL because of embedding issues.
-// Please refrain from using reserved SQL keywords as struct and member names.
-func insertSql(def *codegen.Type) *bytes.Buffer {
-
-	b := bytes.NewBuffer(nil)
-	tableName := snaker.CamelToSnake(def.Name)
-
-	fmt.Fprintf(b, "INSERT INTO %s (\n", tableName)
-	for idx, member := range def.Members {
-		if idx == len(def.Members)-1 {
-			fmt.Fprintf(b, "\t%s\n", member.SqlName)
-		} else {
-			// Note the trailing comma.
-			fmt.Fprintf(b, "\t%s,\n", member.SqlName)
-		}
-	}
-	fmt.Fprint(b, ") VALUES (")
-	for idx := range def.Members {
-		if idx == len(def.Members)-1 {
-			fmt.Fprintf(b, "$%d);\n", idx+1)
-		} else {
-			fmt.Fprintf(b, "$%d, ", idx+1)
-		}
-	}
-
-	return b
-}
+var templateInsertSql string = "`" + `
+INSERT INTO {{.table}} (
+{{range $i, $member := .members}}{{$member.SqlName}}{{if last $i $}}{{else}},{{end}}
+{{end}}) VALUES (
+{{range $i, $member := .members}}${{inc $i}}{{if last $i $}});{{else}},{{end}}
+{{end}}
+` + "`"

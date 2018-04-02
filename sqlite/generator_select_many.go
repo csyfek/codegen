@@ -1,196 +1,125 @@
 package sqlite
 
 import (
-	"bytes"
-	"fmt"
 	"github.com/jackmanlabs/codegen"
 	"github.com/serenize/snaker"
+	"github.com/jackmanlabs/errors"
 )
 
-func (this *generator) SelectMany(pkgName string, def *codegen.Type) string {
+func (this *generator) SelectMany(pkgName string, def *codegen.Type) (string, error) {
 
-	b := bytes.NewBuffer(nil)
-	b_sql := selectManySql(def)
-
-	funcName := fmt.Sprintf("Get%ss", def.Name)
-	psName := fmt.Sprintf("ps_%s", funcName)
-
-	fmt.Fprintf(b, "var %s *sql.Stmt\n\n", psName)
-	fmt.Fprintf(b, "func %s() ([]%s.%s, error) {\n", funcName, pkgName, def.Name)
-	fmt.Fprint(b, `
-	db, err := db()
-	if err != nil {
-		return nil, errors.Stack(err)
+	data := map[string]interface{}{
+		"model":   def.Name,
+		"members": def.Members,
+		"table":   snaker.CamelToSnake(def.Name),
 	}
 
-`)
-	fmt.Fprintf(b, "\tif %s == nil{\n", psName)
-	fmt.Fprint(b, "\t\tq := `\n")
-	fmt.Fprintf(b, "%s", b_sql.Bytes())
-	fmt.Fprint(b, "`\n\n")
+	s, err := render(templateInsertOne, map[string]string{"templateInsertSql": templateInsertSql}, data)
+	if err != nil {
+		return "", errors.Stack(err)
+	}
 
-	fmt.Fprintf(b, "\t\t%s, err = db.Prepare(q)", psName)
-	fmt.Fprint(b, `
+	return s, nil
+}
+
+func (this *generator) SelectManyTx(pkgName string, def *codegen.Type) (string, error) {
+
+	data := map[string]interface{}{
+		"model":   def.Name,
+		"members": def.Members,
+		"table":   snaker.CamelToSnake(def.Name),
+	}
+
+	s, err := render(templateInsertOneTx, map[string]string{"templateInsertSql": templateInsertSql}, data)
+	if err != nil {
+		return "", errors.Stack(err)
+	}
+
+	return s, nil
+
+}
+
+var templateSelectMany string = `
+var psSelect{{.models}} *sql.Stmt
+
+func (this *SqliteDataSource)  Select{{.models}}(id string) ([]{{.modelPackageName}}.{{.model}}, error) {
+
+	var err error
+
+	if psSelect{{.model}} == nil{
+		q := {{template "templateSelectOneSql" .}}
+	
+		psSelect{{.model}}, err = this.Prepare(q)
 		if err != nil {
 			return nil, errors.Stack(err)
 		}
-`)
-	fmt.Fprint(b, "	}\n\n") // end of prepared statement clause
-	fmt.Fprint(b, "\targs := []interface{}{}\n\n")
-	fmt.Fprintf(b, "\trows, err := %s.Query(args...)", psName)
-	fmt.Fprint(b, `
+	}
+
+	args := []interface{}{id}
+
+	rows, err := psSelect{{.models}}.Query( args...)
 	if err != nil {
 		return nil, errors.Stack(err)
 	}
 	defer rows.Close()
 
-`)
-
-	fmt.Fprintf(b, "\tvar z []%s.%s = make([]%s.%s, 0)\n", pkgName, def.Name, pkgName, def.Name)
-	fmt.Fprint(b, "\tfor rows.Next() {\n")
-	fmt.Fprintf(b, "\t\tvar x %s.%s\n", pkgName, def.Name)
-	for _, member := range def.Members {
-		if _, ok := sqlType(member.GoType); !ok {
-			fmt.Fprintf(b, "\t\tvar x_%s []byte\n", member.GoName)
+	var z []{{.modelPackageName}}.{{.model}} = make([]{{.modelPackageName}}.{{.model}},0)
+	for rows.Next() {
+		var x {{.modelPackageName}}.{{.model}}
+		dest := []interface{}{
+{{range .members}}&x.{{.GoName}},
+{{end}}
 		}
-	}
 
-	fmt.Fprint(b, "\t\ttargets := []interface{}{\n")
-	for _, member := range def.Members {
-		if _, ok := sqlType(member.GoType); ok {
-			fmt.Fprintf(b, "\t\t\t&x.%s,\n", member.GoName)
-		} else {
-			fmt.Fprintf(b, "\t\t\t&x_%s,\n", member.GoName)
-		}
-	}
-
-	fmt.Fprint(b, "\t\t}\n") // end of targets declaration.
-	fmt.Fprint(b, `
-		err = rows.Scan(targets...)
+		err = rows.Scan(dest...)
 		if err != nil {
 			return z, errors.Stack(err)
 		}
 
-`)
-
-	for _, member := range def.Members {
-		if _, ok := sqlType(member.GoType); !ok {
-			fmt.Fprintf(b, "\t\terr = json.Unmarshal(x_%s, &x.%s)", member.GoName, member.GoName)
-			fmt.Fprint(b, `
-		if err != nil {
-			return z, errors.Stack(err)
-		}
-
-`)
-		}
+		z = append(z, x)
 	}
 
-	fmt.Fprint(b, "\t\tz = append(z, x)\n")
-	fmt.Fprint(b, "\t}\n\n") // end of scan clause.
-	fmt.Fprint(b, "\t// empty slice is returned if no data was present.\n")
-	fmt.Fprint(b, "\treturn z, nil\n")
-
-	fmt.Fprint(b, "}\n") // end of function
-
-	return b.String()
+	return z, nil
 }
+`
 
-func (this *generator) SelectManyTx(pkgName string, def *codegen.Type) string {
+var templateSelectManyTx string = `
 
-	b := bytes.NewBuffer(nil)
-	b_sql := selectManySql(def)
+func  (this *SqliteDataSource) Select{{.models}}Tx(tx *sql.Tx, id string)  ([]{{.modelPackageName}}.{{.model}}, error) {
 
-	funcName := fmt.Sprintf("Get%ssTx", def.Name)
+	q := {{template "templateSelectOneSql" .}}
 
-	fmt.Fprintf(b, "func %s(tx *sql.Tx) ([]%s.%s, error) {\n", funcName, pkgName, def.Name)
+	args := []interface{}{id}
 
-	fmt.Fprint(b, "\t\tq := `\n")
-	fmt.Fprintf(b, "%s", b_sql.Bytes())
-	fmt.Fprint(b, "`\n\n")
-
-	fmt.Fprint(b, "\targs := []interface{}{}\n\n")
-	fmt.Fprint(b, "\trows, err := tx.Query(q, args...)")
-	fmt.Fprint(b, `
+	rows, err := tx.Query(q, args...)
 	if err != nil {
 		return nil, errors.Stack(err)
 	}
 	defer rows.Close()
 
-`)
-
-	fmt.Fprintf(b, "\tvar z []%s.%s = make([]%s.%s, 0)\n", pkgName, def.Name, pkgName, def.Name)
-	fmt.Fprint(b, "\tfor rows.Next() {\n")
-	fmt.Fprintf(b, "\t\tvar x %s.%s\n", pkgName, def.Name)
-	for _, member := range def.Members {
-		if _, ok := sqlType(member.GoType); !ok {
-			fmt.Fprintf(b, "\t\tvar x_%s []byte\n", member.GoName)
+	var z []{{.modelPackageName}}.{{.model}} = make([]{{.modelPackageName}}.{{.model}},0)
+	for rows.Next() {
+		var x {{.modelPackageName}}.{{.model}}
+		dest := []interface{}{
+{{range .members}}&x.{{.GoName}},
+{{end}}
 		}
-	}
 
-	fmt.Fprint(b, "\t\ttargets := []interface{}{\n")
-	for _, member := range def.Members {
-		if _, ok := sqlType(member.GoType); ok {
-			fmt.Fprintf(b, "\t\t\t&x.%s,\n", member.GoName)
-		} else {
-			fmt.Fprintf(b, "\t\t\t&x_%s,\n", member.GoName)
-		}
-	}
-
-	fmt.Fprint(b, "\t\t}\n") // end of targets declaration.
-	fmt.Fprint(b, `
-		err = rows.Scan(targets...)
+		err = rows.Scan(dest...)
 		if err != nil {
 			return z, errors.Stack(err)
 		}
 
-`)
-
-	for _, member := range def.Members {
-		if _, ok := sqlType(member.GoType); !ok {
-			fmt.Fprintf(b, "\t\terr = json.Unmarshal(x_%s, &x.%s)", member.GoName, member.GoName)
-			fmt.Fprint(b, `
-		if err != nil {
-			return z, errors.Stack(err)
-		}
-
-`)
-		}
+		z = append(z, x)
 	}
 
-	fmt.Fprint(b, "\t\tz = append(z, x)\n")
-	fmt.Fprint(b, "\t}\n\n") // end of scan clause.
-	fmt.Fprint(b, "\t// empty slice is returned if no data was present.\n")
-	fmt.Fprint(b, "\treturn z, nil\n")
-
-	fmt.Fprint(b, "}\n") // end of function
-
-	return b.String()
+	return z, nil
 }
+`
 
-// I have to leave out backticks from the SQL because of embedding issues.
-// Please refrain from using reserved SQL keywords as struct and member names.
-func selectManySql(def *codegen.Type) *bytes.Buffer {
 
-	b := bytes.NewBuffer(nil)
-	tableName := snaker.CamelToSnake(def.Name)
-
-	var firstField codegen.Member
-	if len(def.Members) > 0 {
-		firstField = def.Members[0]
-	}
-
-	fmt.Fprint(b, "SELECT\n")
-	for idx, member := range def.Members {
-		if idx == len(def.Members)-1 {
-			fmt.Fprintf(b, "\t%s.%s\n", tableName, member.SqlName)
-		} else {
-			// Note the trailing comma.
-			fmt.Fprintf(b, "\t%s.%s,\n", tableName, member.SqlName)
-		}
-	}
-	fmt.Fprintf(b, "FROM %s;\n", tableName)
-	fmt.Fprint(b, "-- Update your filter criteria here:\n")
-	fmt.Fprintf(b, "-- WHERE %s.%s = $1;\n", tableName, firstField.SqlName)
-
-	return b
-}
+var templateSelectManySql string = "`" + `
+SELECT
+{{range $i, $member := .members}}{{$member.SqlName}}{{if last $i $}}{{else}},
+{{end}}{{end}}FROM {{.table}};
+` + "`"

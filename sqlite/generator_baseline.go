@@ -1,56 +1,35 @@
 package sqlite
 
-func (this *generator) Baseline() string {
-	return `
-package main
+import "fmt"
+
+func (this *generator) Baseline(pkgName string) string {
+	return fmt.Sprintf(`
+package %s
 
 import (
 	"database/sql"
-	"encoding/json"
 	"github.com/jackmanlabs/errors"
 	_ "github.com/mattn/go-sqlite3"
-	"sync"
 )
 
-var (
-	_db    *sql.DB
-	_mutex sync.Mutex
-)
+type SqliteDataSource struct {
+	sql.DB
+}
 
-func db() (*sql.DB, error) {
-	_mutex.Lock()
-	defer _mutex.Unlock()
-
-	if _db != nil {
-		return _db, nil
-	}
-
+func New() (*SqliteDataSource, error) {
 	connString := "file::memory:?mode=memory&cache=shared"
 
 	var err error
-	_db, err = sql.Open("sqlite", connString)
+	db, err := sql.Open("sqlite", connString)
 	if err != nil {
 		return nil, errors.Stack(err)
 	}
 
-	_db.SetMaxIdleConns(10)
-	_db.SetMaxOpenConns(100) // A nice, round number.
+	sqliteDb := &SqliteDataSource{
+		DB:*db,
+	}
 
-	return _db, nil
+	return sqliteDb, nil
 }
-
-func tx() (*sql.Tx, error) {
-	db, err := db()
-	if err != nil {
-		return nil, errors.Stack(err)
-	}
-
-	tx, err := db.Begin()
-	if err != nil {
-		return nil, errors.Stack(err)
-	}
-
-	return tx, nil
-}
-`
+`, pkgName)
 }

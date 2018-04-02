@@ -1,69 +1,154 @@
 package sqlite
 
 import (
-	"bytes"
-	"fmt"
 	"github.com/jackmanlabs/codegen"
+	"github.com/serenize/snaker"
+	"github.com/jackmanlabs/errors"
 )
 
-func (this *generator) UpdateMany(pkgName string, def *codegen.Type) string {
+func (this *generator) UpdateMany(pkgName string, def *codegen.Type) (string, error) {
 
-	var (
-		b             = bytes.NewBuffer(nil)
-		funcName      = fmt.Sprintf("Update%ss", def.Name)
-		funcNameSlave = fmt.Sprintf("Update%sTx", def.Name)
-	)
+	data := map[string]interface{}{
+		"model":   def.Name,
+		"members": def.Members,
+		"table":   snaker.CamelToSnake(def.Name),
+	}
 
-	fmt.Fprintf(b, "func %s(z []%s.%s) error {\n", funcName, pkgName, def.Name)
-	fmt.Fprint(b, `
+	s, err := render(templateInsertOne, map[string]string{"templateInsertSql": templateInsertSql}, data)
+	if err != nil {
+		return "", errors.Stack(err)
+	}
 
-	tx, err := tx()
-	if err != nil{
+	return s, nil
+}
+
+func (this *generator) UpdateManyTx(pkgName string, def *codegen.Type) (string, error) {
+
+	data := map[string]interface{}{
+		"model":   def.Name,
+		"members": def.Members,
+		"table":   snaker.CamelToSnake(def.Name),
+	}
+
+	s, err := render(templateInsertOneTx, map[string]string{"templateInsertSql": templateInsertSql}, data)
+	if err != nil {
+		return "", errors.Stack(err)
+	}
+
+	return s, nil
+
+}
+
+var templateUpdateMany string = `
+var psInsert{{.model}} *sql.Stmt
+
+	func  (this *SqliteDataSource) Insert{{.model}}(x *{{.modelPackageName}}.{{.model}}) error {
+	
+var err error
+
+if psInsert{{.model}} == nil{
+	q := {{template "templateInsertSql" .}}
+
+psInsert{{.model}}, err := this.Prepare(q)
+		if err != nil {
+			return errors.Stack(err)
+		}
+}
+
+{{range .members}}
+	{{if .SqlType}}{{else}}var x_{{.GoName}}[]byte{{end}}
+{{end}}
+
+
+{{range .members}}
+	{{if .SqlType}}{{else}}
+	x_{{.GoName}}, err = json.Marshal(x.{{.GoName}})
+	if err != nil {
+		return errors.Stack(err)
+	}
+{{end}}
+{{end}}
+
+	}
+}
+
+	args := []interface{}{
+{{range .members}}
+	{{if .SqlType}}
+		&x.{{.GoName}},
+	{{else}}
+		&x_{{.GoName}},
+{{end}}
+{{end}}
+
+	}
+
+	_, err = psInsert{{.model}}.Exec(args...)
+	if err != nil {
 		return errors.Stack(err)
 	}
 
-	for _, x := range z {
-`)
-	fmt.Fprintf(b, "err := %s(tx, &x)", funcNameSlave)
-	fmt.Fprint(b, `
-		if err != nil {
-			return errors.Stack(err)
-		}
-	}
+	// nil is returned if no data was present.
+	return nil
 
-	err = tx.Commit()
+}
+`
+
+var templateUpdateManyTx string = `
+
+	func  (this *SqliteDataSource) Insert{{.model}}Tx(tx *sql.Tx, x *{{.modelPackageName}}.{{.model}}) error {
+
+
+	q := {{template "templateInsertSql" .}}
+
+
+{{range .members}}
+	{{if .SqlType}}{{else}}var x_{{.GoName}}[]byte{{end}}
+{{end}}
+
+
+{{range .members}}
+	{{if .SqlType}}{{else}}
+	x_{{.GoName}}, err = json.Marshal(x.{{.GoName}})
 	if err != nil {
-		return nil, errors.Stack(err)
+		return errors.Stack(err)
 	}
+{{end}}
+{{end}}
 
-	return nil
-}`)
-
-	return b.String()
+	}
 }
 
-func (this *generator) UpdateManyTx(pkgName string, def *codegen.Type) string {
+	args := []interface{}{
+{{range .members}}
+	{{if .SqlType}}
+		&x.{{.GoName}},
+	{{else}}
+		&x_{{.GoName}},
+{{end}}
+{{end}}
 
-	var (
-		b             = bytes.NewBuffer(nil)
-		funcName      = fmt.Sprintf("Update%ssTx", def.Name)
-		funcNameSlave = fmt.Sprintf("Update%sTx", def.Name)
-	)
-
-	fmt.Fprintf(b, "func %s(tx *sql.Tx, z []%s.%s) error {\n", funcName, pkgName, def.Name)
-	fmt.Fprint(b, `
-
-	for _, x := range z {
-`)
-	fmt.Fprintf(b, "err := %s(tx, &x)", funcNameSlave)
-	fmt.Fprint(b, `
-		if err != nil {
-			return errors.Stack(err)
-		}
 	}
 
-	return nil
-}`)
+	_, err = tx.Exec(args...)
+	if err != nil {
+		return errors.Stack(err)
+	}
 
-	return b.String()
+	// nil is returned if no data was present.
+	return nil
+
 }
+`
+
+var templateSqlUpdateMany string = "`" + `
+
+	INSERT INTO {{.table}} (
+{{range $i, $member := .members}}
+{{$member}}{{if last $i $}}{{else}},{{end}}
+{{end}}
+	) VALUES (
+{{range $i, $member := .members}}
+${{inc $i}}{{if last $i $}});{{else}},{{end}}
+{{end}}
+` + "`"
