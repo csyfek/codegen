@@ -77,10 +77,16 @@ func main() {
 		log.Fatal(errors.Stack(err))
 	}
 
-	pkgPath := packagePath(*dst)
-	pkgName := packageName(pkgPath)
+	bindingsImportPath := importPath(*dst)
+	bindingsPkgName := packageName(bindingsImportPath)
+	log.Print("Package Path: ", bindingsImportPath)
+	log.Print("Package Name: ", bindingsPkgName)
 
-	f.Write([]byte(generator.Baseline(pkgName)))
+	modelsPkgName := packageName(*src)
+	log.Print("Package Path: ", *src)
+	log.Print("Package Name: ", modelsPkgName)
+
+	f.Write([]byte(generator.Baseline(bindingsPkgName)))
 
 	err = f.Close()
 	if err != nil {
@@ -93,7 +99,11 @@ func main() {
 			continue
 		}
 
-		out, err := generator.Bindings([]string{*src}, pkgName,"types", def)
+		if len(def.Members) == 0{
+			continue
+		}
+
+		out, err := generator.Bindings([]string{*src}, bindingsPkgName, modelsPkgName, def)
 		if err != nil {
 			log.Fatal(errors.Stack(err))
 		}
@@ -135,7 +145,7 @@ func checkDir(path string) error {
 	return nil
 }
 
-func packagePath(path string) string {
+func importPath(path string) string {
 
 	var err error
 
