@@ -2,3 +2,4 @@
 codegen.iml
 codegen
 tmp/
+/structs2schema

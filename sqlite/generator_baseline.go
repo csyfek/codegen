@@ -20,7 +20,7 @@ func New() (*SqliteDataSource, error) {
 	connString := "file::memory:?mode=memory&cache=shared"
 
 	var err error
-	db, err := sql.Open("sqlite", connString)
+	db, err := sql.Open("sqlite3", connString)
 	if err != nil {
 		return nil, errors.Stack(err)
 	}

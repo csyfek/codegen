@@ -47,9 +47,9 @@ func (this *SqliteDataSource)  Select{{.models}}(id string) ([]{{.modelPackageNa
 	var err error
 
 	if psSelect{{.model}} == nil{
-		q := {{template "templateSelectOneSql" .}}
+		q := {{template "templateSelectManySql" .}}
 	
-		psSelect{{.model}}, err = this.Prepare(q)
+		psSelect{{.models}}, err = this.Prepare(q)
 		if err != nil {
 			return nil, errors.Stack(err)
 		}
@@ -87,7 +87,7 @@ var templateSelectManyTx string = `
 
 func  (this *SqliteDataSource) Select{{.models}}Tx(tx *sql.Tx, id string)  ([]{{.modelPackageName}}.{{.model}}, error) {
 
-	q := {{template "templateSelectOneSql" .}}
+	q := {{template "templateSelectManySql" .}}
 
 	args := []interface{}{id}
 

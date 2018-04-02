@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"github.com/jackmanlabs/codegen"
 	"github.com/jackmanlabs/codegen/pkger"
 	"github.com/jackmanlabs/codegen/sqlite"
@@ -70,9 +69,7 @@ func main() {
 		log.Fatal(errors.Stack(err))
 	}
 
-	// Write baseline file.
-
-	f, err := os.Create(*dst + "/bindings.go")
+	f, err := os.Create(*dst + "/schema.sql")
 	if err != nil {
 		log.Fatal(errors.Stack(err))
 	}
@@ -86,43 +83,12 @@ func main() {
 	log.Print("Package Path: ", *src)
 	log.Print("Package Name: ", modelsPkgName)
 
-	f.Write([]byte(generator.Baseline(bindingsPkgName)))
+	f.Write([]byte(generator.Schema(pkg)))
 
 	err = f.Close()
 	if err != nil {
 		log.Fatal(errors.Stack(err))
 	}
-
-	for _, def := range pkg.Types {
-
-		if def.UnderlyingType != "struct" {
-			continue
-		}
-
-		if len(def.Members) == 0{
-			continue
-		}
-
-		out, err := generator.Bindings([]string{*src}, bindingsPkgName, modelsPkgName, def)
-		if err != nil {
-			log.Fatal(errors.Stack(err))
-		}
-
-		filename := fmt.Sprintf("/bindings_%s.go", snaker.CamelToSnake(def.Name))
-
-		f, err := os.Create(*dst + filename)
-		if err != nil {
-			log.Fatal(errors.Stack(err))
-		}
-
-		f.Write([]byte(out))
-
-		err = f.Close()
-		if err != nil {
-			log.Fatal(errors.Stack(err))
-		}
-	}
-
 }
 
 func checkDir(path string) error {

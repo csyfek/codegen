@@ -116,7 +116,8 @@ func  (this *SqliteDataSource) Select{{.model}}Tx(tx *sql.Tx, id string)  (*{{.m
 var templateSelectOneSql string = "`" + `
 SELECT
 {{range $i, $member := .members}}{{$member.SqlName}}{{if last $i $}}{{else}},
-{{end}}{{end}}FROM {{.table}}
+{{end}}{{end}}
+FROM {{.table}}
 WHERE {{range $i, $member := .members}}{{if eq $i 0}}{{$member.SqlName}}{{end}}{{end}} = ?
 LIMIT 1;
 ` + "`"
