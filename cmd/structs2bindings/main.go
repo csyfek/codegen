@@ -99,7 +99,7 @@ func main() {
 			continue
 		}
 
-		if len(def.Members) == 0{
+		if len(def.Members) == 0 {
 			continue
 		}
 

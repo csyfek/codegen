@@ -35,7 +35,7 @@ func (this *Type) ContainsMember(name string) bool {
 type Member struct {
 	GoName   string // Go-friendly (CamelCase) name.
 	SqlName  string // Name to be used for SQL schemas and operations.
-	SqlType string // The SQL type, dependant on the SQL driver.
+	SqlType  string // The SQL type, dependant on the SQL driver.
 	JsonName string // Name for use in JSON-REST APIs.
 	GoType   string // All types are normalized to best available Go types.
 	Length   int    // Length is preserved for DB-specific configurations.

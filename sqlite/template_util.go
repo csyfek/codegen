@@ -3,8 +3,8 @@ package sqlite
 import (
 	"bytes"
 	"github.com/jackmanlabs/errors"
-	"text/template"
 	"reflect"
+	"text/template"
 )
 
 func render(rootPattern string, subPatterns map[string]string, data interface{}) (string, error) {

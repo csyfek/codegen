@@ -2,8 +2,8 @@ package sqlite
 
 import (
 	"github.com/jackmanlabs/codegen"
-	"github.com/serenize/snaker"
 	"github.com/jackmanlabs/errors"
+	"github.com/serenize/snaker"
 )
 
 func (this *generator) InsertOne(pkgName string, def *codegen.Type) (string, error) {

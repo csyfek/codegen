@@ -2,8 +2,8 @@ package sqlite
 
 import (
 	"github.com/jackmanlabs/codegen"
-	"github.com/serenize/snaker"
 	"github.com/jackmanlabs/errors"
+	"github.com/serenize/snaker"
 )
 
 func (this *generator) SelectMany(pkgName string, def *codegen.Type) (string, error) {
@@ -116,7 +116,6 @@ func  (this *SqliteDataSource) Select{{.models}}Tx(tx *sql.Tx, id string)  ([]{{
 	return z, nil
 }
 `
-
 
 var templateSelectManySql string = "`" + `
 SELECT

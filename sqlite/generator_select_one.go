@@ -2,8 +2,8 @@ package sqlite
 
 import (
 	"github.com/jackmanlabs/codegen"
-	"github.com/serenize/snaker"
 	"github.com/jackmanlabs/errors"
+	"github.com/serenize/snaker"
 )
 
 func (this *generator) SelectOne(pkgName string, def *codegen.Type) (string, error) {
@@ -36,7 +36,6 @@ func (this *generator) SelectOneTx(pkgName string, def *codegen.Type) (string, e
 	}
 
 	return s, nil
-
 }
 
 var templateSelectOne string = `
