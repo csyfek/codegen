@@ -7,7 +7,7 @@ import (
 func Plural(s string) string {
 	switch {
 	case strings.HasSuffix(s, "y"):
-		strings.TrimSuffix(s, "y")
+		s = strings.TrimSuffix(s, "y")
 		s += "ies"
 	case strings.HasSuffix(s, "s"):
 		s += "es"

@@ -42,7 +42,7 @@ func (this *generator) UpdateOneTx(pkgName string, def *codegen.Type) (string, e
 var templateUpdateOne string = `
 var psUpdate{{.model}} *sql.Stmt
 
-func  (this *SqliteDataSource) Update{{.model}}(x *{{.modelPackageName}}.{{.model}}) error {
+func  (this *DataSource) Update{{.model}}(x *{{.modelPackageName}}.{{.model}}) error {
 
 var err error
 
@@ -56,9 +56,8 @@ psUpdate{{.model}}, err = this.Prepare(q)
 }
 
 	args := []interface{}{
-{{range .members}}&x.{{.GoName}},
-{{end}}
-{{range $i, $member := .members}}{{if eq $i 0}}&x.{{$member.GoName}}{{end}}{{end}},
+{{range .members}}		&x.{{.GoName}},
+{{end}}{{range $i, $member := .members}}{{if eq $i 0}}		&x.{{$member.GoName}}{{end}}{{end}},
 	}
 
 	_, err = psUpdate{{.model}}.Exec(args...)
@@ -72,7 +71,7 @@ psUpdate{{.model}}, err = this.Prepare(q)
 
 var templateUpdateOneTx string = `
 
-	func  (this *SqliteDataSource) Update{{.model}}Tx(tx *sql.Tx, x *{{.modelPackageName}}.{{.model}}) error {
+	func  (this *DataSource) Update{{.model}}Tx(tx *sql.Tx, x *{{.modelPackageName}}.{{.model}}) error {
 
 
 
@@ -83,9 +82,8 @@ var err error
 
 
 	args := []interface{}{
-{{range .members}}&x.{{.GoName}},
-{{end}}
-{{range $i, $member := .members}}{{if eq $i 0}}&x.{{$member.GoName}}{{end}}{{end}},
+{{range .members}}		&x.{{.GoName}},
+{{end}}{{range $i, $member := .members}}{{if eq $i 0}}		&x.{{$member.GoName}}{{end}}{{end}},
 	}
 
 	_, err = tx.Exec(q, args...)
@@ -100,7 +98,6 @@ var err error
 var templateUpdateOneSql string = "`" + `
 UPDATE {{.table}}
 SET
-{{range $i, $member := .members}}{{$member.SqlName}} = ?{{if last $i $}}{{else}},{{end}}
-{{end}}
-WHERE {{range $i, $member := .members}}{{if eq $i 0}}{{$member.SqlName}}{{end}}{{end}} = ?;
+{{range $i, $member := .members}}	{{$member.SqlName}} = ?{{if last $i $.members}}{{else}},{{end}}
+{{end}}WHERE {{range $i, $member := .members}}{{if eq $i 0}}{{$member.SqlName}}{{end}}{{end}} = ?;
 ` + "`"

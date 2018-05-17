@@ -41,7 +41,7 @@ func (this *generator) DeleteTx(def *codegen.Type) (string, error) {
 var templateDelete string = `
 var psDelete{{.model}} *sql.Stmt
 
-func (this *SqliteDataSource) Delete{{.model}}(id string) error {
+func (this *DataSource) Delete{{.model}}(id string) error {
 
 var err error
 
@@ -65,7 +65,7 @@ var err error
 `
 
 var templateDeleteTx string = `
-func  (this *SqliteDataSource) Delete{{.model}}Tx(tx *sql.Tx, id string) error {
+func  (this *DataSource) Delete{{.model}}Tx(tx *sql.Tx, id string) error {
 	q := {{template "templateDeleteSql" .}}
 
 	args := []interface{}{id}

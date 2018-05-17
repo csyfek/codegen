@@ -1,13 +1,17 @@
 .PHONY: clean charts all
 
-all: structs2bindings structs2schema
+BINARIES=structs2bindings structs2schema structs2interface
+
+all: $(BINARIES)
 
 clean:
-	rm -f structs2bindings
-	rm -f structs2schema
+	rm -rf $(BINARIES)
 
 structs2bindings:
 	go build github.com/jackmanlabs/codegen/cmd/structs2bindings
 
 structs2schema:
 	go build github.com/jackmanlabs/codegen/cmd/structs2schema
+
+structs2interface:
+	go build github.com/jackmanlabs/codegen/cmd/structs2interface

@@ -14,7 +14,7 @@ func (this *generator) SelectOne(pkgName string, def *codegen.Type) (string, err
 		"table":   snaker.CamelToSnake(def.Name),
 	}
 
-	s, err := render(templateSelectOne, map[string]string{"templateSelectSql": templateSelectOneSql}, data)
+	s, err := render(templateSelectOne, map[string]string{"templateSelectOneSql": templateSelectOneSql}, data)
 	if err != nil {
 		return "", errors.Stack(err)
 	}
@@ -30,7 +30,7 @@ func (this *generator) SelectOneTx(pkgName string, def *codegen.Type) (string, e
 		"table":   snaker.CamelToSnake(def.Name),
 	}
 
-	s, err := render(templateSelectOneTx, map[string]string{"templateSelectSql": templateSelectOneSql}, data)
+	s, err := render(templateSelectOneTx, map[string]string{"templateSelectOneSql": templateSelectOneSql}, data)
 	if err != nil {
 		return "", errors.Stack(err)
 	}
@@ -41,7 +41,7 @@ func (this *generator) SelectOneTx(pkgName string, def *codegen.Type) (string, e
 var templateSelectOne string = `
 var psSelect{{.model}} *sql.Stmt
 
-func (this *SqliteDataSource)  Select{{.model}}(id string) (*{{.modelPackageName}}.{{.model}}, error) {
+func (this *DataSource)  Select{{.model}}(id string) (*{{.modelPackageName}}.{{.model}}, error) {
 
 	var err error
 
@@ -66,9 +66,8 @@ func (this *SqliteDataSource)  Select{{.model}}(id string) (*{{.modelPackageName
 	if rows.Next() {
 		x = new({{.modelPackageName}}.{{.model}})
 		dest := []interface{}{
-{{range .members}}&x.{{.GoName}},
-{{end}}
-		}
+{{range .members}}			&x.{{.GoName}},
+{{end}}		}
 
 		err = rows.Scan(dest...)
 		if err != nil {
@@ -82,7 +81,7 @@ func (this *SqliteDataSource)  Select{{.model}}(id string) (*{{.modelPackageName
 
 var templateSelectOneTx string = `
 
-func  (this *SqliteDataSource) Select{{.model}}Tx(tx *sql.Tx, id string)  (*{{.modelPackageName}}.{{.model}}, error) {
+func  (this *DataSource) Select{{.model}}Tx(tx *sql.Tx, id string)  (*{{.modelPackageName}}.{{.model}}, error) {
 
 	q := {{template "templateSelectOneSql" .}}
 
@@ -98,9 +97,8 @@ func  (this *SqliteDataSource) Select{{.model}}Tx(tx *sql.Tx, id string)  (*{{.m
 	if rows.Next() {
 		x = new({{.modelPackageName}}.{{.model}})
 		dest := []interface{}{
-{{range .members}}&x.{{.GoName}},
-{{end}}
-		}
+{{range .members}}			&x.{{.GoName}},
+{{end}}		}
 
 		err = rows.Scan(dest...)
 		if err != nil {
@@ -114,9 +112,8 @@ func  (this *SqliteDataSource) Select{{.model}}Tx(tx *sql.Tx, id string)  (*{{.m
 
 var templateSelectOneSql string = "`" + `
 SELECT
-{{range $i, $member := .members}}{{$member.SqlName}}{{if last $i $}}{{else}},
-{{end}}{{end}}
-FROM {{.table}}
+{{range $i, $member := .members}}	{{$member.SqlName}}{{if last $i $.members}}{{else}},{{end}}
+{{end}}FROM {{.table}}
 WHERE {{range $i, $member := .members}}{{if eq $i 0}}{{$member.SqlName}}{{end}}{{end}} = ?
 LIMIT 1;
 ` + "`"

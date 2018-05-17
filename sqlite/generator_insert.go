@@ -42,7 +42,7 @@ func (this *generator) InsertOneTx(pkgName string, def *codegen.Type) (string, e
 var templateInsertOne string = `
 var psInsert{{.model}} *sql.Stmt
 
-func  (this *SqliteDataSource) Insert{{.model}}(x *{{.modelPackageName}}.{{.model}}) error {
+func  (this *DataSource) Insert{{.model}}(x *{{.modelPackageName}}.{{.model}}) error {
 
 	var err error
 
@@ -71,7 +71,7 @@ func  (this *SqliteDataSource) Insert{{.model}}(x *{{.modelPackageName}}.{{.mode
 
 var templateInsertOneTx string = `
 
-	func  (this *SqliteDataSource) Insert{{.model}}Tx(tx *sql.Tx, x *{{.modelPackageName}}.{{.model}}) error {
+	func  (this *DataSource) Insert{{.model}}Tx(tx *sql.Tx, x *{{.modelPackageName}}.{{.model}}) error {
 
 	var err error
 
@@ -93,8 +93,8 @@ var templateInsertOneTx string = `
 
 var templateInsertSql string = "`" + `
 INSERT INTO {{.table}} (
-{{range $i, $member := .members}}{{$member.SqlName}}{{if last $i $}}{{else}},{{end}}
+{{range $i, $member := .members}}	{{$member.SqlName}}{{if last $i $.members}}{{else}},{{end}}
 {{end}}) VALUES (
-{{range $i, $member := .members}}${{inc $i}}{{if last $i $}});{{else}},{{end}}
-{{end}}
+{{range $i, $member := .members}}	${{inc $i}}{{if last $i $.members}}{{else}},{{end}}
+{{end}});
 ` + "`"

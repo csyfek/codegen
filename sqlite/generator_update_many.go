@@ -42,7 +42,7 @@ func (this *generator) UpdateManyTx(pkgName string, def *codegen.Type) (string, 
 var templateUpdateMany string = `
 var psInsert{{.model}} *sql.Stmt
 
-	func  (this *SqliteDataSource) Insert{{.model}}(x *{{.modelPackageName}}.{{.model}}) error {
+	func  (this *DataSource) Insert{{.model}}(x *{{.modelPackageName}}.{{.model}}) error {
 	
 var err error
 
@@ -96,7 +96,7 @@ psInsert{{.model}}, err := this.Prepare(q)
 
 var templateUpdateManyTx string = `
 
-	func  (this *SqliteDataSource) Insert{{.model}}Tx(tx *sql.Tx, x *{{.modelPackageName}}.{{.model}}) error {
+	func  (this *DataSource) Insert{{.model}}Tx(tx *sql.Tx, x *{{.modelPackageName}}.{{.model}}) error {
 
 
 	q := {{template "templateInsertSql" .}}

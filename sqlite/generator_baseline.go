@@ -12,24 +12,23 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type SqliteDataSource struct {
-	sql.DB
+type DataSource struct {
+	*sql.DB
 }
 
-func New() (*SqliteDataSource, error) {
+func New() (*DataSource, error) {
 	connString := "file::memory:?mode=memory&cache=shared"
 
-	var err error
 	db, err := sql.Open("sqlite3", connString)
 	if err != nil {
 		return nil, errors.Stack(err)
 	}
 
-	sqliteDb := &SqliteDataSource{
-		DB:*db,
+	ds := &DataSource{
+		DB:db,
 	}
 
-	return sqliteDb, nil
+	return ds, nil
 }
 `, pkgName)
 }

@@ -42,7 +42,7 @@ func (this *generator) SelectManyTx(pkgName string, def *codegen.Type) (string, 
 var templateSelectMany string = `
 var psSelect{{.models}} *sql.Stmt
 
-func (this *SqliteDataSource)  Select{{.models}}(id string) ([]{{.modelPackageName}}.{{.model}}, error) {
+func (this *DataSource)  Select{{.models}}(id string) ([]{{.modelPackageName}}.{{.model}}, error) {
 
 	var err error
 
@@ -67,9 +67,8 @@ func (this *SqliteDataSource)  Select{{.models}}(id string) ([]{{.modelPackageNa
 	for rows.Next() {
 		var x {{.modelPackageName}}.{{.model}}
 		dest := []interface{}{
-{{range .members}}&x.{{.GoName}},
-{{end}}
-		}
+{{range .members}}			&x.{{.GoName}},
+{{end}}		}
 
 		err = rows.Scan(dest...)
 		if err != nil {
@@ -85,7 +84,7 @@ func (this *SqliteDataSource)  Select{{.models}}(id string) ([]{{.modelPackageNa
 
 var templateSelectManyTx string = `
 
-func  (this *SqliteDataSource) Select{{.models}}Tx(tx *sql.Tx, id string)  ([]{{.modelPackageName}}.{{.model}}, error) {
+func  (this *DataSource) Select{{.models}}Tx(tx *sql.Tx, id string)  ([]{{.modelPackageName}}.{{.model}}, error) {
 
 	q := {{template "templateSelectManySql" .}}
 
@@ -101,9 +100,8 @@ func  (this *SqliteDataSource) Select{{.models}}Tx(tx *sql.Tx, id string)  ([]{{
 	for rows.Next() {
 		var x {{.modelPackageName}}.{{.model}}
 		dest := []interface{}{
-{{range .members}}&x.{{.GoName}},
-{{end}}
-		}
+{{range .members}}			&x.{{.GoName}},
+{{end}}		}
 
 		err = rows.Scan(dest...)
 		if err != nil {
@@ -119,6 +117,7 @@ func  (this *SqliteDataSource) Select{{.models}}Tx(tx *sql.Tx, id string)  ([]{{
 
 var templateSelectManySql string = "`" + `
 SELECT
-{{range $i, $member := .members}}{{$member.SqlName}}{{if last $i $}}{{else}},
-{{end}}{{end}}FROM {{.table}};
+{{range $i, $member := .members}}	{{$member.SqlName}}{{if last $i $.members}}{{else}},
+{{end}}{{end}}
+FROM {{.table}};
 ` + "`"
