@@ -10,8 +10,6 @@ import (
 	"github.com/serenize/snaker"
 	"log"
 	"os"
-	"path/filepath"
-	"strings"
 )
 
 func main() {
@@ -50,7 +48,7 @@ func main() {
 	}
 
 	// Generate SQL Names
-	for _, def := range pkg.Types {
+	for _, def := range pkg.Models {
 
 		if def.Table == "" {
 			def.Table = snaker.CamelToSnake(def.Name)
@@ -65,7 +63,7 @@ func main() {
 
 	generator := sqlite.NewGenerator()
 
-	err = checkDir(*dst)
+	err = codegen.CheckDir(*dst)
 	if err != nil {
 		log.Fatal(errors.Stack(err))
 	}
@@ -77,12 +75,12 @@ func main() {
 		log.Fatal(errors.Stack(err))
 	}
 
-	bindingsImportPath := importPath(*dst)
-	bindingsPkgName := packageName(bindingsImportPath)
+	bindingsImportPath := codegen.ImportPath(*dst)
+	bindingsPkgName := codegen.PackageName(bindingsImportPath)
 	log.Print("Package Path: ", bindingsImportPath)
 	log.Print("Package Name: ", bindingsPkgName)
 
-	modelsPkgName := packageName(*src)
+	modelsPkgName := codegen.PackageName(*src)
 	log.Print("Package Path: ", *src)
 	log.Print("Package Name: ", modelsPkgName)
 
@@ -93,7 +91,7 @@ func main() {
 		log.Fatal(errors.Stack(err))
 	}
 
-	for _, def := range pkg.Types {
+	for _, def := range pkg.Models {
 
 		if def.UnderlyingType != "struct" {
 			continue
@@ -123,55 +121,4 @@ func main() {
 		}
 	}
 
-}
-
-func checkDir(path string) error {
-	d, err := os.Open(path)
-	if os.IsNotExist(err) {
-		err = os.Mkdir(path, os.ModeDir|os.ModePerm)
-		if err != nil {
-			log.Print(path)
-			return errors.Stack(err)
-		}
-	} else if err != nil {
-		return errors.Stack(err)
-	} else {
-		err = d.Close()
-		if err != nil {
-			return errors.Stack(err)
-		}
-	}
-
-	return nil
-}
-
-func importPath(path string) string {
-
-	var err error
-
-	path, err = filepath.Abs(path)
-	if err != nil {
-		log.Print(errors.Stack(err))
-		return ""
-	}
-
-	gopath := os.Getenv("GOPATH")
-	gopath, err = filepath.Abs(gopath)
-	if err != nil {
-		log.Print(errors.Stack(err))
-		return ""
-	}
-
-	if !strings.HasPrefix(path, gopath) {
-		return ""
-	}
-
-	pkgpath := strings.TrimPrefix(path, gopath+"/src/")
-
-	return pkgpath
-}
-
-func packageName(packagePath string) string {
-	chunks := strings.Split(packagePath, "/")
-	return chunks[len(chunks)-1]
 }

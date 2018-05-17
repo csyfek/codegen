@@ -6,7 +6,7 @@ import (
 	"github.com/jackmanlabs/codegen"
 )
 
-func (this *generator) SelectOne(pkgName string, def *codegen.Type) string {
+func (this *generator) SelectOne(pkgName string, def *codegen.Model) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := selectOneSql(def)
@@ -72,7 +72,7 @@ func (this *generator) SelectOne(pkgName string, def *codegen.Type) string {
 	return b.String()
 }
 
-func (this *generator) SelectOneTx(pkgName string, def *codegen.Type) string {
+func (this *generator) SelectOneTx(pkgName string, def *codegen.Model) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := selectOneSqlTx(def)
@@ -123,7 +123,7 @@ func (this *generator) SelectOneTx(pkgName string, def *codegen.Type) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func selectOneSql(def *codegen.Type) *bytes.Buffer {
+func selectOneSql(def *codegen.Model) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 
@@ -149,7 +149,7 @@ func selectOneSql(def *codegen.Type) *bytes.Buffer {
 }
 
 // SELECT for transactions require some slight changes.
-func selectOneSqlTx(def *codegen.Type) *bytes.Buffer {
+func selectOneSqlTx(def *codegen.Model) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 

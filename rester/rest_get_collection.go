@@ -6,10 +6,10 @@ import (
 	"github.com/jackmanlabs/codegen"
 )
 
-func GetCollection(def *codegen.Type) (string, string) {
+func GetCollection(def *codegen.Model) (string, string) {
 
 	resourceName := resource(def.Name)
-	models := plural(def.Name)
+	models := codegen.Plural(def.Name)
 
 	register := fmt.Sprintf(`r.Path("/%s").Methods("GET").Handler(ErrFilter(handleGet%s))`, resourceName, models)
 

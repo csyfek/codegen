@@ -35,7 +35,7 @@ func main() {
 	}
 
 	// Generate SQL Names
-	for _, def := range pkg.Types {
+	for _, def := range pkg.Models {
 		if def.Table == "" {
 			def.Table = snaker.CamelToSnake(def.Name)
 		}

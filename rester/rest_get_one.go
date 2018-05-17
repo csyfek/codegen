@@ -6,7 +6,7 @@ import (
 	"github.com/jackmanlabs/codegen"
 )
 
-func GetOne(def *codegen.Type) (string, string) {
+func GetOne(def *codegen.Model) (string, string) {
 
 	resourceName := resource(def.Name)
 	model := def.Name

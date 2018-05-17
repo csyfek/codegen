@@ -1,43 +1,5 @@
 package sqlite
 
-import (
-	"github.com/jackmanlabs/codegen"
-	"github.com/jackmanlabs/errors"
-	"github.com/serenize/snaker"
-)
-
-func (this *generator) Delete(def *codegen.Type) (string, error) {
-
-	data := map[string]interface{}{
-		"model":   def.Name,
-		"members": def.Members,
-		"table":   snaker.CamelToSnake(def.Name),
-	}
-
-	s, err := render(templateDelete, map[string]string{"templateDeleteSql": templateDeleteSql}, data)
-	if err != nil {
-		return "", errors.Stack(err)
-	}
-
-	return s, nil
-}
-
-func (this *generator) DeleteTx(def *codegen.Type) (string, error) {
-
-	data := map[string]interface{}{
-		"model":   def.Name,
-		"members": def.Members,
-		"table":   snaker.CamelToSnake(def.Name),
-	}
-
-	s, err := render(templateDeleteTx, map[string]string{"templateDeleteSql": templateDeleteSql}, data)
-	if err != nil {
-		return "", errors.Stack(err)
-	}
-
-	return s, nil
-}
-
 var templateDelete string = `
 var psDelete{{.model}} *sql.Stmt
 

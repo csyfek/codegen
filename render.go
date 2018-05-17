@@ -1,4 +1,4 @@
-package sqlite
+package codegen
 
 import (
 	"bytes"
@@ -7,7 +7,7 @@ import (
 	"text/template"
 )
 
-func render(rootPattern string, subPatterns map[string]string, data interface{}) (string, error) {
+func Render(rootPattern string, subPatterns map[string]string, data interface{}) (string, error) {
 
 	var fns = template.FuncMap{
 		"last": func(x int, a interface{}) bool {

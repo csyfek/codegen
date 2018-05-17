@@ -65,17 +65,17 @@ func (this *extractorType) Visit(node ast.Node) (w ast.Visitor) {
 
 	case *ast.TypeSpec:
 
-		newType := codegen.NewType()
+		newType := codegen.NewClass()
 		newType.Name = t.Name.String()
 		newType.UnderlyingType = resolveTypeExpression(t.Type)
 
 		//log.Printf("GoType: %s\tUnderlyingType: %s", newType.Name, newType.UnderlyingType)
 
-		this.Types = append(this.Types, newType)
+		this.Models = append(this.Models, newType)
 
 	case *ast.Field:
 
-		parent := this.Types[len(this.Types)-1]
+		parent := this.Models[len(this.Models)-1]
 		typ := resolveTypeExpression(t.Type)
 
 		// Handle embedded structs.

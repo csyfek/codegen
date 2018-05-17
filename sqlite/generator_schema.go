@@ -13,16 +13,15 @@ func (this *generator) Schema(pkg *codegen.Package) string {
 
 	b := bytes.NewBuffer(nil)
 
-	for _, def := range pkg.Types {
+	for _, def := range pkg.Models {
 		fmt.Fprint(b, "\n\n/-- ----------------------------------------------------------------------------\n\n")
 		b.WriteString(this.typeSchema(def))
-		fmt.Fprint(b, "\n\n/-- ----------------------------------------------------------------------------\n\n")
 	}
 
 	return b.String()
 }
 
-func (this *generator) typeSchema(def *codegen.Type) string {
+func (this *generator) typeSchema(def *codegen.Model) string {
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)
 

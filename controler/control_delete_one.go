@@ -6,7 +6,7 @@ import (
 	"github.com/jackmanlabs/codegen"
 )
 
-func Delete(def *codegen.Type) string {
+func Delete(def *codegen.Model) string {
 
 	model := def.Name
 	handler := bytes.NewBuffer(nil)

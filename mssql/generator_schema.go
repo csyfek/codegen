@@ -12,13 +12,13 @@ func (this *generator) Schema(pkg *codegen.Package) string {
 
 	b := bytes.NewBuffer(nil)
 
-	for _, def := range pkg.Types {
+	for _, def := range pkg.Models {
 		b.WriteString(this.typeDrop(def))
 	}
 
 	fmt.Fprint(b, "\n\n-- -----------------------------------------------------------------------------\n\n")
 
-	for _, def := range pkg.Types {
+	for _, def := range pkg.Models {
 		b.WriteString(this.typeSchema(def))
 		fmt.Fprint(b, "\n\n-- -----------------------------------------------------------------------------\n\n")
 	}
@@ -26,11 +26,11 @@ func (this *generator) Schema(pkg *codegen.Package) string {
 	return b.String()
 }
 
-func (this *generator) typeDrop(def *codegen.Type) string {
+func (this *generator) typeDrop(def *codegen.Model) string {
 	return fmt.Sprintf("DROP TABLE IF EXISTS %s;\n", def.Table)
 }
 
-func (this *generator) typeSchema(def *codegen.Type) string {
+func (this *generator) typeSchema(def *codegen.Model) string {
 	b := bytes.NewBuffer(nil)
 
 	var firstField codegen.Member

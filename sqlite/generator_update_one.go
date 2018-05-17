@@ -1,44 +1,5 @@
 package sqlite
 
-import (
-	"github.com/jackmanlabs/codegen"
-	"github.com/jackmanlabs/errors"
-	"github.com/serenize/snaker"
-)
-
-func (this *generator) UpdateOne(pkgName string, def *codegen.Type) (string, error) {
-
-	data := map[string]interface{}{
-		"model":   def.Name,
-		"members": def.Members,
-		"table":   snaker.CamelToSnake(def.Name),
-	}
-
-	s, err := render(templateUpdateOne, map[string]string{"templateUpdateOneSql": templateUpdateOneSql}, data)
-	if err != nil {
-		return "", errors.Stack(err)
-	}
-
-	return s, nil
-}
-
-func (this *generator) UpdateOneTx(pkgName string, def *codegen.Type) (string, error) {
-
-	data := map[string]interface{}{
-		"model":   def.Name,
-		"members": def.Members,
-		"table":   snaker.CamelToSnake(def.Name),
-	}
-
-	s, err := render(templateUpdateOneTx, map[string]string{"templateUpdateOneSql": templateUpdateOneSql}, data)
-	if err != nil {
-		return "", errors.Stack(err)
-	}
-
-	return s, nil
-
-}
-
 var templateUpdateOne string = `
 var psUpdate{{.model}} *sql.Stmt
 

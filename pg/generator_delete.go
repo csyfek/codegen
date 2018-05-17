@@ -7,7 +7,7 @@ import (
 	"github.com/serenize/snaker"
 )
 
-func (this *generator) Delete(def *codegen.Type) string {
+func (this *generator) Delete(def *codegen.Model) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := deleteSql(def)
@@ -51,7 +51,7 @@ func (this *generator) Delete(def *codegen.Type) string {
 	return b.String()
 }
 
-func (this *generator) DeleteTx(def *codegen.Type) string {
+func (this *generator) DeleteTx(def *codegen.Model) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := deleteSql(def)
@@ -80,7 +80,7 @@ func (this *generator) DeleteTx(def *codegen.Type) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func deleteSql(def *codegen.Type) *bytes.Buffer {
+func deleteSql(def *codegen.Model) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)

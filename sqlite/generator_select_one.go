@@ -1,43 +1,5 @@
 package sqlite
 
-import (
-	"github.com/jackmanlabs/codegen"
-	"github.com/jackmanlabs/errors"
-	"github.com/serenize/snaker"
-)
-
-func (this *generator) SelectOne(pkgName string, def *codegen.Type) (string, error) {
-
-	data := map[string]interface{}{
-		"model":   def.Name,
-		"members": def.Members,
-		"table":   snaker.CamelToSnake(def.Name),
-	}
-
-	s, err := render(templateSelectOne, map[string]string{"templateSelectOneSql": templateSelectOneSql}, data)
-	if err != nil {
-		return "", errors.Stack(err)
-	}
-
-	return s, nil
-}
-
-func (this *generator) SelectOneTx(pkgName string, def *codegen.Type) (string, error) {
-
-	data := map[string]interface{}{
-		"model":   def.Name,
-		"members": def.Members,
-		"table":   snaker.CamelToSnake(def.Name),
-	}
-
-	s, err := render(templateSelectOneTx, map[string]string{"templateSelectOneSql": templateSelectOneSql}, data)
-	if err != nil {
-		return "", errors.Stack(err)
-	}
-
-	return s, nil
-}
-
 var templateSelectOne string = `
 var psSelect{{.model}} *sql.Stmt
 

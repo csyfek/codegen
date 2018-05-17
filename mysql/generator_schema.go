@@ -12,12 +12,12 @@ import (
 func (this *generator) Schema(pkg *codegen.Package) string {
 
 	// We need to take enum types and extract their underlying types for the type caster.
-	typeMap := make(map[string]*codegen.Type)
-	for _, def := range pkg.Types {
+	typeMap := make(map[string]*codegen.Model)
+	for _, def := range pkg.Models {
 		typeMap[def.Name] = def
 	}
 
-	for _, def := range pkg.Types {
+	for _, def := range pkg.Models {
 		for memberId, member := range def.Members {
 			if _, sqlTypeOk := sqlType(member.GoType); !sqlTypeOk {
 				if t, underlyingTypeOk := typeMap[member.GoType]; underlyingTypeOk {
@@ -29,7 +29,7 @@ func (this *generator) Schema(pkg *codegen.Package) string {
 
 	b := bytes.NewBuffer(nil)
 
-	for _, def := range pkg.Types {
+	for _, def := range pkg.Models {
 
 		if def.UnderlyingType != "struct" {
 			continue
@@ -42,7 +42,7 @@ func (this *generator) Schema(pkg *codegen.Package) string {
 	return b.String()
 }
 
-func (this *generator) typeSchema(def *codegen.Type) string {
+func (this *generator) typeSchema(def *codegen.Model) string {
 	b := bytes.NewBuffer(nil)
 
 	var firstField codegen.Member

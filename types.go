@@ -1,13 +1,13 @@
 package codegen
 
 type Package struct {
-	Types   []*Type
+	Models  []*Model
 	Imports map[string][]string
 	Name    string
 	Path    string
 }
 
-type Type struct {
+type Model struct {
 	Name            string
 	Table           string
 	Members         []Member
@@ -15,14 +15,14 @@ type Type struct {
 	UnderlyingType  string
 }
 
-func NewType() *Type {
-	return &Type{
+func NewClass() *Model {
+	return &Model{
 		Members:         make([]Member, 0),
 		EmbeddedStructs: make([]string, 0),
 	}
 }
 
-func (this *Type) ContainsMember(name string) bool {
+func (this *Model) ContainsMember(name string) bool {
 	for _, member := range this.Members {
 		if member.GoName == name {
 			return true
@@ -85,7 +85,7 @@ func (this Member) IsPrimitive() bool {
 	case "string":
 	case "bool":
 
-	// Numeric Types
+	// Numeric Models
 
 	case "byte":
 	case "complex64":
@@ -114,5 +114,4 @@ func (this Member) IsPrimitive() bool {
 	}
 
 	return true
-
 }

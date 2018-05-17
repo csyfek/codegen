@@ -6,7 +6,7 @@ import (
 	"github.com/jackmanlabs/codegen"
 )
 
-func GetOne(def *codegen.Type) string {
+func GetOne(def *codegen.Model) string {
 
 	model := def.Name
 	handler := bytes.NewBuffer(nil)

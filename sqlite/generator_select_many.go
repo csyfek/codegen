@@ -1,48 +1,9 @@
 package sqlite
 
-import (
-	"github.com/jackmanlabs/codegen"
-	"github.com/jackmanlabs/errors"
-	"github.com/serenize/snaker"
-)
-
-func (this *generator) SelectMany(pkgName string, def *codegen.Type) (string, error) {
-
-	data := map[string]interface{}{
-		"model":   def.Name,
-		"members": def.Members,
-		"table":   snaker.CamelToSnake(def.Name),
-	}
-
-	s, err := render(templateInsertOne, map[string]string{"templateInsertSql": templateInsertSql}, data)
-	if err != nil {
-		return "", errors.Stack(err)
-	}
-
-	return s, nil
-}
-
-func (this *generator) SelectManyTx(pkgName string, def *codegen.Type) (string, error) {
-
-	data := map[string]interface{}{
-		"model":   def.Name,
-		"members": def.Members,
-		"table":   snaker.CamelToSnake(def.Name),
-	}
-
-	s, err := render(templateInsertOneTx, map[string]string{"templateInsertSql": templateInsertSql}, data)
-	if err != nil {
-		return "", errors.Stack(err)
-	}
-
-	return s, nil
-
-}
-
 var templateSelectMany string = `
 var psSelect{{.models}} *sql.Stmt
 
-func (this *DataSource)  Select{{.models}}(id string) ([]{{.modelPackageName}}.{{.model}}, error) {
+func (this *DataSource)  Select{{.models}}() ([]{{.modelPackageName}}.{{.model}}, error) {
 
 	var err error
 
@@ -55,7 +16,7 @@ func (this *DataSource)  Select{{.models}}(id string) ([]{{.modelPackageName}}.{
 		}
 	}
 
-	args := []interface{}{id}
+	args := []interface{}{}
 
 	rows, err := psSelect{{.models}}.Query( args...)
 	if err != nil {
@@ -84,11 +45,11 @@ func (this *DataSource)  Select{{.models}}(id string) ([]{{.modelPackageName}}.{
 
 var templateSelectManyTx string = `
 
-func  (this *DataSource) Select{{.models}}Tx(tx *sql.Tx, id string)  ([]{{.modelPackageName}}.{{.model}}, error) {
+func  (this *DataSource) Select{{.models}}Tx(tx *sql.Tx)  ([]{{.modelPackageName}}.{{.model}}, error) {
 
 	q := {{template "templateSelectManySql" .}}
 
-	args := []interface{}{id}
+	args := []interface{}{}
 
 	rows, err := tx.Query(q, args...)
 	if err != nil {

@@ -6,7 +6,7 @@ import (
 	"github.com/serenize/snaker"
 )
 
-func (this *generator) Bindings(importPaths []string, bindingsPackageName string, modelPackageName string, def *codegen.Type) (string, error) {
+func (this *generator) Bindings(importPaths []string, bindingsPackageName string, modelPackageName string, def *codegen.Model) (string, error) {
 
 	var (
 		err error
@@ -45,7 +45,7 @@ func (this *generator) Bindings(importPaths []string, bindingsPackageName string
 		"templateUpdateOneTx":   templateUpdateOneTx,
 	}
 
-	s, err := render(templateBindings, subPatterns, data)
+	s, err := codegen.Render(templateBindings, subPatterns, data)
 	if err != nil {
 		return "", errors.Stack(err)
 	}

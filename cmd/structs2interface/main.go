@@ -2,13 +2,13 @@ package main
 
 import (
 	"flag"
-	"log"
-	"os"
-	"github.com/jackmanlabs/codegen/pkger"
+	"fmt"
 	"github.com/jackmanlabs/codegen"
+	"github.com/jackmanlabs/codegen/pkger"
 	"github.com/jackmanlabs/errors"
 	"github.com/serenize/snaker"
-	"github.com/jackmanlabs/codegen/sqlite"
+	"log"
+	"os"
 )
 
 func main() {
@@ -46,45 +46,63 @@ func main() {
 		log.Fatal(errors.Stack(err))
 	}
 
-	// Generate SQL Names
-	for _, def := range pkg.Types {
-
-		if def.Table == "" {
-			def.Table = snaker.CamelToSnake(def.Name)
-		}
-
-		for mid, member := range def.Members {
-			if member.SqlName == "" {
-				def.Members[mid].SqlName = snaker.CamelToSnake(member.GoName)
-			}
-		}
-	}
-
-	generator := sqlite.NewGenerator()
-
-	err = checkDir(*dst)
+	err = codegen.CheckDir(*dst)
 	if err != nil {
 		log.Fatal(errors.Stack(err))
 	}
 
-	f, err := os.Create(*dst + "/schema.sql")
+	// Write baseline file.
+
+	f, err := os.Create(*dst + "/ds.go")
 	if err != nil {
 		log.Fatal(errors.Stack(err))
 	}
 
-	bindingsImportPath := importPath(*dst)
-	bindingsPkgName := packageName(bindingsImportPath)
-	log.Print("Package Path: ", bindingsImportPath)
-	log.Print("Package Name: ", bindingsPkgName)
+	interfaceImportPath := codegen.ImportPath(*dst)
+	interfacePkgName := codegen.PackageName(interfaceImportPath)
+	log.Print("Package Path: ", interfaceImportPath)
+	log.Print("Package Name: ", interfacePkgName)
 
-	modelsPkgName := packageName(*src)
+	modelsPkgName := codegen.PackageName(*src)
 	log.Print("Package Path: ", *src)
 	log.Print("Package Name: ", modelsPkgName)
 
-	f.Write([]byte(generator.Schema(pkg)))
+	pkgInterface, err := codegen.PackageInterface(pkg.Models, interfacePkgName)
+	f.Write([]byte(pkgInterface))
 
 	err = f.Close()
 	if err != nil {
 		log.Fatal(errors.Stack(err))
 	}
+
+	for _, def := range pkg.Models {
+
+		if def.UnderlyingType != "struct" {
+			continue
+		}
+
+		if len(def.Members) == 0 {
+			continue
+		}
+
+		out, err := codegen.ModelInterface([]string{*src}, interfacePkgName, modelsPkgName, def)
+		if err != nil {
+			log.Fatal(errors.Stack(err))
+		}
+
+		filename := fmt.Sprintf("/ds_%s.go", snaker.CamelToSnake(def.Name))
+
+		f, err := os.Create(*dst + filename)
+		if err != nil {
+			log.Fatal(errors.Stack(err))
+		}
+
+		f.Write([]byte(out))
+
+		err = f.Close()
+		if err != nil {
+			log.Fatal(errors.Stack(err))
+		}
+	}
+
 }

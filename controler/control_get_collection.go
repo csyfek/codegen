@@ -7,14 +7,14 @@ import (
 	"text/template"
 )
 
-func GetCollection(def *codegen.Type) (string, error) {
+func GetCollection(def *codegen.Model) (string, error) {
 
 	model := def.Name
 	b := bytes.NewBuffer(nil)
 
 	values := map[string]string{
 		"singular": model,
-		"plural":   plural(model),
+		"plural":   codegen.Plural(model),
 	}
 
 	pattern := `

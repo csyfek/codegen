@@ -2,23 +2,14 @@ package rester
 
 import (
 	"github.com/serenize/snaker"
-	"strings"
+	"github.com/jackmanlabs/codegen"
 )
 
 func resource(s string) string {
 	//s = strings.ToLower(s)
 	s = snaker.CamelToSnake(s)
-	s = plural(s)
+	s = codegen.Plural(s)
 
 	return s
 }
 
-func plural(s string) string {
-	if strings.HasSuffix(s, "s") {
-		s += "es"
-	} else {
-		s += "s"
-	}
-
-	return s
-}

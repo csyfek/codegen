@@ -6,7 +6,7 @@ import (
 	"github.com/jackmanlabs/codegen"
 )
 
-func Insert(def *codegen.Type) string {
+func Insert(def *codegen.Model) string {
 
 	// TODO: Find a better way of determining the primary key.
 	pkey := def.Members[0]
