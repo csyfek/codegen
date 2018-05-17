@@ -1,53 +1,73 @@
 package sqlite
 
 import (
-	"bytes"
-	"fmt"
 	"github.com/jackmanlabs/codegen"
+	"github.com/jackmanlabs/errors"
 	"github.com/serenize/snaker"
+	"log"
+	"strings"
 )
 
-// I have to leave out backticks from the SQL because of embedding issues.
-// Please refrain from using reserved SQL keywords as struct and member names.
-func (this *generator) Schema(pkg *codegen.Package) string {
-
-	b := bytes.NewBuffer(nil)
+func (this *generator) Schema(pkg *codegen.Package) (string, error) {
+	var (
+		s string
+	)
 
 	for _, def := range pkg.Models {
-		fmt.Fprint(b, "\n\n/-- ----------------------------------------------------------------------------\n\n")
-		b.WriteString(this.typeSchema(def))
-	}
 
-	return b.String()
-}
+		var foreignKeys map[string]string = make(map[string]string)
 
-func (this *generator) typeSchema(def *codegen.Model) string {
-	b := bytes.NewBuffer(nil)
-	tableName := snaker.CamelToSnake(def.Name)
+		for i, member := range def.Members {
 
-	var firstField codegen.Member
-	if len(def.Members) > 0 {
-		firstField = def.Members[0]
-	}
-
-	fmt.Fprintf(b, "DROP TABLE IF EXISTS %s;\n\n", tableName)
-	fmt.Fprintf(b, "CREATE TABLE %s (\n", tableName)
-	for idx, member := range def.Members {
-
-		sqlType, _ := sqlType(member.GoType)
-
-		if idx == 0 {
-			if member.GoType == "string" {
-				sqlType = "CHAR(36)"
+			// types
+			t, _ := sqlType(member.GoType)
+			def.Members[i].SqlType = t
+			if (member.SqlName == "id" || strings.HasSuffix(member.SqlName, "_id")) && t == "TEXT" {
+				def.Members[i].SqlType = "CHAR(36)"
 			}
-			fmt.Fprintf(b, "\t%s %s PRIMARY KEY,\n", member.SqlName, sqlType)
-		} else if idx == len(def.Members)-1 {
-			fmt.Fprintf(b, "\t%s %s NOT NULL\n", member.SqlName, sqlType)
-		} else {
-			fmt.Fprintf(b, "\t%s %s NOT NULL,\n", member.SqlName, sqlType)
+
+			// constraints
+			if i == 0 && member.SqlName == "id" {
+				def.Members[i].SqlConstraint = "PRIMARY KEY"
+			} else {
+				def.Members[i].SqlConstraint = "NOT NULL"
+			}
+
+			// foreign keys
+			if strings.HasSuffix(member.SqlName, "_id") {
+				table := strings.TrimSuffix(member.SqlName, "_id")
+				foreignKeys[member.SqlName] = table
+			}
 		}
+
+		data := map[string]interface{}{
+			"members":     def.Members,
+			"model":       def.Name,
+			"models":      codegen.Plural(def.Name),
+			"table":       snaker.CamelToSnake(def.Name),
+			"type":        def.Name,
+			"foreignKeys": foreignKeys,
+		}
+
+		subPatterns := map[string]string{}
+
+		s_, err := codegen.Render(templateSchema, subPatterns, data)
+		if err != nil {
+			return "", errors.Stack(err)
+		}
+
+		s += s_
+		log.Print("model:", def.Name)
 	}
-	fmt.Fprintf(b, "\t-- FOREIGN KEY (%s) REFERENCES parent_table (id) ON DELETE CASCADE\n", firstField.SqlName)
-	fmt.Fprintf(b, ");\n")
-	return b.String()
+
+	return s, nil
 }
+
+var templateSchema string = `
+DROP TABLE IF EXISTS {{.table}};
+CREATE TABLE {{.table}} (
+{{range $i, $member := .members}}	{{.SqlName}}	{{.SqlType}} {{.SqlConstraint}}{{if last $i $.members}}{{else}},
+{{end}}{{end}}{{range $col, $table := .foreignKeys}},
+FOREIGN KEY ({{$col}}) REFERENCES {{$table}} (id) ON DELETE CASCADE{{end}}
+);
+`

@@ -49,5 +49,10 @@ func main() {
 
 	generator := sqlite.NewGenerator()
 
-	fmt.Print(generator.Schema(pkg))
+	schema, err := generator.Schema(pkg)
+	if err != nil {
+		log.Fatal(errors.Stack(err))
+	}
+
+	fmt.Print(schema)
 }

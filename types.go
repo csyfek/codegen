@@ -33,12 +33,13 @@ func (this *Model) ContainsMember(name string) bool {
 }
 
 type Member struct {
-	GoName   string // Go-friendly (CamelCase) name.
-	SqlName  string // Name to be used for SQL schemas and operations.
-	SqlType  string // The SQL type, dependant on the SQL driver.
-	JsonName string // Name for use in JSON-REST APIs.
-	GoType   string // All types are normalized to best available Go types.
-	Length   int    // Length is preserved for DB-specific configurations.
+	GoName        string // Go-friendly (CamelCase) name.
+	SqlName       string // Name to be used for SQL schemas and operations.
+	SqlType       string // The SQL type, dependant on the SQL driver.
+	SqlConstraint string // Things like 'PRIMARY KEY' and 'NOT NULL'
+	JsonName      string // Name for use in JSON-REST APIs.
+	GoType        string // All types are normalized to best available Go types.
+	Length        int    // Length is preserved for DB-specific configurations.
 
 	// After much debate and trial-and-error, I've settled on keeping the GoName
 	// and the SqlName distinct and accessible as strings. Therefore, the caller
