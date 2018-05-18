@@ -1,15 +1,17 @@
-package sqlite
+package mysql
 
 import "fmt"
 
-func (this *generator) Baseline(pkgName string) string {
+
+
+func (this *generator) BindingsBaseline(pkgName string) string {
 	return fmt.Sprintf(`
 package %s
 
 import (
 	"database/sql"
 	"github.com/jackmanlabs/errors"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type DataSource struct {
@@ -17,18 +19,20 @@ type DataSource struct {
 }
 
 func New() (*DataSource, error) {
-	connString := "file::memory:?mode=memory&cache=shared"
 
-	db, err := sql.Open("sqlite3", connString)
+	connString := "username:password@tcp(host:port)/database?parseTime=true"
+
+	db, err := sql.Open("mysql", connString)
 	if err != nil {
 		return nil, errors.Stack(err)
 	}
 
 	ds := &DataSource{
-		DB:db,
+		DB: db,
 	}
 
 	return ds, nil
 }
+
 `, pkgName)
 }

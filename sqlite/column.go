@@ -48,7 +48,7 @@ func (this *Column) Member() codegen.Member {
 
 func (this *Column) goType() string {
 
-	for s, g := range sqlTogo {
+	for s, g := range sqlToGo {
 		if s == this.DataType {
 			return g
 		}

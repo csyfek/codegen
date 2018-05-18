@@ -31,7 +31,7 @@ func  (this *DataSource) Delete{{.model}}Tx(tx *sql.Tx, id string) error {
 	q := {{template "templateDeleteSql" .}}
 
 	args := []interface{}{id}
-	_, err := tx.Exec(q, args...)")
+	_, err := tx.Exec(q, args...)
 
 	if err != nil {
 		return errors.Stack(err)

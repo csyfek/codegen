@@ -10,12 +10,13 @@ import (
 	"github.com/serenize/snaker"
 	"log"
 	"os"
+	"github.com/jackmanlabs/codegen/mysql"
 )
 
 func main() {
 	var (
-		//driver     *string = flag.String("driver", "mysql", "The SQL driver relevant to your request; one of 'sqlite', 'mysql', 'pg', or 'mssql'.")
-		src *string = flag.String("pkg", "", "The package that you want to use for source material.")
+		driver *string = flag.String("driver", "mysql", "The SQL driver relevant to your request; one of 'sqlite', 'mysql', 'pg', or 'mssql'.")
+		src    *string = flag.String("pkg", "", "The package that you want to use for source material.")
 		//database   *string = flag.String("db", "", "The name of the database you want to analyze.")
 		//hostname   *string = flag.String("host", "", "The host (IP address or hostname) that hosts the database you want to analyze.")
 		//outputRoot *string = flag.String("out", "", "The path where resulting files will be deposited. Without a specified path, stdout will be used if possible.")
@@ -30,6 +31,15 @@ func main() {
 	if *src == "" {
 		flag.Usage()
 		log.Println("The 'pkg' argument is required.")
+		os.Exit(1)
+	}
+
+	switch *driver {
+	case "sqlite":
+	case "mysql":
+	default:
+		flag.Usage()
+		log.Println("The 'driver' argument is required.")
 		os.Exit(1)
 	}
 
@@ -61,7 +71,15 @@ func main() {
 		}
 	}
 
-	generator := sqlite.NewGenerator()
+var generator codegen.SqlGenerator
+	switch *driver {
+	case "sqlite":
+		generator = sqlite.NewGenerator()
+	case "mysql":
+		generator = mysql.NewGenerator()
+	}
+
+
 
 	err = codegen.CheckDir(*dst)
 	if err != nil {
@@ -84,13 +102,14 @@ func main() {
 	log.Print("Package Path: ", *src)
 	log.Print("Package Name: ", modelsPkgName)
 
-	f.Write([]byte(generator.Baseline(bindingsPkgName)))
+	f.Write([]byte(generator.BindingsBaseline(bindingsPkgName)))
 
 	err = f.Close()
 	if err != nil {
 		log.Fatal(errors.Stack(err))
 	}
 
+	// The actual bindings files.
 	for _, def := range pkg.Models {
 
 		if def.UnderlyingType != "struct" {
@@ -107,6 +126,57 @@ func main() {
 		}
 
 		filename := fmt.Sprintf("/bindings_%s.go", snaker.CamelToSnake(def.Name))
+
+		f, err := os.Create(*dst + filename)
+		if err != nil {
+			log.Fatal(errors.Stack(err))
+		}
+
+		f.Write([]byte(out))
+
+		err = f.Close()
+		if err != nil {
+			log.Fatal(errors.Stack(err))
+		}
+	}
+
+	// Write baseline file for tests.
+
+	f, err = os.Create(*dst + "/bindings_test.go")
+	if err != nil {
+		log.Fatal(errors.Stack(err))
+	}
+
+	baseline, err := generator.BindingsBaselineTests([]string{bindingsImportPath}, bindingsPkgName, modelsPkgName)
+	if err != nil {
+		log.Fatal(errors.Stack(err))
+	}
+
+	f.Write([]byte(baseline))
+
+	err = f.Close()
+	if err != nil {
+		log.Fatal(errors.Stack(err))
+	}
+
+
+	// The files containing the basic tests for the bindings.
+	for _, def := range pkg.Models {
+
+		if def.UnderlyingType != "struct" {
+			continue
+		}
+
+		if len(def.Members) == 0 {
+			continue
+		}
+
+		out, err := generator.BindingsTests([]string{*src}, bindingsPkgName, modelsPkgName, def)
+		if err != nil {
+			log.Fatal(errors.Stack(err))
+		}
+
+		filename := fmt.Sprintf("/bindings_%s_test.go", snaker.CamelToSnake(def.Name))
 
 		f, err := os.Create(*dst + filename)
 		if err != nil {

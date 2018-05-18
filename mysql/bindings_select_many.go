@@ -1,4 +1,4 @@
-package sqlite
+package mysql
 
 var templateSelectMany string = `
 var psSelect{{.models}} *sql.Stmt
@@ -7,7 +7,7 @@ func (this *DataSource)  Select{{.models}}() ([]{{.modelPackageName}}.{{.model}}
 
 	var err error
 
-	if psSelect{{.model}} == nil{
+	if psSelect{{.models}} == nil{
 		q := {{template "templateSelectManySql" .}}
 	
 		psSelect{{.models}}, err = this.Prepare(q)

@@ -1,7 +1,7 @@
 package sqlite
 
 // TODO: These are not proper mappings, only borrowed from MSSQL as a template.
-var sqlTogo map[string]string = map[string]string{
+var sqlToGo map[string]string = map[string]string{
 	"BIGINT":     "int64",     // MS-SQL 'bigint' uses 8 bytes (64 bits).
 	"BINARY":     "[]byte",    //
 	"BIT":        "bool",      //

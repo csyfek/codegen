@@ -9,7 +9,7 @@ import (
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func (this *generator) Schema(pkg *codegen.Package) string {
+func (this *generator) SchemaOld(pkg *codegen.Package) string {
 
 	// We need to take enum types and extract their underlying types for the type caster.
 	typeMap := make(map[string]*codegen.Model)

@@ -10,11 +10,12 @@ import (
 	"github.com/serenize/snaker"
 	"log"
 	"os"
+	"github.com/jackmanlabs/codegen/mysql"
 )
 
 func main() {
 	var (
-		//driver     *string = flag.String("driver", "mysql", "The SQL driver relevant to your request; one of 'sqlite', 'mysql', 'pg', or 'mssql'.")
+		driver     *string = flag.String("driver", "mysql", "The SQL driver relevant to your request; one of 'sqlite', 'mysql', 'pg', or 'mssql'.")
 		src *string = flag.String("pkg", "", "The package that you want to use for source material.")
 	)
 
@@ -25,6 +26,16 @@ func main() {
 		log.Println("The 'pkg' argument is required.")
 		os.Exit(1)
 	}
+
+	switch *driver {
+	case "sqlite":
+	case "mysql":
+	default:
+		flag.Usage()
+		log.Println("The 'driver' argument is required.")
+		os.Exit(1)
+	}
+
 
 	extractor := pkger.NewExtractor(*src)
 
@@ -47,7 +58,13 @@ func main() {
 		}
 	}
 
-	generator := sqlite.NewGenerator()
+	var generator codegen.SqlGenerator
+	switch *driver {
+	case "sqlite":
+		generator = sqlite.NewGenerator()
+	case "mysql":
+		generator = mysql.NewGenerator()
+	}
 
 	schema, err := generator.Schema(pkg)
 	if err != nil {
