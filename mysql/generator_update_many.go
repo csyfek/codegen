@@ -6,7 +6,7 @@ import (
 	"github.com/jackmanlabs/codegen"
 )
 
-func (this *generator) UpdateMany(pkgName string, def *codegen.Model) string {
+func (this *generator) UpdateMany(pkgName string, def *codegen.Parent) string {
 
 	var (
 		b             = bytes.NewBuffer(nil)
@@ -42,7 +42,7 @@ func (this *generator) UpdateMany(pkgName string, def *codegen.Model) string {
 	return b.String()
 }
 
-func (this *generator) UpdateManyTx(pkgName string, def *codegen.Model) string {
+func (this *generator) UpdateManyTx(pkgName string, def *codegen.Parent) string {
 
 	var (
 		b             = bytes.NewBuffer(nil)

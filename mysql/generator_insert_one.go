@@ -6,7 +6,7 @@ import (
 	"github.com/jackmanlabs/codegen"
 )
 
-func (this *generator) InsertOne(pkgName string, def *codegen.Model) string {
+func (this *generator) InsertOne(pkgName string, def *codegen.Parent) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := insertSql(def)
@@ -58,7 +58,7 @@ func (this *generator) InsertOne(pkgName string, def *codegen.Model) string {
 	return b.String()
 }
 
-func (this *generator) InsertOneTx(pkgName string, def *codegen.Model) string {
+func (this *generator) InsertOneTx(pkgName string, def *codegen.Parent) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := insertSql(def)
@@ -96,7 +96,7 @@ func (this *generator) InsertOneTx(pkgName string, def *codegen.Model) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func insertSql(def *codegen.Model) *bytes.Buffer {
+func insertSql(def *codegen.Parent) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 

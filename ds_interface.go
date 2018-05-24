@@ -5,7 +5,7 @@ import (
 )
 
 func PackageInterface(
-	classes []*Model,
+	classes []*Parent,
 	interfacePackageName string,
 ) (string, error) {
 
@@ -35,7 +35,7 @@ func ModelInterface(
 	importPaths []string,
 	interfacePackageName string,
 	modelPackageName string,
-	def *Model,
+	def *Parent,
 ) (string, error) {
 	data := map[string]interface{}{
 		"model":                def.Name,

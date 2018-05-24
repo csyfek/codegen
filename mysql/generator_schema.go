@@ -12,7 +12,7 @@ import (
 func (this *generator) SchemaOld(pkg *codegen.Package) string {
 
 	// We need to take enum types and extract their underlying types for the type caster.
-	typeMap := make(map[string]*codegen.Model)
+	typeMap := make(map[string]*codegen.Parent)
 	for _, def := range pkg.Models {
 		typeMap[def.Name] = def
 	}
@@ -42,10 +42,10 @@ func (this *generator) SchemaOld(pkg *codegen.Package) string {
 	return b.String()
 }
 
-func (this *generator) typeSchema(def *codegen.Model) string {
+func (this *generator) typeSchema(def *codegen.Parent) string {
 	b := bytes.NewBuffer(nil)
 
-	var firstField codegen.Member
+	var firstField codegen.Child
 	if len(def.Members) > 0 {
 		firstField = def.Members[0]
 	}

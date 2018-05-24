@@ -26,14 +26,14 @@ func (this *generator) Schema(pkg *codegen.Package) string {
 	return b.String()
 }
 
-func (this *generator) typeDrop(def *codegen.Model) string {
+func (this *generator) typeDrop(def *codegen.Parent) string {
 	return fmt.Sprintf("DROP TABLE IF EXISTS %s;\n", def.Table)
 }
 
-func (this *generator) typeSchema(def *codegen.Model) string {
+func (this *generator) typeSchema(def *codegen.Parent) string {
 	b := bytes.NewBuffer(nil)
 
-	var firstField codegen.Member
+	var firstField codegen.Child
 	if len(def.Members) > 0 {
 		firstField = def.Members[0]
 	}

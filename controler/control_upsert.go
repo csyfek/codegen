@@ -6,7 +6,7 @@ import (
 	"github.com/jackmanlabs/codegen"
 )
 
-func Upsert(def *codegen.Model) string {
+func Upsert(def *codegen.Parent) string {
 
 	model := def.Name
 	handler := bytes.NewBuffer(nil)

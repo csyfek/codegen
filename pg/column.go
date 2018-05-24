@@ -28,7 +28,7 @@ type Column struct {
 	DomainName             *string
 }
 
-func (this *Column) Member() codegen.Member {
+func (this *Column) Member() codegen.Child {
 
 	var l int
 
@@ -38,7 +38,7 @@ func (this *Column) Member() codegen.Member {
 		l = *this.NumericPrecision
 	}
 
-	return codegen.Member{
+	return codegen.Child{
 		// We expect the Go and SQL names to be the same for MSSQL.
 		GoName:  this.ColumnName,
 		SqlName: this.ColumnName,

@@ -6,7 +6,7 @@ import (
 	"github.com/jackmanlabs/codegen"
 )
 
-func DeleteOne(def *codegen.Model) (string, string) {
+func DeleteOne(def *codegen.Parent) (string, string) {
 
 	resourceName := resource(def.Name)
 	model := def.Name

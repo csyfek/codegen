@@ -72,7 +72,7 @@ func (this *Extractor) Extract() (*codegen.Package, error) {
 	}
 
 	pkg := &codegen.Package{
-		Models:  make([]*codegen.Model, 0),
+		Models:  make([]*codegen.Parent, 0),
 		Imports: nil,
 		Name:    "",
 		Path:    "",
@@ -80,7 +80,7 @@ func (this *Extractor) Extract() (*codegen.Package, error) {
 
 	for table, columns := range tableColumns {
 
-		t := codegen.NewClass()
+		t := codegen.NewModel()
 		t.Name = strings.TrimPrefix(table, "tbl")
 
 		for _, column := range columns {

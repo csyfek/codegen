@@ -6,7 +6,7 @@ import (
 	"github.com/jackmanlabs/codegen"
 )
 
-func (this *generator) SelectOne(pkgName string, def *codegen.Model) string {
+func (this *generator) SelectOne(pkgName string, def *codegen.Parent) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := selectOneSql(def)
@@ -72,7 +72,7 @@ func (this *generator) SelectOne(pkgName string, def *codegen.Model) string {
 	return b.String()
 }
 
-func (this *generator) SelectOneTx(pkgName string, def *codegen.Model) string {
+func (this *generator) SelectOneTx(pkgName string, def *codegen.Parent) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := selectOneSqlTx(def)
@@ -123,11 +123,11 @@ func (this *generator) SelectOneTx(pkgName string, def *codegen.Model) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func selectOneSql(def *codegen.Model) *bytes.Buffer {
+func selectOneSql(def *codegen.Parent) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 
-	var firstField codegen.Member
+	var firstField codegen.Child
 	if len(def.Members) > 0 {
 		firstField = def.Members[0]
 	}
@@ -149,11 +149,11 @@ func selectOneSql(def *codegen.Model) *bytes.Buffer {
 }
 
 // SELECT for transactions require some slight changes.
-func selectOneSqlTx(def *codegen.Model) *bytes.Buffer {
+func selectOneSqlTx(def *codegen.Parent) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 
-	var firstField codegen.Member
+	var firstField codegen.Child
 	if len(def.Members) > 0 {
 		firstField = def.Members[0]
 	}

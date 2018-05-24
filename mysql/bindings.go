@@ -6,7 +6,7 @@ import (
 	"github.com/serenize/snaker"
 )
 
-func (this *generator) Bindings(importPaths []string, bindingsPackageName string, modelPackageName string, def *codegen.Model) (string, error) {
+func (this *generator) Bindings(importPaths []string, bindingsPackageName string, modelPackageName string, def *codegen.Parent) (string, error) {
 
 	var (
 		err error
@@ -112,7 +112,7 @@ import (
 	`
 
 
-func (this *generator) BindingsTests(importPaths []string, bindingsPackageName string, modelPackageName string, def *codegen.Model) (string, error) {
+func (this *generator) BindingsTests(importPaths []string, bindingsPackageName string, modelPackageName string, def *codegen.Parent) (string, error) {
 
 	var (
 		err error

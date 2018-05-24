@@ -6,7 +6,7 @@ import (
 	"github.com/jackmanlabs/codegen"
 )
 
-func (this *generator) Delete(def *codegen.Model) string {
+func (this *generator) Delete(def *codegen.Parent) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := deleteSql(def)
@@ -50,7 +50,7 @@ func (this *generator) Delete(def *codegen.Model) string {
 	return b.String()
 }
 
-func (this *generator) DeleteTx(def *codegen.Model) string {
+func (this *generator) DeleteTx(def *codegen.Parent) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := deleteSql(def)
@@ -80,7 +80,7 @@ func (this *generator) DeleteTx(def *codegen.Model) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func deleteSql(def *codegen.Model) *bytes.Buffer {
+func deleteSql(def *codegen.Parent) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 

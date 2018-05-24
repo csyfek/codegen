@@ -7,7 +7,7 @@ import (
 	"github.com/serenize/snaker"
 )
 
-func (this *generator) SelectMany(pkgName string, def *codegen.Model) string {
+func (this *generator) SelectMany(pkgName string, def *codegen.Parent) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := selectManySql(def)
@@ -95,7 +95,7 @@ func (this *generator) SelectMany(pkgName string, def *codegen.Model) string {
 	return b.String()
 }
 
-func (this *generator) SelectManyTx(pkgName string, def *codegen.Model) string {
+func (this *generator) SelectManyTx(pkgName string, def *codegen.Parent) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := selectManySql(def)
@@ -169,12 +169,12 @@ func (this *generator) SelectManyTx(pkgName string, def *codegen.Model) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func selectManySql(def *codegen.Model) *bytes.Buffer {
+func selectManySql(def *codegen.Parent) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 	tableName := snaker.CamelToSnake(def.Name)
 
-	var firstField codegen.Member
+	var firstField codegen.Child
 	if len(def.Members) > 0 {
 		firstField = def.Members[0]
 	}

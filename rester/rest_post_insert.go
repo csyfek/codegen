@@ -6,7 +6,7 @@ import (
 	"github.com/jackmanlabs/codegen"
 )
 
-func PostCollection(def *codegen.Model) (string, string) {
+func PostCollection(def *codegen.Parent) (string, string) {
 
 	resourceName := resource(def.Name)
 	model := def.Name

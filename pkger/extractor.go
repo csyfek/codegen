@@ -10,12 +10,11 @@ import (
 	"log"
 	"strings"
 	"unicode"
+	"github.com/jackmanlabs/tipo"
 )
 
 type extractorType struct {
 	pkgPath string
-	codegen.Package
-	Fset *token.FileSet
 }
 
 func NewExtractor(pkgPath string) *extractorType {
@@ -24,31 +23,25 @@ func NewExtractor(pkgPath string) *extractorType {
 	}
 }
 
-func (this *extractorType) Extract() (*codegen.Package, error) {
+func (this *extractorType) Extract() ([]codegen.Parent, error) {
 
-	buildPkg, err := build.Import(this.pkgPath, "", 0)
-	if err != nil {
-		return nil, errors.Stack(err)
-	}
+	names, err := tipo.FindPackageModels(this.pkgPath)
+if err != nil {
+	return nil, errors.Stack(err)
+}
 
-	fset := token.NewFileSet()
-	astPkgs, err := parser.ParseDir(fset, buildPkg.Dir, nil, parser.ParseComments|parser.AllErrors)
-	if err != nil {
-		return nil, errors.Stack(err)
-	}
+models := make([]codegen.Parent, 0)
+for _, name := range names{
+m, err := tipo.FindModel(name, this.pkgPath)
+if err != nil{
+	return nil, errors.Stack(err)
+}
 
-	this.Fset = fset
-	this.Imports = make(map[string][]string)
+model := codegen.NewModel()
 
-	for _, astPkg := range astPkgs {
-		if strings.HasSuffix(astPkg.Name, "_test") {
-			continue
-		}
-		ast.Walk(this, astPkg)
-	}
+}
 
-	this.Path = this.pkgPath
-	return &this.Package, nil
+
 }
 
 func (this *extractorType) Visit(node ast.Node) (w ast.Visitor) {
@@ -65,7 +58,7 @@ func (this *extractorType) Visit(node ast.Node) (w ast.Visitor) {
 
 	case *ast.TypeSpec:
 
-		newType := codegen.NewClass()
+		newType := codegen.NewModel()
 		newType.Name = t.Name.String()
 		newType.UnderlyingType = resolveTypeExpression(t.Type)
 
@@ -80,7 +73,7 @@ func (this *extractorType) Visit(node ast.Node) (w ast.Visitor) {
 
 		// Handle embedded structs.
 		if len(t.Names) == 0 {
-			parent.EmbeddedStructs = append(parent.EmbeddedStructs, typ)
+			parent.EmbeddedModels = append(parent.EmbeddedModels, typ)
 			return nil
 		}
 
@@ -92,7 +85,7 @@ func (this *extractorType) Visit(node ast.Node) (w ast.Visitor) {
 			return nil
 		}
 
-		member := codegen.Member{
+		member := codegen.Child{
 			GoType: typ,
 			GoName: name,
 		}

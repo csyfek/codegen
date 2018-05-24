@@ -7,7 +7,7 @@ import (
 	"text/template"
 )
 
-func GetCollection(def *codegen.Model) (string, error) {
+func GetCollection(def *codegen.Parent) (string, error) {
 
 	model := def.Name
 	b := bytes.NewBuffer(nil)

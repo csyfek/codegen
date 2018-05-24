@@ -44,7 +44,7 @@ func (this *generator) Schema(pkg *codegen.Package) (string, error) {
 			"members":     def.Members,
 			"model":       def.Name,
 			"models":      codegen.Plural(def.Name),
-			"table":       snaker.CamelToSnake(def.Name),
+			"table":       codegen.Plural(snaker.CamelToSnake(def.Name)),
 			"type":        def.Name,
 			"foreignKeys": foreignKeys,
 		}

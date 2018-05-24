@@ -6,7 +6,7 @@ import (
 	"github.com/jackmanlabs/codegen"
 )
 
-func (this *generator) UpdateOne(pkgName string, def *codegen.Model) string {
+func (this *generator) UpdateOne(pkgName string, def *codegen.Parent) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := updateSql(def)
@@ -59,7 +59,7 @@ func (this *generator) UpdateOne(pkgName string, def *codegen.Model) string {
 	return b.String()
 }
 
-func (this *generator) UpdateOneTx(pkgName string, def *codegen.Model) string {
+func (this *generator) UpdateOneTx(pkgName string, def *codegen.Parent) string {
 
 	b := bytes.NewBuffer(nil)
 	b_sql := updateSql(def)
@@ -97,11 +97,11 @@ func (this *generator) UpdateOneTx(pkgName string, def *codegen.Model) string {
 
 // I have to leave out backticks from the SQL because of embedding issues.
 // Please refrain from using reserved SQL keywords as struct and member names.
-func updateSql(def *codegen.Model) *bytes.Buffer {
+func updateSql(def *codegen.Parent) *bytes.Buffer {
 
 	b := bytes.NewBuffer(nil)
 
-	var firstField codegen.Member
+	var firstField codegen.Child
 	if len(def.Members) > 0 {
 		firstField = def.Members[0]
 	}
