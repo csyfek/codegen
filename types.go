@@ -4,10 +4,10 @@ import "github.com/jackmanlabs/tipo"
 
 type Parent struct {
 	tipo.Model
-	Table          string
+	Name     string
+	Table    string
+	Children []Child
 }
-
-
 
 type Child struct {
 	tipo.Model

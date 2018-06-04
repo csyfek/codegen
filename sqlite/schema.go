@@ -8,29 +8,29 @@ import (
 	"strings"
 )
 
-func (this *generator) Schema(pkg *codegen.Package) (string, error) {
+func (this *generator) Schema(parents []codegen.Parent) (string, error) {
 	var (
 		s string
 	)
 
-	for _, def := range pkg.Models {
+	for _, parent := range parents {
 
 		var foreignKeys map[string]string = make(map[string]string)
 
-		for i, member := range def.Members {
+		for i, member := range parent.Children {
 
 			// types
 			t, _ := sqlType(member.GoType)
-			def.Members[i].SqlType = t
+			parent.Children[i].SqlType = t
 			if (member.SqlName == "id" || strings.HasSuffix(member.SqlName, "_id")) && t == "TEXT" {
-				def.Members[i].SqlType = "CHAR(36)"
+				parent.Children[i].SqlType = "CHAR(36)"
 			}
 
 			// constraints
 			if i == 0 && member.SqlName == "id" {
-				def.Members[i].SqlConstraint = "PRIMARY KEY"
+				parent.Children[i].SqlConstraint = "PRIMARY KEY"
 			} else {
-				def.Members[i].SqlConstraint = "NOT NULL"
+				parent.Children[i].SqlConstraint = "NOT NULL"
 			}
 
 			// foreign keys
@@ -41,11 +41,11 @@ func (this *generator) Schema(pkg *codegen.Package) (string, error) {
 		}
 
 		data := map[string]interface{}{
-			"members":     def.Members,
-			"model":       def.Name,
-			"models":      codegen.Plural(def.Name),
-			"table":       codegen.Plural(snaker.CamelToSnake(def.Name)),
-			"type":        def.Name,
+			"members":     parent.Children,
+			"model":       parent.Name,
+			"parents":     codegen.Plural(parent.Name),
+			"table":       codegen.Plural(snaker.CamelToSnake(parent.Name)),
+			"type":        parent.Name,
 			"foreignKeys": foreignKeys,
 		}
 
@@ -57,7 +57,7 @@ func (this *generator) Schema(pkg *codegen.Package) (string, error) {
 		}
 
 		s += s_
-		log.Print("model:", def.Name)
+		log.Print("model:", parent.Name)
 	}
 
 	return s, nil
