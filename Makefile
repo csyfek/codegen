@@ -1,4 +1,4 @@
-.PHONY: clean charts all
+.PHONY: clean charts all install
 
 BINARIES=structs2bindings structs2schema structs2interface
 
@@ -15,3 +15,8 @@ structs2schema:
 
 structs2interface:
 	go build github.com/jackmanlabs/codegen/cmd/structs2interface
+
+install: $(BINARIES)
+	go install github.com/jackmanlabs/codegen/cmd/structs2bindings
+	go install github.com/jackmanlabs/codegen/cmd/structs2schema
+	go install github.com/jackmanlabs/codegen/cmd/structs2interface

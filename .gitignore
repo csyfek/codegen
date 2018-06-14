@@ -4,3 +4,4 @@ codegen
 tmp/
 /structs2schema
 structs2bindings
+structs2interface
