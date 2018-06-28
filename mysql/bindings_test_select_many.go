@@ -31,10 +31,11 @@ func TestSelect{{.models}}Tx(t *testing.T) {
 
 	_, err = ds.Select{{.models}}Tx(tx)
 	if err != nil {
+		tx.Rollback()
 		t.Fatal(errors.Stack(err))
 	}
 
-	err = tx.Rollback()
+	err = tx.Commit()
 	if err != nil {
 		t.Fatal(errors.Stack(err))
 	}

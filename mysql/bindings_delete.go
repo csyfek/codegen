@@ -42,5 +42,5 @@ func  (this *DataSource) Delete{{.model}}Tx(tx *sql.Tx, id string) error {
 
 var templateDeleteSql string = "`" + `
 DELETE FROM {{.table}}
-{{if .members}}WHERE {{.table}}.{{with index .members 0}}{{.SqlName}}{{end}} = $1{{end}}
+{{if .members}}WHERE {{.table}}.{{with index .members 0}}{{.SqlName}}{{end}} = ?{{end}}
 ;` + "`"

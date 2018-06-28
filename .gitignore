@@ -3,5 +3,5 @@ codegen.iml
 codegen
 tmp/
 /structs2schema
-structs2bindings
-structs2interface
+/structs2bindings
+/structs2interface

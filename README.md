@@ -32,7 +32,6 @@ functionality as easily as possible.
 When in doubt, just execute the various binaries to see a list of command-line
 options:
 
-* `db2structs`
 * `structs2bindings`
 * `structs2interface`
 * `structs2schema`

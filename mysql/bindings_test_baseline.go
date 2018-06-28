@@ -45,9 +45,16 @@ import (
 // written by this generator. So... we're going to assume that, at minimum, the
 // type remains a wrapper of a sql.DB.
 func New() (*{{.bindingsPackageName}}.DataSource, error) {
-	connString := "file::memory:?mode=memory&cache=shared"
+	singleton.Lock()
+	defer singleton.Unlock()
 
-	db, err := sql.Open("sqlite3", connString)
+	if singleton.ds != nil {
+		return singleton.ds, nil
+	}
+
+	connString := "test:test@tcp(localhost:3306)/test?parseTime=true"
+
+	db, err := sql.Open("mysql", connString)
 	if err != nil {
 		return nil, errors.Stack(err)
 	}
@@ -56,6 +63,16 @@ func New() (*{{.bindingsPackageName}}.DataSource, error) {
 		DB:db,
 	}
 
+	singleton.ds = ds
+
 	return ds, nil
 }
+
+var singleton *Singleton = new(Singleton)
+
+type Singleton struct {
+	ds *mysql.DataSource
+	sync.Mutex
+}
+
 `

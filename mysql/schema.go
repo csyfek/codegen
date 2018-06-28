@@ -35,6 +35,7 @@ func (this *generator) Schema(pkg *codegen.Package) (string, error) {
 			// foreign keys
 			if strings.HasSuffix(member.SqlName, "_id") {
 				table := strings.TrimSuffix(member.SqlName, "_id")
+				table = codegen.Plural(table)
 				foreignKeys[member.SqlName] = table
 			}
 		}

@@ -34,10 +34,11 @@ func TestDelete{{.model}}Tx(t *testing.T) {
 
 	err = ds.Delete{{.model}}Tx(tx, id)
 	if err != nil {
+		tx.Rollback()
 		t.Fatal(errors.Stack(err))
 	}
 
-	err = tx.Rollback()
+	err = tx.Commit()
 	if err != nil {
 		t.Fatal(errors.Stack(err))
 	}

@@ -34,10 +34,11 @@ func TestInsert{{.model}}Tx(t *testing.T) {
 
 	err = ds.Insert{{.model}}Tx(tx, x)
 	if err != nil {
+		tx.Rollback()
 		t.Fatal(errors.Stack(err))
 	}
 
-	err = tx.Rollback()
+	err = tx.Commit()
 	if err != nil {
 		t.Fatal(errors.Stack(err))
 	}

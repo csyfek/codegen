@@ -58,6 +58,6 @@ var templateInsertSql string = "`" + `
 INSERT INTO {{.table}} (
 {{range $i, $member := .members}}	{{$member.SqlName}}{{if last $i $.members}}{{else}},{{end}}
 {{end}}) VALUES (
-{{range $i, $member := .members}}	${{inc $i}}{{if last $i $.members}}{{else}},{{end}}
+{{range $i, $member := .members}}	?{{if last $i $.members}}{{else}},{{end}}
 {{end}});
 ` + "`"
