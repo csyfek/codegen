@@ -111,7 +111,6 @@ import (
 /*============================================================================*/
 	`
 
-
 func (this *generator) BindingsTests(importPaths []string, bindingsPackageName string, modelPackageName string, def *codegen.Model) (string, error) {
 
 	var (
@@ -134,16 +133,16 @@ func (this *generator) BindingsTests(importPaths []string, bindingsPackageName s
 	}
 
 	subPatterns := map[string]string{
-		"templateTestDelete":        templateTestDelete,
-		"templateTestDeleteTx":      templateTestDeleteTx,
-		"templateTestInsertOne":     templateTestInsertOne,
-		"templateTestInsertOneTx":   templateTestInsertOneTx,
-		"templateTestSelectMany":    templateTestSelectMany,
-		"templateTestSelectManyTx":  templateTestSelectManyTx,
-		"templateTestSelectOne":     templateTestSelectOne,
-		"templateTestSelectOneTx":   templateTestSelectOneTx,
-		"templateTestUpdateOne":     templateTestUpdateOne,
-		"templateTestUpdateOneTx":   templateTestUpdateOneTx,
+		"templateTestDelete":       templateTestDelete,
+		"templateTestDeleteTx":     templateTestDeleteTx,
+		"templateTestInsertOne":    templateTestInsertOne,
+		"templateTestInsertOneTx":  templateTestInsertOneTx,
+		"templateTestSelectMany":   templateTestSelectMany,
+		"templateTestSelectManyTx": templateTestSelectManyTx,
+		"templateTestSelectOne":    templateTestSelectOne,
+		"templateTestSelectOneTx":  templateTestSelectOneTx,
+		"templateTestUpdateOne":    templateTestUpdateOne,
+		"templateTestUpdateOneTx":  templateTestUpdateOneTx,
 	}
 
 	s, err := codegen.Render(templateBindingsTests, subPatterns, data)

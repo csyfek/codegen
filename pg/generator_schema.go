@@ -3,6 +3,7 @@ package pg
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/jackmanlabs/codegen"
 	"github.com/serenize/snaker"
 )

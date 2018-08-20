@@ -1,11 +1,12 @@
 package codegen
 
 import (
-	"github.com/jackmanlabs/errors"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/jackmanlabs/errors"
 )
 
 func ImportPath(path string) string {

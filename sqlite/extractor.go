@@ -3,11 +3,12 @@ package sqlite
 import (
 	"database/sql"
 	"fmt"
+	"strings"
+	"sync"
+
 	"github.com/jackmanlabs/codegen"
 	"github.com/jackmanlabs/errors"
 	_ "github.com/mattn/go-sqlite3"
-	"strings"
-	"sync"
 )
 
 func (this *Extractor) db() (*sql.DB, error) {

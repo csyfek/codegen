@@ -8,18 +8,19 @@ func (this *DataSource) Delete{{.model}}(id string) error {
 var err error
 
 	if psDelete{{.model}} == nil{
+		// language=MySQL
 		q := {{template "templateDeleteSql" .}}
 
 		psDelete{{.model}}, err = this.Prepare(q)
 		if err != nil {
-			return errors.Stack(err)
+			return errs.Stack(err)
 		}
 	}
 	args := []interface{}{id}
 
 	_, err = psDelete{{.model}}.Exec(args...)
 	if err != nil {
-		return errors.Stack(err)
+		return errs.Stack(err)
 	}
 
 	return nil
@@ -28,13 +29,14 @@ var err error
 
 var templateDeleteTx string = `
 func  (this *DataSource) Delete{{.model}}Tx(tx *sql.Tx, id string) error {
+	// language=MySQL
 	q := {{template "templateDeleteSql" .}}
 
 	args := []interface{}{id}
 	_, err := tx.Exec(q, args...)
 
 	if err != nil {
-		return errors.Stack(err)
+		return errs.Stack(err)
 	}
 
 	return nil
@@ -42,5 +44,4 @@ func  (this *DataSource) Delete{{.model}}Tx(tx *sql.Tx, id string) error {
 
 var templateDeleteSql string = "`" + `
 DELETE FROM {{.table}}
-{{if .members}}WHERE {{.table}}.{{with index .members 0}}{{.SqlName}}{{end}} = ?{{end}}
-;` + "`"
+{{if .members}}WHERE {{.table}}.{{with index .members 0}}{{.SqlName}}{{end}} = ?{{end}};` + "`"

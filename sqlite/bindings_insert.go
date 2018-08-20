@@ -1,7 +1,5 @@
 package sqlite
 
-
-
 var templateInsertOne string = `
 var psInsert{{.model}} *sql.Stmt
 

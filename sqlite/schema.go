@@ -1,11 +1,12 @@
 package sqlite
 
 import (
+	"log"
+	"strings"
+
 	"github.com/jackmanlabs/codegen"
 	"github.com/jackmanlabs/errors"
 	"github.com/serenize/snaker"
-	"log"
-	"strings"
 )
 
 func (this *generator) Schema(pkg *codegen.Package) (string, error) {

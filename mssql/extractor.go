@@ -3,11 +3,12 @@ package mssql
 import (
 	"database/sql"
 	"fmt"
+	"strings"
+	"sync"
+
 	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/jackmanlabs/codegen"
 	"github.com/jackmanlabs/errors"
-	"strings"
-	"sync"
 )
 
 func (this *Extractor) db() (*sql.DB, error) {

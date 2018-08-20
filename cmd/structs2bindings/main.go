@@ -3,14 +3,15 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"os"
+
 	"github.com/jackmanlabs/codegen"
+	"github.com/jackmanlabs/codegen/mysql"
 	"github.com/jackmanlabs/codegen/pkger"
 	"github.com/jackmanlabs/codegen/sqlite"
 	"github.com/jackmanlabs/errors"
 	"github.com/serenize/snaker"
-	"log"
-	"os"
-	"github.com/jackmanlabs/codegen/mysql"
 )
 
 func main() {
@@ -71,15 +72,13 @@ func main() {
 		}
 	}
 
-var generator codegen.SqlGenerator
+	var generator codegen.SqlGenerator
 	switch *driver {
 	case "sqlite":
 		generator = sqlite.NewGenerator()
 	case "mysql":
 		generator = mysql.NewGenerator()
 	}
-
-
 
 	err = codegen.CheckDir(*dst)
 	if err != nil {
@@ -158,7 +157,6 @@ var generator codegen.SqlGenerator
 	if err != nil {
 		log.Fatal(errors.Stack(err))
 	}
-
 
 	// The files containing the basic tests for the bindings.
 	for _, def := range pkg.Models {

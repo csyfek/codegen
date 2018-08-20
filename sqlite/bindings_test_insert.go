@@ -42,4 +42,3 @@ func TestInsert{{.model}}Tx(t *testing.T) {
 		t.Fatal(errors.Stack(err))
 	}
 }`
-

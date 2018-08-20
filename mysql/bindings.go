@@ -21,28 +21,31 @@ func (this *generator) Bindings(importPaths []string, bindingsPackageName string
 		"members":             def.Members,
 		"model":               def.Name,
 		"models":              codegen.Plural(def.Name),
-		"table":               snaker.CamelToSnake(def.Name),
+		"table":               snaker.CamelToSnake(codegen.Plural(def.Name)),
 		"type":                def.Name,
 		"bindingsPackageName": bindingsPackageName,
 		"modelPackageName":    modelPackageName,
 	}
 
 	subPatterns := map[string]string{
-		"templateDelete":        templateDelete,
-		"templateDeleteSql":     templateDeleteSql,
-		"templateDeleteTx":      templateDeleteTx,
-		"templateInsertOne":     templateInsertOne,
-		"templateInsertOneTx":   templateInsertOneTx,
-		"templateInsertSql":     templateInsertSql,
-		"templateSelectMany":    templateSelectMany,
-		"templateSelectManySql": templateSelectManySql,
-		"templateSelectManyTx":  templateSelectManyTx,
-		"templateSelectOne":     templateSelectOne,
-		"templateSelectOneSql":  templateSelectOneSql,
-		"templateSelectOneTx":   templateSelectOneTx,
-		"templateUpdateOne":     templateUpdateOne,
-		"templateUpdateOneSql":  templateUpdateOneSql,
-		"templateUpdateOneTx":   templateUpdateOneTx,
+		"templateDelete":          templateDelete,
+		"templateDeleteSql":       templateDeleteSql,
+		"templateDeleteTx":        templateDeleteTx,
+		"templateInsertManyTx":    templateInsertManyTx,
+		"templateInsertOne":       templateInsertOne,
+		"templateInsertOneTx":     templateInsertOneTx,
+		"templateInsertSql":       templateInsertSql,
+		"templateSelectMany":      templateSelectMany,
+		"templateSelectManySql":   templateSelectManySql,
+		"templateSelectManyTx":    templateSelectManyTx,
+		"templateSelectManyTxSql": templateSelectManyTxSql,
+		"templateSelectOne":       templateSelectOne,
+		"templateSelectOneSql":    templateSelectOneSql,
+		"templateSelectOneTx":     templateSelectOneTx,
+		"templateSelectOneTxSql":  templateSelectOneTxSql,
+		"templateUpdateOne":       templateUpdateOne,
+		"templateUpdateOneSql":    templateUpdateOneSql,
+		"templateUpdateOneTx":     templateUpdateOneTx,
 	}
 
 	s, err := codegen.Render(templateBindings, subPatterns, data)
@@ -59,7 +62,7 @@ package {{.bindingsPackageName}}
 
 import (
 	"database/sql"
-	"github.com/jackmanlabs/errors"
+	errs "github.com/jackmanlabs/errors"
 	{{range .importPaths}}"{{.}}"{{end}}
 )
 
@@ -94,6 +97,10 @@ import (
 
 /*============================================================================*/
 
+{{template "templateInsertManyTx" .}}
+
+/*============================================================================*/
+
 {{template "templateUpdateOne" .}}
 
 /*============================================================================*/
@@ -110,7 +117,6 @@ import (
 
 /*============================================================================*/
 	`
-
 
 func (this *generator) BindingsTests(importPaths []string, bindingsPackageName string, modelPackageName string, def *codegen.Model) (string, error) {
 
@@ -134,16 +140,16 @@ func (this *generator) BindingsTests(importPaths []string, bindingsPackageName s
 	}
 
 	subPatterns := map[string]string{
-		"templateTestDelete":        templateTestDelete,
-		"templateTestDeleteTx":      templateTestDeleteTx,
-		"templateTestInsertOne":     templateTestInsertOne,
-		"templateTestInsertOneTx":   templateTestInsertOneTx,
-		"templateTestSelectMany":    templateTestSelectMany,
-		"templateTestSelectManyTx":  templateTestSelectManyTx,
-		"templateTestSelectOne":     templateTestSelectOne,
-		"templateTestSelectOneTx":   templateTestSelectOneTx,
-		"templateTestUpdateOne":     templateTestUpdateOne,
-		"templateTestUpdateOneTx":   templateTestUpdateOneTx,
+		"templateTestDelete":       templateTestDelete,
+		"templateTestDeleteTx":     templateTestDeleteTx,
+		"templateTestInsertOne":    templateTestInsertOne,
+		"templateTestInsertOneTx":  templateTestInsertOneTx,
+		"templateTestSelectMany":   templateTestSelectMany,
+		"templateTestSelectManyTx": templateTestSelectManyTx,
+		"templateTestSelectOne":    templateTestSelectOne,
+		"templateTestSelectOneTx":  templateTestSelectOneTx,
+		"templateTestUpdateOne":    templateTestUpdateOne,
+		"templateTestUpdateOneTx":  templateTestUpdateOneTx,
 	}
 
 	s, err := codegen.Render(templateBindingsTests, subPatterns, data)
@@ -160,7 +166,7 @@ package {{.bindingsPackageName}}_test
 
 import (
 	"testing"
-	"github.com/jackmanlabs/errors"
+	errs "github.com/jackmanlabs/errors"
 	{{range .importPaths}}"{{.}}"{{end}}
 )
 

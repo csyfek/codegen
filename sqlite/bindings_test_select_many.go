@@ -1,6 +1,5 @@
 package sqlite
 
-
 var templateTestSelectMany string = `
 func TestSelect{{.models}}(t *testing.T) {
 
@@ -39,4 +38,3 @@ func TestSelect{{.models}}Tx(t *testing.T) {
 		t.Fatal(errors.Stack(err))
 	}
 }`
-

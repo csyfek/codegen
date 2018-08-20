@@ -1,8 +1,9 @@
 package codegen
 
 import (
-	"os"
 	"log"
+	"os"
+
 	"github.com/jackmanlabs/errors"
 )
 

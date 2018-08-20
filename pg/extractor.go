@@ -3,11 +3,12 @@ package pg
 import (
 	"database/sql"
 	"fmt"
+	"strings"
+	"sync"
+
 	"github.com/jackmanlabs/codegen"
 	"github.com/jackmanlabs/errors"
 	_ "github.com/lib/pq"
-	"strings"
-	"sync"
 )
 
 func (this *Extractor) db() (*sql.DB, error) {

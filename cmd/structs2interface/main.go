@@ -3,12 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"os"
+
 	"github.com/jackmanlabs/codegen"
 	"github.com/jackmanlabs/codegen/pkger"
 	"github.com/jackmanlabs/errors"
 	"github.com/serenize/snaker"
-	"log"
-	"os"
 )
 
 func main() {

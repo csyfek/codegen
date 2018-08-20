@@ -20,3 +20,6 @@ install: $(BINARIES)
 	go install github.com/jackmanlabs/codegen/cmd/structs2bindings
 	go install github.com/jackmanlabs/codegen/cmd/structs2schema
 	go install github.com/jackmanlabs/codegen/cmd/structs2interface
+
+fmt:
+	for d in $(shell go list -f {{.Dir}} ./...); do goimports -w $$d/*.go; done

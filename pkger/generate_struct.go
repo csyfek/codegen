@@ -3,6 +3,7 @@ package pkger
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/jackmanlabs/codegen"
 	"github.com/segmentio/go-camelcase"
 )

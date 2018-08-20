@@ -42,4 +42,3 @@ func TestSelect{{.model}}Tx(t *testing.T) {
 		t.Fatal(errors.Stack(err))
 	}
 }`
-

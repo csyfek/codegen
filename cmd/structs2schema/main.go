@@ -3,20 +3,21 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"os"
+
 	"github.com/jackmanlabs/codegen"
+	"github.com/jackmanlabs/codegen/mysql"
 	"github.com/jackmanlabs/codegen/pkger"
 	"github.com/jackmanlabs/codegen/sqlite"
 	"github.com/jackmanlabs/errors"
 	"github.com/serenize/snaker"
-	"log"
-	"os"
-	"github.com/jackmanlabs/codegen/mysql"
 )
 
 func main() {
 	var (
-		driver     *string = flag.String("driver", "mysql", "The SQL driver relevant to your request; one of 'sqlite', 'mysql', 'pg', or 'mssql'.")
-		src *string = flag.String("pkg", "", "The package that you want to use for source material.")
+		driver *string = flag.String("driver", "mysql", "The SQL driver relevant to your request; one of 'sqlite', 'mysql', 'pg', or 'mssql'.")
+		src    *string = flag.String("pkg", "", "The package that you want to use for source material.")
 	)
 
 	flag.Parse()
@@ -35,7 +36,6 @@ func main() {
 		log.Println("The 'driver' argument is required.")
 		os.Exit(1)
 	}
-
 
 	extractor := pkger.NewExtractor(*src)
 

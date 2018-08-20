@@ -1,6 +1,5 @@
 package sqlite
 
-
 import "fmt"
 
 func (this *generator) BindingsBaseline(pkgName string) string {

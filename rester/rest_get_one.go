@@ -3,6 +3,7 @@ package rester
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/jackmanlabs/codegen"
 )
 

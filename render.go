@@ -2,9 +2,10 @@ package codegen
 
 import (
 	"bytes"
-	"github.com/jackmanlabs/errors"
 	"reflect"
 	"text/template"
+
+	"github.com/jackmanlabs/errors"
 )
 
 func Render(rootPattern string, subPatterns map[string]string, data interface{}) (string, error) {

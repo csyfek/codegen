@@ -11,15 +11,13 @@ func (this *generator) BindingsBaselineTests(importPaths []string, bindingsPacka
 		err error
 	)
 
-
 	data := map[string]interface{}{
 		"importPaths":         importPaths,
 		"bindingsPackageName": bindingsPackageName,
 		"modelPackageName":    modelPackageName,
 	}
 
-	subPatterns := map[string]string{
-	}
+	subPatterns := map[string]string{}
 
 	s, err := codegen.Render(templateTestBaseline, subPatterns, data)
 	if err != nil {

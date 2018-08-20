@@ -42,4 +42,3 @@ func TestDelete{{.model}}Tx(t *testing.T) {
 		t.Fatal(errors.Stack(err))
 	}
 }`
-

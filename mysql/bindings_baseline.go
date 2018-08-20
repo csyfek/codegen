@@ -2,15 +2,13 @@ package mysql
 
 import "fmt"
 
-
-
 func (this *generator) BindingsBaseline(pkgName string) string {
 	return fmt.Sprintf(`
 package %s
 
 import (
 	"database/sql"
-	"github.com/jackmanlabs/errors"
+	errs errs "github.com/jackmanlabs/errors"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -24,7 +22,7 @@ func New() (*DataSource, error) {
 
 	db, err := sql.Open("mysql", connString)
 	if err != nil {
-		return nil, errors.Stack(err)
+		return nil, errs.Stack(err)
 	}
 
 	ds := &DataSource{

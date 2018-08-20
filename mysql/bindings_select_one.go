@@ -8,11 +8,12 @@ func (this *DataSource)  Select{{.model}}(id string) (*{{.modelPackageName}}.{{.
 	var err error
 
 	if psSelect{{.model}} == nil{
+		// language=MySQL
 		q := {{template "templateSelectOneSql" .}}
 	
 		psSelect{{.model}}, err = this.Prepare(q)
 		if err != nil {
-			return nil, errors.Stack(err)
+			return nil, errs.Stack(err)
 		}
 	}
 
@@ -20,7 +21,7 @@ func (this *DataSource)  Select{{.model}}(id string) (*{{.modelPackageName}}.{{.
 
 	rows, err := psSelect{{.model}}.Query(args...)
 	if err != nil {
-		return nil, errors.Stack(err)
+		return nil, errs.Stack(err)
 	}
 	defer rows.Close()
 
@@ -33,7 +34,7 @@ func (this *DataSource)  Select{{.model}}(id string) (*{{.modelPackageName}}.{{.
 
 		err = rows.Scan(dest...)
 		if err != nil {
-			return x, errors.Stack(err)
+			return x, errs.Stack(err)
 		}
 	}
 
@@ -45,13 +46,14 @@ var templateSelectOneTx string = `
 
 func  (this *DataSource) Select{{.model}}Tx(tx *sql.Tx, id string)  (*{{.modelPackageName}}.{{.model}}, error) {
 
-	q := {{template "templateSelectOneSql" .}}
+	// language=MySQL
+	q := {{template "templateSelectOneTxSql" .}}
 
 	args := []interface{}{id}
 
 	rows, err := tx.Query(q, args...)
 	if err != nil {
-		return nil, errors.Stack(err)
+		return nil, errs.Stack(err)
 	}
 	defer rows.Close()
 
@@ -64,7 +66,7 @@ func  (this *DataSource) Select{{.model}}Tx(tx *sql.Tx, id string)  (*{{.modelPa
 
 		err = rows.Scan(dest...)
 		if err != nil {
-			return x, errors.Stack(err)
+			return x, errs.Stack(err)
 		}
 	}
 
@@ -78,4 +80,13 @@ SELECT
 {{end}}FROM {{.table}}
 WHERE {{range $i, $member := .members}}{{if eq $i 0}}{{$member.SqlName}}{{end}}{{end}} = ?
 LIMIT 1;
+` + "`"
+
+var templateSelectOneTxSql string = "`" + `
+SELECT
+{{range $i, $member := .members}}	{{$member.SqlName}}{{if last $i $.members}}{{else}},{{end}}
+{{end}}FROM {{.table}}
+WHERE {{range $i, $member := .members}}{{if eq $i 0}}{{$member.SqlName}}{{end}}{{end}} = ?
+LIMIT 1
+FOR UPDATE;
 ` + "`"

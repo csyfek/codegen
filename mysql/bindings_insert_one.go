@@ -1,7 +1,5 @@
 package mysql
 
-
-
 var templateInsertOne string = `
 var psInsert{{.model}} *sql.Stmt
 
@@ -10,11 +8,12 @@ func  (this *DataSource) Insert{{.model}}(x *{{.modelPackageName}}.{{.model}}) e
 	var err error
 
 	if psInsert{{.model}} == nil{
+		// language=MySQL
 		q := {{template "templateInsertSql" .}}
 
 		psInsert{{.model}}, err = this.Prepare(q)
 		if err != nil {
-			return errors.Stack(err)
+			return errs.Stack(err)
 		}
 	}
 
@@ -25,7 +24,7 @@ func  (this *DataSource) Insert{{.model}}(x *{{.modelPackageName}}.{{.model}}) e
 
 	_, err = psInsert{{.model}}.Exec(args...)
 	if err != nil {
-		return errors.Stack(err)
+		return errs.Stack(err)
 	}
 
 	return nil
@@ -38,6 +37,7 @@ var templateInsertOneTx string = `
 
 	var err error
 
+	// language=MySQL
 	q := {{template "templateInsertSql" .}}
 
 	args := []interface{}{
@@ -47,7 +47,7 @@ var templateInsertOneTx string = `
 
 	_, err = tx.Exec(q, args...)
 	if err != nil {
-		return errors.Stack(err)
+		return errs.Stack(err)
 	}
 
 	return nil

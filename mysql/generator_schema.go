@@ -3,8 +3,9 @@ package mysql
 import (
 	"bytes"
 	"fmt"
-	"github.com/jackmanlabs/codegen"
 	"strings"
+
+	"github.com/jackmanlabs/codegen"
 )
 
 // I have to leave out backticks from the SQL because of embedding issues.

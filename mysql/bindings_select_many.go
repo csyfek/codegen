@@ -8,11 +8,12 @@ func (this *DataSource)  Select{{.models}}() ([]{{.modelPackageName}}.{{.model}}
 	var err error
 
 	if psSelect{{.models}} == nil{
+		// language=MySQL
 		q := {{template "templateSelectManySql" .}}
 	
 		psSelect{{.models}}, err = this.Prepare(q)
 		if err != nil {
-			return nil, errors.Stack(err)
+			return nil, errs.Stack(err)
 		}
 	}
 
@@ -20,7 +21,7 @@ func (this *DataSource)  Select{{.models}}() ([]{{.modelPackageName}}.{{.model}}
 
 	rows, err := psSelect{{.models}}.Query( args...)
 	if err != nil {
-		return nil, errors.Stack(err)
+		return nil, errs.Stack(err)
 	}
 	defer rows.Close()
 
@@ -33,7 +34,7 @@ func (this *DataSource)  Select{{.models}}() ([]{{.modelPackageName}}.{{.model}}
 
 		err = rows.Scan(dest...)
 		if err != nil {
-			return z, errors.Stack(err)
+			return z, errs.Stack(err)
 		}
 
 		z = append(z, x)
@@ -47,13 +48,14 @@ var templateSelectManyTx string = `
 
 func  (this *DataSource) Select{{.models}}Tx(tx *sql.Tx)  ([]{{.modelPackageName}}.{{.model}}, error) {
 
-	q := {{template "templateSelectManySql" .}}
+	// language=MySQL
+	q := {{template "templateSelectManyTxSql" .}}
 
 	args := []interface{}{}
 
 	rows, err := tx.Query(q, args...)
 	if err != nil {
-		return nil, errors.Stack(err)
+		return nil, errs.Stack(err)
 	}
 	defer rows.Close()
 
@@ -66,7 +68,7 @@ func  (this *DataSource) Select{{.models}}Tx(tx *sql.Tx)  ([]{{.modelPackageName
 
 		err = rows.Scan(dest...)
 		if err != nil {
-			return z, errors.Stack(err)
+			return z, errs.Stack(err)
 		}
 
 		z = append(z, x)
@@ -81,4 +83,12 @@ SELECT
 {{range $i, $member := .members}}	{{$member.SqlName}}{{if last $i $.members}}{{else}},
 {{end}}{{end}}
 FROM {{.table}};
+` + "`"
+
+var templateSelectManyTxSql string = "`" + `
+SELECT
+{{range $i, $member := .members}}	{{$member.SqlName}}{{if last $i $.members}}{{else}},
+{{end}}{{end}}
+FROM {{.table}}
+FOR UPDATE;
 ` + "`"

@@ -5,16 +5,17 @@ var psUpdate{{.model}} *sql.Stmt
 
 func  (this *DataSource) Update{{.model}}(x *{{.modelPackageName}}.{{.model}}) error {
 
-var err error
-
-if psUpdate{{.model}} == nil{
-	q := {{template "templateUpdateOneSql" .}}
-
-psUpdate{{.model}}, err = this.Prepare(q)
+	var err error
+	
+	if psUpdate{{.model}} == nil{
+		// language=MySQL
+		q := {{template "templateUpdateOneSql" .}}
+		
+		psUpdate{{.model}}, err = this.Prepare(q)
 		if err != nil {
-			return errors.Stack(err)
+			return errs.Stack(err)
 		}
-}
+	}
 
 	args := []interface{}{
 {{range .members}}		&x.{{.GoName}},
@@ -23,7 +24,7 @@ psUpdate{{.model}}, err = this.Prepare(q)
 
 	_, err = psUpdate{{.model}}.Exec(args...)
 	if err != nil {
-		return errors.Stack(err)
+		return errs.Stack(err)
 	}
 
 	return nil
@@ -32,13 +33,11 @@ psUpdate{{.model}}, err = this.Prepare(q)
 
 var templateUpdateOneTx string = `
 
-	func  (this *DataSource) Update{{.model}}Tx(tx *sql.Tx, x *{{.modelPackageName}}.{{.model}}) error {
+func  (this *DataSource) Update{{.model}}Tx(tx *sql.Tx, x *{{.modelPackageName}}.{{.model}}) error {
 
+	var err error
 
-
-
-var err error
-
+	// language=MySQL
 	q := {{template "templateUpdateOneSql" .}}
 
 
@@ -49,7 +48,7 @@ var err error
 
 	_, err = tx.Exec(q, args...)
 	if err != nil {
-		return errors.Stack(err)
+		return errs.Stack(err)
 	}
 
 	return nil

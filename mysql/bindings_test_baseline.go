@@ -11,15 +11,13 @@ func (this *generator) BindingsBaselineTests(importPaths []string, bindingsPacka
 		err error
 	)
 
-
 	data := map[string]interface{}{
 		"importPaths":         importPaths,
 		"bindingsPackageName": bindingsPackageName,
 		"modelPackageName":    modelPackageName,
 	}
 
-	subPatterns := map[string]string{
-	}
+	subPatterns := map[string]string{}
 
 	s, err := codegen.Render(templateTestBaseline, subPatterns, data)
 	if err != nil {
@@ -36,7 +34,7 @@ import (
 {{range .importPaths}}	"{{.}}"
 {{end}}
 	"database/sql"
-	"github.com/jackmanlabs/errors"
+	errs "github.com/jackmanlabs/errors"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -56,7 +54,7 @@ func New() (*{{.bindingsPackageName}}.DataSource, error) {
 
 	db, err := sql.Open("mysql", connString)
 	if err != nil {
-		return nil, errors.Stack(err)
+		return nil, errs.Stack(err)
 	}
 
 	ds := &{{.bindingsPackageName}}.DataSource{

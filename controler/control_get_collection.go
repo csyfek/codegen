@@ -2,9 +2,10 @@ package controler
 
 import (
 	"bytes"
+	"text/template"
+
 	"github.com/jackmanlabs/codegen"
 	"github.com/jackmanlabs/errors"
-	"text/template"
 )
 
 func GetCollection(def *codegen.Model) (string, error) {

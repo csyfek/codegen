@@ -1,8 +1,8 @@
 package rester
 
 import (
-	"github.com/serenize/snaker"
 	"github.com/jackmanlabs/codegen"
+	"github.com/serenize/snaker"
 )
 
 func resource(s string) string {
@@ -12,4 +12,3 @@ func resource(s string) string {
 
 	return s
 }
-

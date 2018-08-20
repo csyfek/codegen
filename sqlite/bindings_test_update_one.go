@@ -1,6 +1,5 @@
 package sqlite
 
-
 var templateTestUpdateOne string = `
 func TestUpdate{{.model}}(t *testing.T) {
 
@@ -43,4 +42,3 @@ func TestUpdate{{.model}}Tx(t *testing.T) {
 		t.Fatal(errors.Stack(err))
 	}
 }`
-

@@ -1,8 +1,6 @@
 package pkger
 
 import (
-	"github.com/jackmanlabs/codegen"
-	"github.com/jackmanlabs/errors"
 	"go/ast"
 	"go/build"
 	"go/parser"
@@ -10,6 +8,9 @@ import (
 	"log"
 	"strings"
 	"unicode"
+
+	"github.com/jackmanlabs/codegen"
+	"github.com/jackmanlabs/errors"
 )
 
 type extractorType struct {
