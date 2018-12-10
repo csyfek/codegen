@@ -15,7 +15,7 @@ type Model struct {
 	UnderlyingType  string
 }
 
-func NewClass() *Model {
+func NewModel() *Model {
 	return &Model{
 		Members:         make([]Member, 0),
 		EmbeddedStructs: make([]string, 0),

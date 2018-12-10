@@ -66,7 +66,7 @@ func (this *extractorType) Visit(node ast.Node) (w ast.Visitor) {
 
 	case *ast.TypeSpec:
 
-		newType := codegen.NewClass()
+		newType := codegen.NewModel()
 		newType.Name = t.Name.String()
 		newType.UnderlyingType = resolveTypeExpression(t.Type)
 

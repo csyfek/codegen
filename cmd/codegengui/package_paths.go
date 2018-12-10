@@ -58,7 +58,12 @@ func findPackagePathsRecurse(dir string) (*PackageTreeItem, error) {
 
 	p, err := build.ImportDir(dir, 0)
 	if err != nil {
-		log.Print(err)
+		switch err.(type) {
+		case *build.NoGoError:
+		// Do nothing. This error is acceptable.
+		default:
+			log.Print(err)
+		}
 		if len(children) == 0 {
 			return nil, nil
 		}

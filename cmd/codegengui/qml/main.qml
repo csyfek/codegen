@@ -1,28 +1,26 @@
 import QtQuick 2.10
-//Item
 import QtQuick.Controls 1.4
-//TableView
 import QtQuick.Controls 2.3
-//Button
 import QtQuick.Layouts 1.3
-//ColumnLayout
 import CustomQmlTypes 1.0
 
-
-//CustomTableModel
-Item {
+ApplicationWindow {
     width: 800
     height: 600
+    visible: true
+    title: qsTr("Transometron")
 
     GridLayout {
         columns: 2
         anchors.fill: parent
 
         TreeView {
+            id: treeview
             Layout.fillWidth: true
             Layout.fillHeight: true
             frameVisible: true
 
+            onClicked: bridge.selectPackage(index)
             TableViewColumn {
                 role: "PackageName"
                 title: "Package"
@@ -33,8 +31,8 @@ Item {
                 title: "Path"
                 width: 200
             }
-            model: PackageTree {
-            }
+
+            model: bridge.packageTree
         }
 
         ColumnLayout {
@@ -46,17 +44,16 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
 
-                model: StructTable {
+                model: bridge.typeTable
+
+                TableViewColumn {
+                    title: "Type Name"
+                    role: "TypeName"
                 }
 
                 TableViewColumn {
-                    role: "FirstName"
-                    title: role
-                }
-
-                TableViewColumn {
-                    role: "LastName"
-                    title: role
+                    title: "Description"
+                    role: "TypeDescription"
                 }
             }
 

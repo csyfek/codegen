@@ -143,3 +143,4 @@ func (m *PackageTree) edit(packageName string, packagePath string) {
 	//m.DataChanged(m.Index(item.row(), 0, core.NewQModelIndex()), m.Index(item.row(), 1, core.NewQModelIndex()), []int{FirstName, LastName})
 	//feel free to send a PR, if you got it working somehow :)
 }
+

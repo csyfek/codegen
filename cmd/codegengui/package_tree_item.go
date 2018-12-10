@@ -1,11 +1,14 @@
 package main
 
-import "github.com/therecipe/qt/core"
+import (
+	"github.com/therecipe/qt/core"
+)
 
 type PackageTreeItem struct {
 	core.QObject
 
-	_ func() `constructor:"init"`
+	_ func()                        `constructor:"init"`
+	//_ func(index *core.QModelIndex) `signal:"clicked,auto"`
 
 	_packageName string
 	_packagePath string
@@ -36,13 +39,12 @@ func (i *PackageTreeItem) appendChild(child *PackageTreeItem) {
 	i._childItems = append(i._childItems, child)
 }
 
-func (i *PackageTreeItem) withChildren(children []*PackageTreeItem) *PackageTreeItem{
-	for _, child := range children{
+func (i *PackageTreeItem) withChildren(children []*PackageTreeItem) *PackageTreeItem {
+	for _, child := range children {
 		i.appendChild(child)
 	}
 	return i
 }
-
 
 func (i *PackageTreeItem) child(row int) *PackageTreeItem {
 	return i._childItems[row]

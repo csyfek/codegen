@@ -77,7 +77,7 @@ func (this *Extractor) Extract() (*codegen.Package, error) {
 
 	for table, columns := range tableColumns {
 
-		t := codegen.NewClass()
+		t := codegen.NewModel()
 		t.Name = strings.TrimPrefix(table, "tbl")
 
 		for _, column := range columns {
