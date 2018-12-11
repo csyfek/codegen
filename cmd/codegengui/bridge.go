@@ -1,11 +1,12 @@
 package main
 
 import (
+	"log"
+	"sort"
+
 	"github.com/jackmanlabs/codegen/extract"
 	"github.com/jackmanlabs/errors"
 	"github.com/therecipe/qt/core"
-	"log"
-	"sort"
 )
 
 type QmlBridge struct {

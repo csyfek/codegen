@@ -7,7 +7,7 @@ import (
 type PackageTreeItem struct {
 	core.QObject
 
-	_ func()                        `constructor:"init"`
+	_ func() `constructor:"init"`
 	//_ func(index *core.QModelIndex) `signal:"clicked,auto"`
 
 	_packageName string

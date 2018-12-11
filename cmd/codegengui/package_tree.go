@@ -1,9 +1,10 @@
 package main
 
 import (
+	"log"
+
 	"github.com/jackmanlabs/errors"
 	"github.com/therecipe/qt/core"
-	"log"
 )
 
 func init() { PackageTree_QmlRegisterType2("CustomQmlTypes", 1, 0, "PackageTree") }
@@ -143,4 +144,3 @@ func (m *PackageTree) edit(packageName string, packagePath string) {
 	//m.DataChanged(m.Index(item.row(), 0, core.NewQModelIndex()), m.Index(item.row(), 1, core.NewQModelIndex()), []int{FirstName, LastName})
 	//feel free to send a PR, if you got it working somehow :)
 }
-

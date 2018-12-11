@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/jackmanlabs/errors"
 	"go/build"
 	"log"
 	"os"
 	"path"
 	"strings"
+
+	"github.com/jackmanlabs/errors"
 )
 
 func findPackagePaths() ([]*PackageTreeItem, error) {

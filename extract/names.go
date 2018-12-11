@@ -1,7 +1,6 @@
 package extract
 
 import (
-	"github.com/jackmanlabs/errors"
 	"go/ast"
 	"go/build"
 	"go/parser"
@@ -9,6 +8,8 @@ import (
 	"log"
 	"strings"
 	"unicode"
+
+	"github.com/jackmanlabs/errors"
 )
 
 func Names(importPath string) (map[string]string, error) {
