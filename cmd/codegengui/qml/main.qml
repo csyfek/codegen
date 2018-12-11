@@ -2,6 +2,7 @@ import QtQuick 2.10
 import QtQuick.Controls 1.4
 import QtQuick.Controls 2.3
 import QtQuick.Layouts 1.3
+import QtQuick.Dialogs 1.3
 import CustomQmlTypes 1.0
 
 ApplicationWindow {
@@ -10,73 +11,100 @@ ApplicationWindow {
     visible: true
     title: qsTr("Transometron")
 
-    GridLayout {
-        columns: 2
+    TabView {
         anchors.fill: parent
 
-        TreeView {
-            id: treeview
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            frameVisible: true
+        Tab {
+            title: "Structs"
 
-            onClicked: bridge.selectPackage(index)
-            TableViewColumn {
-                role: "PackageName"
-                title: "Package"
-                width: 100
-            }
-            TableViewColumn {
-                role: "PackagePath"
-                title: "Path"
-                width: 200
-            }
+            GridLayout {
+                columns: 2
+                anchors.fill: parent
 
-            model: bridge.packageTree
-        }
+                TreeView {
+                    id: treeview
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    frameVisible: true
 
-        ColumnLayout {
+                    onClicked: bridge.selectPackage(index)
 
-            // anchors.fill: parent
-            TableView {
-                id: tableview
+                    TableViewColumn {
+                        role: "PackageName"
+                        title: "Package"
+                        width: 100
+                    }
+                    TableViewColumn {
+                        role: "PackagePath"
+                        title: "Path"
+                        width: 200
+                    }
 
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-
-                model: bridge.typeTable
-
-                TableViewColumn {
-                    title: "Type Name"
-                    role: "TypeName"
+                    model: bridge.packageTree
                 }
 
-                TableViewColumn {
-                    title: "Description"
-                    role: "TypeDescription"
+                ColumnLayout {
+
+                    // anchors.fill: parent
+                    TableView {
+                        id: tableview
+
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+
+                        model: bridge.typeTable
+
+                        TableViewColumn {
+                            title: "Type Name"
+                            role: "TypeName"
+                        }
+
+                        TableViewColumn {
+                            title: "Description"
+                            role: "TypeDescription"
+                        }
+                    }
+
+                    Button {
+                        Layout.fillWidth: true
+
+                        text: "remove last item"
+                        onClicked: tableview.model.remove()
+                    }
+
+                    Button {
+                        Layout.fillWidth: true
+
+                        text: "add new item"
+                        onClicked: tableview.model.add(["john", "doe"])
+                    }
+
+                    Button {
+                        Layout.fillWidth: true
+
+                        text: "save"
+                        onClicked: fileDialog.open()
+                    }
                 }
             }
-
-            Button {
-                Layout.fillWidth: true
-
-                text: "remove last item"
-                onClicked: tableview.model.remove()
-            }
-
-            Button {
-                Layout.fillWidth: true
-
-                text: "add new item"
-                onClicked: tableview.model.add(["john", "doe"])
-            }
-
-            Button {
-                Layout.fillWidth: true
-
-                text: "edit last item"
-                onClicked: tableview.model.edit("bob", "omb")
-            }
         }
+        Tab {
+            title: "SQL DB"
+        }
+    }
+
+    FileDialog {
+        id: fileDialog
+        title: "Please choose a file"
+        folder: shortcuts.home
+        selectExisting: false
+
+        onAccepted: {
+            console.log("You chose: " + fileDialog.fileUrls)
+        }
+        onRejected: {
+            console.log("Canceled")
+        }
+        //        Component.onCompleted: visible = true
     }
 }

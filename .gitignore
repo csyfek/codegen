@@ -14,3 +14,4 @@ tmp/
 /cmd/codegengui/moc_cgo_linux_linux_amd64.go
 /qt-opensource-linux-x64-5.11.1.run
 /cmd/codegengui/deploy/
+*.log
