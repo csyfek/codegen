@@ -4,72 +4,158 @@ import (
 	"github.com/therecipe/qt/core"
 )
 
-func init() { TypeTable_QmlRegisterType2("CustomQmlTypes", 1, 0, "TypeTable") }
+func init() { TypeTableModel_QmlRegisterType2("CustomQmlTypes", 1, 0, "TypeTableModel") }
 
-type TypeTable struct {
+type TypeTableModel struct {
 	core.QAbstractTableModel
-	_ func()                                  `constructor:"init"`
-	_ func()                                  `signal:"remove,auto"`
-	_ func(item []*core.QVariant)             `signal:"add,auto"`
-	_ func(firstName string, lastName string) `signal:"edit,auto"`
+	_ func()                                                 `constructor:"init"`
+	_ func()                                                 `slot:"remove,auto"`
+	_ func()                                                 `slot:"selectAll,auto"`
+	_ func()                                                 `slot:"selectNone,auto"`
+	_ func(firstName string, lastName string, selected bool) `slot:"add,auto"`
+	_ func(firstName string, lastName string, selected bool) `slot:"edit,auto"`
+	_ func(row int, checked bool)                            `slot:"checkRow,auto"`
+	_ func(row int)                                          `slot:"toggleRow,auto"`
 
-	modelData []TypeTableItem
+	modelData []*TypeTableItem
 }
 
-func (m *TypeTable) init() {
-	m.modelData = []TypeTableItem{}
+func (ptr *TypeTableModel) init() {
+	ptr.modelData = []*TypeTableItem{}
 
-	m.ConnectRoleNames(m.roleNames)
-	m.ConnectRowCount(m.rowCount)
-	m.ConnectColumnCount(m.columnCount)
-	m.ConnectData(m.data)
+	ptr.ConnectRoleNames(ptr.roleNames)
+	ptr.ConnectRowCount(ptr.rowCount)
+	ptr.ConnectColumnCount(ptr.columnCount)
+	ptr.ConnectData(ptr.data)
+	ptr.ConnectSetData(ptr.setData)
+	ptr.ConnectFlags(ptr.flags)
 }
 
-func (m *TypeTable) roleNames() map[int]*core.QByteArray {
+func (ptr *TypeTableModel) roleNames() map[int]*core.QByteArray {
 	return map[int]*core.QByteArray{
 		RoleTypeName:        core.NewQByteArray2("TypeName", -1),
 		RoleTypeDescription: core.NewQByteArray2("TypeDescription", -1),
+		RoleTypeChecked:     core.NewQByteArray2("TypeSelected", -1),
 	}
 }
 
-func (m *TypeTable) rowCount(*core.QModelIndex) int {
-	return len(m.modelData)
+func (ptr *TypeTableModel) rowCount(*core.QModelIndex) int {
+	return len(ptr.modelData)
 }
 
-func (m *TypeTable) columnCount(*core.QModelIndex) int {
+func (ptr *TypeTableModel) columnCount(*core.QModelIndex) int {
 	return 2
 }
 
-func (m *TypeTable) data(index *core.QModelIndex, role int) *core.QVariant {
-	item := m.modelData[index.Row()]
+func (ptr *TypeTableModel) data(index *core.QModelIndex, role int) *core.QVariant {
+	item := ptr.modelData[index.Row()]
 	switch role {
 	case RoleTypeName:
 		return core.NewQVariant14(item.name)
 	case RoleTypeDescription:
 		return core.NewQVariant14(item.desc)
+	case RoleTypeChecked:
+		return core.NewQVariant11(item.checked)
 	}
 	return core.NewQVariant()
 }
 
-func (m *TypeTable) remove() {
-	if len(m.modelData) == 0 {
+func (ptr *TypeTableModel) remove() {
+	if len(ptr.modelData) == 0 {
 		return
 	}
-	m.BeginRemoveRows(core.NewQModelIndex(), len(m.modelData)-1, len(m.modelData)-1)
-	m.modelData = m.modelData[:len(m.modelData)-1]
-	m.EndRemoveRows()
+	ptr.BeginRemoveRows(core.NewQModelIndex(), len(ptr.modelData)-1, len(ptr.modelData)-1)
+	ptr.modelData = ptr.modelData[:len(ptr.modelData)-1]
+	ptr.EndRemoveRows()
 }
 
-func (m *TypeTable) add(item []*core.QVariant) {
-	m.BeginInsertRows(core.NewQModelIndex(), len(m.modelData), len(m.modelData))
-	m.modelData = append(m.modelData, TypeTableItem{item[0].ToString(), item[1].ToString()})
-	m.EndInsertRows()
+func (ptr *TypeTableModel) add(name string, desc string, selected bool) {
+	ptr.BeginInsertRows(core.NewQModelIndex(), len(ptr.modelData), len(ptr.modelData))
+	item := &TypeTableItem{
+		name:    name,
+		desc:    desc,
+		checked: selected,
+	}
+	ptr.modelData = append(ptr.modelData, item)
+	ptr.EndInsertRows()
 }
 
-func (m *TypeTable) edit(firstName string, lastName string) {
-	if len(m.modelData) == 0 {
+func (ptr *TypeTableModel) edit(name string, desc string, selected bool) {
+	if len(ptr.modelData) == 0 {
 		return
 	}
-	m.modelData[len(m.modelData)-1] = TypeTableItem{firstName, lastName}
-	m.DataChanged(m.Index(len(m.modelData)-1, 0, core.NewQModelIndex()), m.Index(len(m.modelData)-1, 1, core.NewQModelIndex()), []int{RoleTypeName, RoleTypeDescription})
+
+	item := &TypeTableItem{
+		name:    name,
+		desc:    desc,
+		checked: selected,
+	}
+
+	ptr.modelData[len(ptr.modelData)-1] = item
+
+	ptr.DataChanged(
+		ptr.Index(len(ptr.modelData)-1, 0, core.NewQModelIndex()),
+		ptr.Index(len(ptr.modelData)-1, 2, core.NewQModelIndex()),
+		[]int{RoleTypeName, RoleTypeDescription, RoleTypeChecked})
+}
+
+func (ptr *TypeTableModel) setData(index *core.QModelIndex, variant *core.QVariant, role int) bool {
+
+	item := ptr.modelData[index.Row()]
+	switch role {
+	case RoleTypeName:
+		v := variant.ToString()
+		item.name = v
+		return true
+	case RoleTypeDescription:
+		v := variant.ToString()
+		item.desc = v
+	case RoleTypeChecked:
+		v := variant.ToBool()
+		item.checked = v
+	default:
+		return false
+	}
+	return true
+}
+
+func (ptr *TypeTableModel) flags(index *core.QModelIndex) core.Qt__ItemFlag {
+	return core.Qt__ItemIsEditable
+}
+
+func (ptr *TypeTableModel) checkRow(row int, checked bool) {
+	item := ptr.modelData[row]
+	item.checked = checked
+
+	ptr.DataChanged(
+		ptr.Index(row, 0, core.NewQModelIndex()),
+		ptr.Index(row, 2, core.NewQModelIndex()),
+		[]int{RoleTypeChecked})
+}
+
+func (ptr *TypeTableModel) toggleRow(row int) {
+	item := ptr.modelData[row]
+	item.checked = !item.checked
+
+	ptr.DataChanged(
+		ptr.Index(row, 0, core.NewQModelIndex()),
+		ptr.Index(row, 2, core.NewQModelIndex()),
+		[]int{RoleTypeChecked})
+}
+
+func (ptr *TypeTableModel) selectAll() {
+
+	ptr.BeginResetModel()
+	for _, item := range ptr.modelData {
+		item.checked = true
+	}
+	ptr.EndResetModel()
+}
+
+func (ptr *TypeTableModel) selectNone() {
+	ptr.BeginResetModel()
+	for _, item := range ptr.modelData {
+		item.checked = false
+	}
+	ptr.EndResetModel()
 }
