@@ -2,11 +2,12 @@ package sqlite
 
 import (
 	"github.com/jackmanlabs/codegen"
+	"github.com/jackmanlabs/codegen/util"
 	"github.com/jackmanlabs/errors"
 	"github.com/serenize/snaker"
 )
 
-func (this *generator) Bindings(importPaths []string, bindingsPackageName string, modelPackageName string, def *codegen.Model) (string, error) {
+func (g *generator) Bindings(importPaths []string, bindingsPackageName string, modelPackageName string, def *codegen.Model) ([]byte, error) {
 
 	var (
 		err error
@@ -20,7 +21,7 @@ func (this *generator) Bindings(importPaths []string, bindingsPackageName string
 		"importPaths":         importPaths,
 		"members":             def.Members,
 		"model":               def.Name,
-		"models":              codegen.Plural(def.Name),
+		"models":              util.Plural(def.Name),
 		"table":               snaker.CamelToSnake(def.Name),
 		"type":                def.Name,
 		"bindingsPackageName": bindingsPackageName,
@@ -45,9 +46,9 @@ func (this *generator) Bindings(importPaths []string, bindingsPackageName string
 		"templateUpdateOneTx":   templateUpdateOneTx,
 	}
 
-	s, err := codegen.Render(templateBindings, subPatterns, data)
+	s, err := util.Render(templateBindings, subPatterns, data)
 	if err != nil {
-		return "", errors.Stack(err)
+		return nil, errors.Stack(err)
 	}
 
 	return s, nil
@@ -111,7 +112,7 @@ import (
 /*============================================================================*/
 	`
 
-func (this *generator) BindingsTests(importPaths []string, bindingsPackageName string, modelPackageName string, def *codegen.Model) (string, error) {
+func (g *generator) BindingsTests(importPaths []string, bindingsPackageName string, modelPackageName string, def *codegen.Model) ([]byte, error) {
 
 	var (
 		err error
@@ -125,7 +126,7 @@ func (this *generator) BindingsTests(importPaths []string, bindingsPackageName s
 		"importPaths":         importPaths,
 		"members":             def.Members,
 		"model":               def.Name,
-		"models":              codegen.Plural(def.Name),
+		"models":              util.Plural(def.Name),
 		"table":               snaker.CamelToSnake(def.Name),
 		"type":                def.Name,
 		"bindingsPackageName": bindingsPackageName,
@@ -145,9 +146,9 @@ func (this *generator) BindingsTests(importPaths []string, bindingsPackageName s
 		"templateTestUpdateOneTx":  templateTestUpdateOneTx,
 	}
 
-	s, err := codegen.Render(templateBindingsTests, subPatterns, data)
+	s, err := util.Render(templateBindingsTests, subPatterns, data)
 	if err != nil {
-		return "", errors.Stack(err)
+		return nil, errors.Stack(err)
 	}
 
 	return s, nil

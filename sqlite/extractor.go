@@ -64,9 +64,6 @@ func (this *Extractor) Extract() (*codegen.Package, error) {
 
 	pkg := &codegen.Package{
 		Models:  make([]*codegen.Model, 0),
-		Imports: nil,
-		Name:    "",
-		Path:    "",
 	}
 
 	for table, columns := range tableColumns {

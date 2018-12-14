@@ -18,8 +18,7 @@ func  (this *DataSource) Insert{{.model}}(x *{{.modelPackageName}}.{{.model}}) e
 	}
 
 	args := []interface{}{
-{{range .members}}&x.{{.GoName}},
-{{end}}
+		{{range .members}}&x.{{.GoName}},{{end}}
 	}
 
 	_, err = psInsert{{.model}}.Exec(args...)

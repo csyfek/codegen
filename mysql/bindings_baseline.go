@@ -2,8 +2,8 @@ package mysql
 
 import "fmt"
 
-func (this *generator) BindingsBaseline(pkgName string) string {
-	return fmt.Sprintf(`
+func (this *generator) BindingsBaseline(pkgName string) []byte {
+	s := fmt.Sprintf(`
 package %s
 
 import (
@@ -33,4 +33,6 @@ func New() (*DataSource, error) {
 }
 
 `, pkgName)
+
+	return []byte(s)
 }

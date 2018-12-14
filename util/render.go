@@ -1,4 +1,4 @@
-package codegen
+package util
 
 import (
 	"bytes"
@@ -8,7 +8,7 @@ import (
 	"github.com/jackmanlabs/errors"
 )
 
-func Render(rootPattern string, subPatterns map[string]string, data interface{}) (string, error) {
+func Render(rootPattern string, subPatterns map[string]string, data interface{}) ([]byte, error) {
 
 	var fns = template.FuncMap{
 		"last": func(x int, a interface{}) bool {
@@ -19,13 +19,13 @@ func Render(rootPattern string, subPatterns map[string]string, data interface{})
 
 	t, err := template.New("").Funcs(fns).Parse(rootPattern)
 	if err != nil {
-		return "", errors.Stack(err)
+		return nil, errors.Stack(err)
 	}
 
 	for name, pattern := range subPatterns {
 		_, err := t.New(name).Parse(pattern)
 		if err != nil {
-			return "", errors.Stack(err)
+			return nil, errors.Stack(err)
 		}
 	}
 
@@ -33,9 +33,8 @@ func Render(rootPattern string, subPatterns map[string]string, data interface{})
 
 	err = t.Execute(b, data)
 	if err != nil {
-		return "", errors.Stack(err)
+		return nil, errors.Stack(err)
 	}
 
-	return b.String(), nil
-
+	return b.Bytes(), nil
 }

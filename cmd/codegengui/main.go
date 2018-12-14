@@ -1,12 +1,13 @@
 package main
 
 import (
-	"os"
-
+	"github.com/jackmanlabs/errors"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/qml"
 	"github.com/therecipe/qt/quickcontrols2"
+	"log"
+	"os"
 )
 
 func main() {
@@ -14,7 +15,14 @@ func main() {
 
 	gui.NewQGuiApplication(len(os.Args), os.Args)
 
+	// Load package states (if they exist)
+	state, err := loadState()
+	if err != nil {
+		log.Fatal(errors.Stack(err))
+	}
+
 	bridge := NewBridge()
+	bridge.SetPackageState(state)
 
 	quickcontrols2.QQuickStyle_SetStyle("Material")
 	engine := qml.NewQQmlApplicationEngine(nil)

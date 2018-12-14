@@ -12,11 +12,11 @@ import (
 	"github.com/jackmanlabs/errors"
 )
 
-func Names(importPath string) (map[string]string, error) {
+func Summary(importPath string) (map[string]string, error) {
 	// This needs to be really fast.
 	// I don't want to deal with UI delay when calling this.
 
-	extractor := &nameExtractor{
+	extractor := &summaryExtractor{
 		Types: map[string]string{},
 	}
 
@@ -41,18 +41,17 @@ func Names(importPath string) (map[string]string, error) {
 	}
 
 	return extractor.Types, nil
-
 }
 
-type nameExtractor struct {
+type summaryExtractor struct {
 	//pkgPath string
 	Types map[string]string
 	Fset  *token.FileSet // for debugging
 }
 
-func (this *nameExtractor) Visit(node ast.Node) (w ast.Visitor) {
+func (x *summaryExtractor) Visit(node ast.Node) (w ast.Visitor) {
 
-	if this.Fset == nil {
+	if x.Fset == nil {
 		log.Println("fset is nil.")
 		return nil
 	}
@@ -68,11 +67,8 @@ func (this *nameExtractor) Visit(node ast.Node) (w ast.Visitor) {
 		}
 
 		typ := resolveTypeExpression(t.Type)
-		if typ == "interface{}" {
-			return nil
-		}
 
-		this.Types[name] = typ
+		x.Types[name] = typ
 
 	case *ast.Field:
 
@@ -97,5 +93,5 @@ func (this *nameExtractor) Visit(node ast.Node) (w ast.Visitor) {
 
 	}
 
-	return this
+	return x
 }

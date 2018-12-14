@@ -1,13 +1,14 @@
 package codegen
 
 import (
+	"github.com/jackmanlabs/codegen/util"
 	"github.com/jackmanlabs/errors"
 )
 
 func PackageInterface(
 	classes []*Model,
 	interfacePackageName string,
-) (string, error) {
+) ([]byte, error) {
 
 	data := map[string]interface{}{
 		"classes":              classes,
@@ -22,13 +23,12 @@ type DataSource interface{
 {{end}}
 }`
 
-	s, err := Render(t, map[string]string{}, data)
+	s, err := util.Render(t, map[string]string{}, data)
 	if err != nil {
-		return "", errors.Stack(err)
+		return nil, errors.Stack(err)
 	}
 
 	return s, nil
-
 }
 
 func ModelInterface(
@@ -36,13 +36,13 @@ func ModelInterface(
 	interfacePackageName string,
 	modelPackageName string,
 	def *Model,
-) (string, error) {
+) ([]byte, error) {
 	data := map[string]interface{}{
 		"model":                def.Name,
 		"modelPackageName":     modelPackageName,
 		"interfacePackageName": interfacePackageName,
 		"importPaths":          importPaths,
-		"models":               Plural(def.Name),
+		"models":               util.Plural(def.Name),
 	}
 
 	t := `
@@ -56,8 +56,8 @@ import (
 type {{.model}}DataSource interface{
 	Delete{{.model}}(id string) error
 	Delete{{.model}}Tx(tx *sql.Tx, id string) error 
-	Insert{{.model}}(x *{{.modelPackageName}}.{{.model}}) error
-	Insert{{.model}}Tx(tx *sql.Tx, x *{{.modelPackageName}}.{{.model}}) error
+	Insert{{.model}}(x *{{.modelPackageName}}.{{.model}}) (*{{.modelPackageName}}.{{.model}}, error)
+	Insert{{.model}}Tx(tx *sql.Tx, x *{{.modelPackageName}}.{{.model}}) (*{{.modelPackageName}}.{{.model}}, error)
 	Select{{.models}}() ([]{{.modelPackageName}}.{{.model}}, error) 
 	Select{{.models}}Tx(tx *sql.Tx)  ([]{{.modelPackageName}}.{{.model}}, error) 
 	Select{{.model}}(id string) (*{{.modelPackageName}}.{{.model}}, error)
@@ -66,11 +66,10 @@ type {{.model}}DataSource interface{
 	Update{{.model}}Tx(tx *sql.Tx, x *{{.modelPackageName}}.{{.model}}) error
 }`
 
-	s, err := Render(t, map[string]string{}, data)
+	s, err := util.Render(t, map[string]string{}, data)
 	if err != nil {
-		return "", errors.Stack(err)
+		return nil, errors.Stack(err)
 	}
 
 	return s, nil
-
 }

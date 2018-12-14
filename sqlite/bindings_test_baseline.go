@@ -1,11 +1,11 @@
 package sqlite
 
 import (
-	"github.com/jackmanlabs/codegen"
+	"github.com/jackmanlabs/codegen/util"
 	"github.com/jackmanlabs/errors"
 )
 
-func (this *generator) BindingsBaselineTests(importPaths []string, bindingsPackageName string, modelPackageName string) (string, error) {
+func (g *generator) BindingsBaselineTests(importPaths []string, bindingsPackageName string, modelPackageName string) ([]byte, error) {
 
 	var (
 		err error
@@ -19,9 +19,9 @@ func (this *generator) BindingsBaselineTests(importPaths []string, bindingsPacka
 
 	subPatterns := map[string]string{}
 
-	s, err := codegen.Render(templateTestBaseline, subPatterns, data)
+	s, err := util.Render(templateTestBaseline, subPatterns, data)
 	if err != nil {
-		return "", errors.Stack(err)
+		return nil, errors.Stack(err)
 	}
 
 	return s, nil

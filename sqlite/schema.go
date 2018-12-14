@@ -1,6 +1,8 @@
 package sqlite
 
 import (
+	"bytes"
+	"github.com/jackmanlabs/codegen/util"
 	"log"
 	"strings"
 
@@ -9,9 +11,9 @@ import (
 	"github.com/serenize/snaker"
 )
 
-func (this *generator) Schema(pkg *codegen.Package) (string, error) {
+func (g *generator) Schema(pkg *codegen.Package) ([]byte, error) {
 	var (
-		s string
+		b *bytes.Buffer = bytes.NewBuffer(nil)
 	)
 
 	for _, def := range pkg.Models {
@@ -44,7 +46,7 @@ func (this *generator) Schema(pkg *codegen.Package) (string, error) {
 		data := map[string]interface{}{
 			"members":     def.Members,
 			"model":       def.Name,
-			"models":      codegen.Plural(def.Name),
+			"models":      util.Plural(def.Name),
 			"table":       snaker.CamelToSnake(def.Name),
 			"type":        def.Name,
 			"foreignKeys": foreignKeys,
@@ -52,16 +54,20 @@ func (this *generator) Schema(pkg *codegen.Package) (string, error) {
 
 		subPatterns := map[string]string{}
 
-		s_, err := codegen.Render(templateSchema, subPatterns, data)
+		s, err := util.Render(templateSchema, subPatterns, data)
 		if err != nil {
-			return "", errors.Stack(err)
+			return nil, errors.Stack(err)
 		}
 
-		s += s_
+		_, err = b.Write(s)
+		if err != nil {
+			return nil, errors.Stack(err)
+		}
+
 		log.Print("model:", def.Name)
 	}
 
-	return s, nil
+	return b.Bytes(), nil
 }
 
 var templateSchema string = `

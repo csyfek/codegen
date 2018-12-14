@@ -2,8 +2,8 @@ package sqlite
 
 import "fmt"
 
-func (this *generator) BindingsBaseline(pkgName string) string {
-	return fmt.Sprintf(`
+func (g *generator) BindingsBaseline(pkgName string) []byte {
+	s := fmt.Sprintf(`
 package %s
 
 import (
@@ -31,4 +31,6 @@ func New() (*DataSource, error) {
 	return ds, nil
 }
 `, pkgName)
+
+	return []byte(s)
 }

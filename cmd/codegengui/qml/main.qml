@@ -6,10 +6,13 @@ import QtQuick.Dialogs 1.3
 import CustomQmlTypes 1.0
 
 ApplicationWindow {
-    width: 800
-    height: 600
+    minimumWidth: 800
+    minimumHeight: 600
+    visibility: "Maximized"
     visible: true
     title: qsTr("Transometron")
+
+    onClosing: bridge.saveState()
 
     TabView {
         anchors.fill: parent
@@ -54,12 +57,18 @@ ApplicationWindow {
                         Button {
                             Layout.fillWidth: true
                             text: "Select All"
-                            onClicked: bridge.typeTableModel.selectAll()
+                            onClicked: {
+                                bridge.typeTableModel.selectAll()
+                                bridge.updateState()
+                            }
                         }
                         Button {
                             Layout.fillWidth: true
                             text: "Select None"
-                            onClicked: bridge.typeTableModel.selectNone()
+                            onClicked: {
+                                bridge.typeTableModel.selectNone()
+                                bridge.updateState()
+                            }
                         }
                     }
 
@@ -91,6 +100,7 @@ ApplicationWindow {
                                         bridge.typeTableModel.checkRow(
                                                     styleData.row,
                                                     typeCheckBox.checked)
+                                        bridge.updateState()
                                     }
                                 }
                             }
@@ -113,6 +123,7 @@ ApplicationWindow {
                         onCurrentIndexChanged: {
                             console.debug(model[currentIndex])
                             bridge.sqlDriver = model[currentIndex]
+                            bridge.updateState()
                         }
                     }
                     GridLayout {
@@ -125,7 +136,9 @@ ApplicationWindow {
 
                         Button {
                             text: "Set"
-                            onClicked: interfaceFileDialog.open()
+                            onClicked: {
+                                interfaceFileDialog.open()
+                            }
                         }
                         Text {
                             textFormat: Text.RichText
@@ -135,6 +148,7 @@ ApplicationWindow {
                         Button {
                             text: "Generate"
                             enabled: bridge.bindingsPath !== ""
+                            onClicked: bridge.generateBindings()
                         }
                         Button {
                             text: "Set"
@@ -176,6 +190,7 @@ ApplicationWindow {
         selectMultiple: false
         onAccepted: {
             bridge.bindingsPath = fileUrl
+            bridge.updateState()
         }
     }
     FileDialog {
@@ -188,6 +203,7 @@ ApplicationWindow {
         selectMultiple: false
         onAccepted: {
             bridge.schemaPath = fileUrl
+            bridge.updateState()
         }
     }
     FileDialog {
@@ -199,6 +215,7 @@ ApplicationWindow {
         selectMultiple: false
         onAccepted: {
             bridge.interfacePath = fileUrl
+            bridge.updateState()
         }
     }
 }

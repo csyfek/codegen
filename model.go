@@ -1,10 +1,17 @@
 package codegen
 
+import (
+	"bytes"
+	"fmt"
+	"github.com/serenize/snaker"
+)
+
 type Package struct {
-	Models  []*Model
-	Imports map[string][]string
-	Name    string
-	Path    string
+	Models     []*Model
+	Imports    map[string][]string
+	Name       string
+	ImportPath string
+	AbsPath    string
 }
 
 type Model struct {
@@ -29,6 +36,42 @@ func (this *Model) ContainsMember(name string) bool {
 		}
 	}
 
+	return false
+}
+
+// https://google.github.io/styleguide/jsoncstyleguide.xml#Property_Name_Format
+
+func GenerateModel(def *Model) (string, []string) {
+	var (
+		b       *bytes.Buffer = bytes.NewBuffer(nil)
+		imports []string      = make([]string, 0)
+	)
+
+	fmt.Fprintf(b, "type %s struct{\n", def.Name)
+
+	for _, member := range def.Members {
+
+		// We assume the Go Name is PascalCase.
+		jsonName := snaker.SnakeToCamelLower(member.GoName)
+
+		fmt.Fprintf(b, "\t%s\t%s\t`json:\"%s\"`\n", member.GoName, member.GoType, jsonName)
+
+		if member.GoType == "time.Time" && !sContains(imports, "time") {
+			imports = append(imports, "time")
+		}
+	}
+
+	fmt.Fprint(b, "}\n")
+
+	return b.String(), imports
+}
+
+func sContains(set []string, s string) bool {
+	for _, s_ := range set {
+		if s == s_ {
+			return true
+		}
+	}
 	return false
 }
 

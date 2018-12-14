@@ -1,6 +1,9 @@
-package pkger
+package extract
 
 import (
+	"github.com/jackmanlabs/codegen"
+	"github.com/jackmanlabs/codegen/util"
+	"github.com/jackmanlabs/errors"
 	"go/ast"
 	"go/build"
 	"go/parser"
@@ -8,29 +11,24 @@ import (
 	"log"
 	"strings"
 	"unicode"
-
-	"github.com/jackmanlabs/codegen"
-	"github.com/jackmanlabs/errors"
 )
 
 type extractorType struct {
 	pkgPath string
 	codegen.Package
-	Fset *token.FileSet
+	fset *token.FileSet
 }
 
-func NewExtractor(pkgPath string) *extractorType {
-	return &extractorType{
-		pkgPath: pkgPath,
+func Extract(importPath string) (*codegen.Package, error) {
+	ex := &extractorType{
+		pkgPath: importPath,
 	}
-}
 
-func (this *extractorType) Extract() (*codegen.Package, error) {
-
-	buildPkg, err := build.Import(this.pkgPath, "", 0)
+	buildPkg, err := build.Import(ex.pkgPath, "", 0)
 	if err != nil {
 		return nil, errors.Stack(err)
 	}
+
 
 	fset := token.NewFileSet()
 	astPkgs, err := parser.ParseDir(fset, buildPkg.Dir, nil, parser.ParseComments|parser.AllErrors)
@@ -38,23 +36,24 @@ func (this *extractorType) Extract() (*codegen.Package, error) {
 		return nil, errors.Stack(err)
 	}
 
-	this.Fset = fset
-	this.Imports = make(map[string][]string)
+	ex.ImportPath = buildPkg.ImportPath
+	ex.AbsPath = buildPkg.Dir
+	ex.fset = fset
+	ex.Imports = make(map[string][]string)
 
 	for _, astPkg := range astPkgs {
 		if strings.HasSuffix(astPkg.Name, "_test") {
 			continue
 		}
-		ast.Walk(this, astPkg)
+		ast.Walk(ex, astPkg)
 	}
 
-	this.Path = this.pkgPath
-	return &this.Package, nil
+	return &ex.Package, nil
 }
 
-func (this *extractorType) Visit(node ast.Node) (w ast.Visitor) {
+func (x *extractorType) Visit(node ast.Node) (w ast.Visitor) {
 
-	if this.Fset == nil {
+	if x.fset == nil {
 		log.Println("fset is nil.")
 		return nil
 	}
@@ -62,7 +61,7 @@ func (this *extractorType) Visit(node ast.Node) (w ast.Visitor) {
 	switch t := node.(type) {
 
 	case *ast.Package:
-		this.Name = t.Name
+		x.Name = t.Name
 
 	case *ast.TypeSpec:
 
@@ -72,11 +71,11 @@ func (this *extractorType) Visit(node ast.Node) (w ast.Visitor) {
 
 		//log.Printf("GoType: %s\tUnderlyingType: %s", newType.Name, newType.UnderlyingType)
 
-		this.Models = append(this.Models, newType)
+		x.Models = append(x.Models, newType)
 
 	case *ast.Field:
 
-		parent := this.Models[len(this.Models)-1]
+		parent := x.Models[len(x.Models)-1]
 		typ := resolveTypeExpression(t.Type)
 
 		// Handle embedded structs.
@@ -107,7 +106,7 @@ func (this *extractorType) Visit(node ast.Node) (w ast.Visitor) {
 		return nil
 
 	case *ast.ImportSpec:
-		//ast.Print(this.Fset, t)
+		//ast.Print(x.fset, t)
 
 		var (
 			path string = t.Path.Value
@@ -119,14 +118,14 @@ func (this *extractorType) Visit(node ast.Node) (w ast.Visitor) {
 			name = t.Name.Name
 		}
 
-		names, ok := this.Imports[path]
+		names, ok := x.Imports[path]
 		if !ok {
 			names = make([]string, 0)
 		}
-		if !sContains(names, name) {
+		if !util.SetContainsString(names, name) {
 			names = append(names, name)
 		}
-		this.Imports[path] = names
+		x.Imports[path] = names
 
 		return nil
 
@@ -141,5 +140,5 @@ func (this *extractorType) Visit(node ast.Node) (w ast.Visitor) {
 
 	}
 
-	return this
+	return x
 }

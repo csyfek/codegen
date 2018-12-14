@@ -1,6 +1,8 @@
 package mysql
 
 import (
+	"bytes"
+	"github.com/jackmanlabs/codegen/util"
 	"log"
 	"strings"
 
@@ -9,9 +11,9 @@ import (
 	"github.com/serenize/snaker"
 )
 
-func (this *generator) Schema(pkg *codegen.Package) (string, error) {
+func (this *generator) Schema(pkg *codegen.Package) ([]byte, error) {
 	var (
-		s string
+		b *bytes.Buffer = bytes.NewBuffer(nil)
 	)
 
 	for _, def := range pkg.Models {
@@ -36,7 +38,7 @@ func (this *generator) Schema(pkg *codegen.Package) (string, error) {
 			// foreign keys
 			if strings.HasSuffix(member.SqlName, "_id") {
 				table := strings.TrimSuffix(member.SqlName, "_id")
-				table = codegen.Plural(table)
+				table = util.Plural(table)
 				foreignKeys[member.SqlName] = table
 			}
 		}
@@ -44,24 +46,28 @@ func (this *generator) Schema(pkg *codegen.Package) (string, error) {
 		data := map[string]interface{}{
 			"members":     def.Members,
 			"model":       def.Name,
-			"models":      codegen.Plural(def.Name),
-			"table":       codegen.Plural(snaker.CamelToSnake(def.Name)),
+			"models":      util.Plural(def.Name),
+			"table":       util.Plural(snaker.CamelToSnake(def.Name)),
 			"type":        def.Name,
 			"foreignKeys": foreignKeys,
 		}
 
 		subPatterns := map[string]string{}
 
-		s_, err := codegen.Render(templateSchema, subPatterns, data)
+		s, err := util.Render(templateSchema, subPatterns, data)
 		if err != nil {
-			return "", errors.Stack(err)
+			return nil, errors.Stack(err)
 		}
 
-		s += s_
+		_, err = b.Write(s)
+		if err != nil {
+			return nil, errors.Stack(err)
+		}
+
 		log.Print("model:", def.Name)
 	}
 
-	return s, nil
+	return b.Bytes(), nil
 }
 
 var templateSchema string = `

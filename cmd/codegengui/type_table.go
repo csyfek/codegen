@@ -20,18 +20,18 @@ type TypeTableModel struct {
 	modelData []*TypeTableItem
 }
 
-func (ptr *TypeTableModel) init() {
-	ptr.modelData = []*TypeTableItem{}
+func (m *TypeTableModel) init() {
+	m.modelData = []*TypeTableItem{}
 
-	ptr.ConnectRoleNames(ptr.roleNames)
-	ptr.ConnectRowCount(ptr.rowCount)
-	ptr.ConnectColumnCount(ptr.columnCount)
-	ptr.ConnectData(ptr.data)
-	ptr.ConnectSetData(ptr.setData)
-	ptr.ConnectFlags(ptr.flags)
+	m.ConnectRoleNames(m.roleNames)
+	m.ConnectRowCount(m.rowCount)
+	m.ConnectColumnCount(m.columnCount)
+	m.ConnectData(m.data)
+	m.ConnectSetData(m.setData)
+	m.ConnectFlags(m.flags)
 }
 
-func (ptr *TypeTableModel) roleNames() map[int]*core.QByteArray {
+func (m *TypeTableModel) roleNames() map[int]*core.QByteArray {
 	return map[int]*core.QByteArray{
 		RoleTypeName:        core.NewQByteArray2("TypeName", -1),
 		RoleTypeDescription: core.NewQByteArray2("TypeDescription", -1),
@@ -39,16 +39,16 @@ func (ptr *TypeTableModel) roleNames() map[int]*core.QByteArray {
 	}
 }
 
-func (ptr *TypeTableModel) rowCount(*core.QModelIndex) int {
-	return len(ptr.modelData)
+func (m *TypeTableModel) rowCount(*core.QModelIndex) int {
+	return len(m.modelData)
 }
 
-func (ptr *TypeTableModel) columnCount(*core.QModelIndex) int {
+func (m *TypeTableModel) columnCount(*core.QModelIndex) int {
 	return 2
 }
 
-func (ptr *TypeTableModel) data(index *core.QModelIndex, role int) *core.QVariant {
-	item := ptr.modelData[index.Row()]
+func (m *TypeTableModel) data(index *core.QModelIndex, role int) *core.QVariant {
+	item := m.modelData[index.Row()]
 	switch role {
 	case RoleTypeName:
 		return core.NewQVariant14(item.name)
@@ -60,28 +60,28 @@ func (ptr *TypeTableModel) data(index *core.QModelIndex, role int) *core.QVarian
 	return core.NewQVariant()
 }
 
-func (ptr *TypeTableModel) remove() {
-	if len(ptr.modelData) == 0 {
+func (m *TypeTableModel) remove() {
+	if len(m.modelData) == 0 {
 		return
 	}
-	ptr.BeginRemoveRows(core.NewQModelIndex(), len(ptr.modelData)-1, len(ptr.modelData)-1)
-	ptr.modelData = ptr.modelData[:len(ptr.modelData)-1]
-	ptr.EndRemoveRows()
+	m.BeginRemoveRows(core.NewQModelIndex(), len(m.modelData)-1, len(m.modelData)-1)
+	m.modelData = m.modelData[:len(m.modelData)-1]
+	m.EndRemoveRows()
 }
 
-func (ptr *TypeTableModel) add(name string, desc string, selected bool) {
-	ptr.BeginInsertRows(core.NewQModelIndex(), len(ptr.modelData), len(ptr.modelData))
+func (m *TypeTableModel) add(name string, desc string, selected bool) {
+	m.BeginInsertRows(core.NewQModelIndex(), len(m.modelData), len(m.modelData))
 	item := &TypeTableItem{
 		name:    name,
 		desc:    desc,
 		checked: selected,
 	}
-	ptr.modelData = append(ptr.modelData, item)
-	ptr.EndInsertRows()
+	m.modelData = append(m.modelData, item)
+	m.EndInsertRows()
 }
 
-func (ptr *TypeTableModel) edit(name string, desc string, selected bool) {
-	if len(ptr.modelData) == 0 {
+func (m *TypeTableModel) edit(name string, desc string, selected bool) {
+	if len(m.modelData) == 0 {
 		return
 	}
 
@@ -91,17 +91,17 @@ func (ptr *TypeTableModel) edit(name string, desc string, selected bool) {
 		checked: selected,
 	}
 
-	ptr.modelData[len(ptr.modelData)-1] = item
+	m.modelData[len(m.modelData)-1] = item
 
-	ptr.DataChanged(
-		ptr.Index(len(ptr.modelData)-1, 0, core.NewQModelIndex()),
-		ptr.Index(len(ptr.modelData)-1, 2, core.NewQModelIndex()),
+	m.DataChanged(
+		m.Index(len(m.modelData)-1, 0, core.NewQModelIndex()),
+		m.Index(len(m.modelData)-1, 2, core.NewQModelIndex()),
 		[]int{RoleTypeName, RoleTypeDescription, RoleTypeChecked})
 }
 
-func (ptr *TypeTableModel) setData(index *core.QModelIndex, variant *core.QVariant, role int) bool {
+func (m *TypeTableModel) setData(index *core.QModelIndex, variant *core.QVariant, role int) bool {
 
-	item := ptr.modelData[index.Row()]
+	item := m.modelData[index.Row()]
 	switch role {
 	case RoleTypeName:
 		v := variant.ToString()
@@ -119,43 +119,55 @@ func (ptr *TypeTableModel) setData(index *core.QModelIndex, variant *core.QVaria
 	return true
 }
 
-func (ptr *TypeTableModel) flags(index *core.QModelIndex) core.Qt__ItemFlag {
+func (m *TypeTableModel) flags(index *core.QModelIndex) core.Qt__ItemFlag {
 	return core.Qt__ItemIsEditable
 }
 
-func (ptr *TypeTableModel) checkRow(row int, checked bool) {
-	item := ptr.modelData[row]
+func (m *TypeTableModel) checkRow(row int, checked bool) {
+	item := m.modelData[row]
 	item.checked = checked
 
-	ptr.DataChanged(
-		ptr.Index(row, 0, core.NewQModelIndex()),
-		ptr.Index(row, 2, core.NewQModelIndex()),
+	m.DataChanged(
+		m.Index(row, 0, core.NewQModelIndex()),
+		m.Index(row, 2, core.NewQModelIndex()),
 		[]int{RoleTypeChecked})
 }
 
-func (ptr *TypeTableModel) toggleRow(row int) {
-	item := ptr.modelData[row]
+func (m *TypeTableModel) toggleRow(row int) {
+	item := m.modelData[row]
 	item.checked = !item.checked
 
-	ptr.DataChanged(
-		ptr.Index(row, 0, core.NewQModelIndex()),
-		ptr.Index(row, 2, core.NewQModelIndex()),
+	m.DataChanged(
+		m.Index(row, 0, core.NewQModelIndex()),
+		m.Index(row, 2, core.NewQModelIndex()),
 		[]int{RoleTypeChecked})
 }
 
-func (ptr *TypeTableModel) selectAll() {
+func (m *TypeTableModel) selectAll() {
 
-	ptr.BeginResetModel()
-	for _, item := range ptr.modelData {
+	m.BeginResetModel()
+	for _, item := range m.modelData {
 		item.checked = true
 	}
-	ptr.EndResetModel()
+	m.EndResetModel()
 }
 
-func (ptr *TypeTableModel) selectNone() {
-	ptr.BeginResetModel()
-	for _, item := range ptr.modelData {
+func (m *TypeTableModel) selectNone() {
+	m.BeginResetModel()
+	for _, item := range m.modelData {
 		item.checked = false
 	}
-	ptr.EndResetModel()
+	m.EndResetModel()
+}
+
+func (m *TypeTableModel) checkedTypes() []string {
+
+	var names []string = make([]string, 0)
+	for _, item := range m.modelData {
+		if item.checked {
+			names = append(names, item.name)
+		}
+	}
+
+	return names
 }

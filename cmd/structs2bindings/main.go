@@ -2,13 +2,13 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"github.com/jackmanlabs/codegen/extract"
+	"github.com/jackmanlabs/codegen/util"
 	"log"
 	"os"
 
 	"github.com/jackmanlabs/codegen"
 	"github.com/jackmanlabs/codegen/mysql"
-	"github.com/jackmanlabs/codegen/pkger"
 	"github.com/jackmanlabs/codegen/sqlite"
 	"github.com/jackmanlabs/errors"
 	"github.com/serenize/snaker"
@@ -16,20 +16,20 @@ import (
 
 func main() {
 	var (
-		driver *string = flag.String("driver", "mysql", "The SQL driver relevant to your request; one of 'sqlite', 'mysql', 'pg', or 'mssql'.")
-		src    *string = flag.String("pkg", "", "The package that you want to use for source material.")
+		driver             *string = flag.String("driver", "mysql", "The SQL driver relevant to your request; one of 'sqlite', 'mysql', 'pg', or 'mssql'.")
+		modelsImportPath   *string = flag.String("pkg", "", "The package that you want to use for source material.")
+		bindingsSourcePath *string = flag.String("dst", "", "The desired output path of the bindings.")
 		//database   *string = flag.String("db", "", "The name of the database you want to analyze.")
 		//hostname   *string = flag.String("host", "", "The host (IP address or hostname) that hosts the database you want to analyze.")
 		//outputRoot *string = flag.String("out", "", "The path where resulting files will be deposited. Without a specified path, stdout will be used if possible.")
 		//password   *string = flag.String("pass", "", "The password of the user specified by 'username'.")
 		//username   *string = flag.String("user", "", "The username on the database you want to analyze.")
-		//src        *string = flag.String("src", "", "The source of data that interests you; one of 'pkg' or 'db'.")
-		dst *string = flag.String("dst", "", "The desired output path of the bindings.")
+		//modelsImportPath        *string = flag.String("modelsImportPath", "", "The source of data that interests you; one of 'pkg' or 'db'.")
 	)
 
 	flag.Parse()
 
-	if *src == "" {
+	if *modelsImportPath == "" {
 		flag.Usage()
 		log.Println("The 'pkg' argument is required.")
 		os.Exit(1)
@@ -44,16 +44,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	if *dst == "" {
+	if *bindingsSourcePath == "" {
 		flag.Usage()
-		log.Println("The 'dst' argument is required.")
+		log.Println("The 'bindingsSourcePath' argument is required.")
 		os.Exit(1)
 	}
 
-	extractor := pkger.NewExtractor(*src)
-
-	var pkg *codegen.Package
-	pkg, err := extractor.Extract()
+	pkg, err := extract.Extract(*modelsImportPath)
 	if err != nil {
 		log.Fatal(errors.Stack(err))
 	}
@@ -80,113 +77,30 @@ func main() {
 		generator = mysql.NewGenerator()
 	}
 
-	err = codegen.CheckDir(*dst)
+	err = util.CheckDir(*bindingsSourcePath)
 	if err != nil {
 		log.Fatal(errors.Stack(err))
 	}
 
-	// Write baseline file.
+	var (
+		//modelsImportPath   string = b.ImportPath()
+		//BindingsAbsPath    string = b.BindingsPath()
+		//modelsSourcePath   string = pkg.AbsPath
+		modelsPkgName      string = pkg.Name
+		bindingsImportPath string
+		bindingsPkgName    string
+	)
 
-	f, err := os.Create(*dst + "/bindings.go")
+	bindingsImportPath = util.ImportPath(*bindingsSourcePath)
+	bindingsPkgName = util.PackageName(bindingsImportPath)
+
+	err = codegen.WriteBindings(generator, pkg.Models, *bindingsSourcePath, bindingsPkgName, *modelsImportPath, modelsPkgName)
 	if err != nil {
 		log.Fatal(errors.Stack(err))
 	}
 
-	bindingsImportPath := codegen.ImportPath(*dst)
-	bindingsPkgName := codegen.PackageName(bindingsImportPath)
-	log.Print("Package Path: ", bindingsImportPath)
-	log.Print("Package Name: ", bindingsPkgName)
-
-	modelsPkgName := codegen.PackageName(*src)
-	log.Print("Package Path: ", *src)
-	log.Print("Package Name: ", modelsPkgName)
-
-	f.Write([]byte(generator.BindingsBaseline(bindingsPkgName)))
-
-	err = f.Close()
+	err = codegen.WriteBindingsTests(generator, pkg.Models, *bindingsSourcePath, bindingsImportPath, bindingsPkgName, *modelsImportPath, modelsPkgName)
 	if err != nil {
 		log.Fatal(errors.Stack(err))
 	}
-
-	// The actual bindings files.
-	for _, def := range pkg.Models {
-
-		if def.UnderlyingType != "struct" {
-			continue
-		}
-
-		if len(def.Members) == 0 {
-			continue
-		}
-
-		out, err := generator.Bindings([]string{*src}, bindingsPkgName, modelsPkgName, def)
-		if err != nil {
-			log.Fatal(errors.Stack(err))
-		}
-
-		filename := fmt.Sprintf("/bindings_%s.go", snaker.CamelToSnake(def.Name))
-
-		f, err := os.Create(*dst + filename)
-		if err != nil {
-			log.Fatal(errors.Stack(err))
-		}
-
-		f.Write([]byte(out))
-
-		err = f.Close()
-		if err != nil {
-			log.Fatal(errors.Stack(err))
-		}
-	}
-
-	// Write baseline file for tests.
-
-	f, err = os.Create(*dst + "/bindings_test.go")
-	if err != nil {
-		log.Fatal(errors.Stack(err))
-	}
-
-	baseline, err := generator.BindingsBaselineTests([]string{bindingsImportPath}, bindingsPkgName, modelsPkgName)
-	if err != nil {
-		log.Fatal(errors.Stack(err))
-	}
-
-	f.Write([]byte(baseline))
-
-	err = f.Close()
-	if err != nil {
-		log.Fatal(errors.Stack(err))
-	}
-
-	// The files containing the basic tests for the bindings.
-	for _, def := range pkg.Models {
-
-		if def.UnderlyingType != "struct" {
-			continue
-		}
-
-		if len(def.Members) == 0 {
-			continue
-		}
-
-		out, err := generator.BindingsTests([]string{*src}, bindingsPkgName, modelsPkgName, def)
-		if err != nil {
-			log.Fatal(errors.Stack(err))
-		}
-
-		filename := fmt.Sprintf("/bindings_%s_test.go", snaker.CamelToSnake(def.Name))
-
-		f, err := os.Create(*dst + filename)
-		if err != nil {
-			log.Fatal(errors.Stack(err))
-		}
-
-		f.Write([]byte(out))
-
-		err = f.Close()
-		if err != nil {
-			log.Fatal(errors.Stack(err))
-		}
-	}
-
 }
