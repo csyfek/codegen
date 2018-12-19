@@ -3,6 +3,7 @@ package codegen
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/serenize/snaker"
 )
 

@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/jackmanlabs/errors"
 	"log"
+
+	"github.com/jackmanlabs/errors"
 )
 
 func (b *QmlBridge) saveState() {

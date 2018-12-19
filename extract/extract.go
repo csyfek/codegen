@@ -1,9 +1,6 @@
 package extract
 
 import (
-	"github.com/jackmanlabs/codegen"
-	"github.com/jackmanlabs/codegen/util"
-	"github.com/jackmanlabs/errors"
 	"go/ast"
 	"go/build"
 	"go/parser"
@@ -11,6 +8,10 @@ import (
 	"log"
 	"strings"
 	"unicode"
+
+	"github.com/jackmanlabs/codegen"
+	"github.com/jackmanlabs/codegen/util"
+	"github.com/jackmanlabs/errors"
 )
 
 type extractorType struct {
@@ -28,7 +29,6 @@ func Extract(importPath string) (*codegen.Package, error) {
 	if err != nil {
 		return nil, errors.Stack(err)
 	}
-
 
 	fset := token.NewFileSet()
 	astPkgs, err := parser.ParseDir(fset, buildPkg.Dir, nil, parser.ParseComments|parser.AllErrors)

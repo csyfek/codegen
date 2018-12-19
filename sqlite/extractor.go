@@ -63,7 +63,7 @@ func (this *Extractor) Extract() (*codegen.Package, error) {
 	}
 
 	pkg := &codegen.Package{
-		Models:  make([]*codegen.Model, 0),
+		Models: make([]*codegen.Model, 0),
 	}
 
 	for table, columns := range tableColumns {

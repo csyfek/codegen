@@ -1,12 +1,12 @@
 package main
 
 import (
-	"bitbucket.org/Jagsaw/jagsaw/errs"
 	"encoding/json"
-	"github.com/jackmanlabs/errors"
 	"log"
 	"os"
 	"path"
+
+	"github.com/jackmanlabs/errors"
 )
 
 type PackageState struct {
@@ -65,11 +65,11 @@ func saveState(state map[string]PackageState) error {
 			return errors.Stack(err)
 		}
 	} else if err != nil {
-		return errs.Stack(err)
+		return errors.Stack(err)
 	} else {
 		err = f.Close()
 		if err != nil {
-			return errs.Stack(err)
+			return errors.Stack(err)
 		}
 	}
 

@@ -2,9 +2,10 @@ package codegen
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/jackmanlabs/errors"
 	"github.com/serenize/snaker"
-	"os"
 )
 
 func WriteBindings(generator SqlGenerator, models []*Model, modelsImportPath, modelsPkgName, bindingsSourcePath, bindingsPkgName string) error {

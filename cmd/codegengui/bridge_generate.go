@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/jackmanlabs/codegen"
 	"github.com/jackmanlabs/codegen/extract"
 	"github.com/jackmanlabs/codegen/mysql"
@@ -9,7 +11,6 @@ import (
 	"github.com/jackmanlabs/codegen/util"
 	"github.com/jackmanlabs/errors"
 	"github.com/therecipe/qt/widgets"
-	"log"
 )
 
 func (b *QmlBridge) generateBindings() {

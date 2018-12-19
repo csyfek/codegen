@@ -8,4 +8,3 @@ func SetContainsString(set []string, s string) bool {
 	}
 	return false
 }
-

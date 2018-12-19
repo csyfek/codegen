@@ -2,9 +2,10 @@ package sqlite
 
 import (
 	"bytes"
-	"github.com/jackmanlabs/codegen/util"
 	"log"
 	"strings"
+
+	"github.com/jackmanlabs/codegen/util"
 
 	"github.com/jackmanlabs/codegen"
 	"github.com/jackmanlabs/errors"

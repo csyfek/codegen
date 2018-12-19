@@ -27,4 +27,3 @@ func resolveTypeExpression(expr ast.Expr) string {
 	}
 
 }
-

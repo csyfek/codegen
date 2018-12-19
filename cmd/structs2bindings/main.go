@@ -2,10 +2,11 @@ package main
 
 import (
 	"flag"
-	"github.com/jackmanlabs/codegen/extract"
-	"github.com/jackmanlabs/codegen/util"
 	"log"
 	"os"
+
+	"github.com/jackmanlabs/codegen/extract"
+	"github.com/jackmanlabs/codegen/util"
 
 	"github.com/jackmanlabs/codegen"
 	"github.com/jackmanlabs/codegen/mysql"
